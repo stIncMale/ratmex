@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project
+    xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <description>
+    An ancestor of all Maven projects with groupId 'stincmale.ratmex'.
+  </description>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>stincmale.ratmex</groupId>
+  <artifactId>ratmex-root</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <name>ratmex-root</name>
+  <url>${ratmex.url}</url>
+  <licenses>
+    <license>
+      <name>${ratmex.licenseName}</name>
+      <url>${ratmex.licenseUrl}</url>
+    </license>
+  </licenses>
+  <inceptionYear>${ratmex.inceptionYear}</inceptionYear>
+  <organization>
+    <name>${ratmex.organizationName}</name>
+    <url>${ratmex.organizationUrl}</url>
+  </organization>
+  <properties>
+    <ratmex.charset>UTF-8</ratmex.charset>
+    <project.build.sourceEncoding>${ratmex.charset}</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>${ratmex.charset}</project.reporting.outputEncoding>
+    <ratmex.url>https://github.com/stIncMale/ratmex</ratmex.url>
+    <ratmex.licenseName>Apache License, Version 2.0</ratmex.licenseName>
+    <ratmex.licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</ratmex.licenseUrl>
+    <ratmex.inceptionYear>2015</ratmex.inceptionYear>
+    <ratmex.organizationName>Valiantsin Kavalenka</ratmex.organizationName>
+    <ratmex.organizationUrl>https://sites.google.com/site/aboutmale/</ratmex.organizationUrl>
+  </properties>
+</project>
