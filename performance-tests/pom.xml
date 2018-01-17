@@ -4,12 +4,12 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <description>
-    A rate-measuring executor and a high-performance rate meter.
+    Performance tests.
   </description>
   <modelVersion>4.0.0</modelVersion>
-  <artifactId>ratmex</artifactId>
+  <artifactId>performance-tests</artifactId>
   <packaging>jar</packaging>
-  <name>ratmex</name>
+  <name>ratmex-performance-tests</name>
   <parent>
     <groupId>stincmale.ratmex</groupId>
     <artifactId>ratmex-build</artifactId>
@@ -18,28 +18,28 @@
   </parent>
   <dependencies>
     <dependency>
+      <groupId>stincmale.ratmex</groupId>
+      <artifactId>ratmex</artifactId>
+    </dependency>
+    <dependency>
       <groupId>com.google.code.findbugs</groupId>
       <artifactId>jsr305</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-api</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency><!-- required because of JUnit5 -->
-      <groupId>org.apiguardian</groupId>
-      <artifactId>apiguardian-api</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.openjdk.jmh</groupId>
       <artifactId>jmh-core</artifactId>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.openjdk.jmh</groupId>
       <artifactId>jmh-generator-annprocess</artifactId>
-      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+    </dependency>
+    <dependency><!-- required because of JUnit5 -->
+      <groupId>org.apiguardian</groupId>
+      <artifactId>apiguardian-api</artifactId>
     </dependency>
   </dependencies>
 </project>

@@ -22,14 +22,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import stincmale.ratmex.NanosComparator;
-import stincmale.ratmex.TestTag;
+import stincmale.ratmex.ConcurrencyTestTag;
 import stincmale.ratmex.internal.util.Utils;
 import stincmale.ratmex.meter.RateMeterConfig.Builder;
 import static java.time.Duration.ofNanos;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Tag(TestTag.CONCURRENCY)
+@Tag(ConcurrencyTestTag.VALUE)
 public abstract class AbstractRateMeterConcurrencyTest<B extends Builder, C extends RateMeterConfig> extends AbstractRateMeterTest<B, C> {
   private final int numberOfThreads;
   private ExecutorService ex;

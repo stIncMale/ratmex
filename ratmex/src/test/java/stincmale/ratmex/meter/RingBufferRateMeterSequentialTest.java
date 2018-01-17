@@ -1,10 +1,10 @@
 package stincmale.ratmex.meter;
 
 import org.junit.jupiter.api.Tag;
-import stincmale.ratmex.TestTag;
+import stincmale.ratmex.ConcurrencyTestTag;
 import stincmale.ratmex.meter.RateMeterConfig.Builder;
 
-@Tag(TestTag.CONCURRENCY)
+@Tag(ConcurrencyTestTag.VALUE)
 public final class RingBufferRateMeterSequentialTest extends AbstractRateMeterConcurrencyTest<Builder, RateMeterConfig> {
   public RingBufferRateMeterSequentialTest() {
     super(

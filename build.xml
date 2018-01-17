@@ -10,12 +10,11 @@
   <artifactId>ratmex-build</artifactId>
   <packaging>pom</packaging>
   <name>ratmex-build</name>
-  <url>${ratmex.url}</url>
   <parent>
     <groupId>stincmale.ratmex</groupId>
-    <artifactId>ratmex-versions</artifactId>
+    <artifactId>ratmex-version</artifactId>
     <version>0.1.0-SNAPSHOT</version>
-    <relativePath>versions.xml</relativePath>
+    <relativePath>version.xml</relativePath>
   </parent>
   <build>
     <pluginManagement>
@@ -26,7 +25,7 @@
           <configuration>
             <source>9</source>
             <target>9</target>
-            <release>9</release>
+            <!--<release>9</release>TODO VAKO-->
             <encoding>${ratmex.charset}</encoding>
             <debug>true</debug>
             <debuglevel>lines,vars,source</debuglevel>

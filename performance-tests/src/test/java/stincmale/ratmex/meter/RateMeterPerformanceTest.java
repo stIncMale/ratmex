@@ -23,11 +23,11 @@ import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.ChainedOptionsBuilder;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
-import stincmale.ratmex.TestTag;
+import stincmale.ratmex.PerformanceTestTag;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.openjdk.jmh.runner.options.TimeValue.milliseconds;
 
-@Tag(TestTag.PERFORMANCE)
+@Tag(PerformanceTestTag.VALUE)
 public class RateMeterPerformanceTest {
   private static final boolean QUICK = true;
   private static final boolean JAVA_SERVER = true;
