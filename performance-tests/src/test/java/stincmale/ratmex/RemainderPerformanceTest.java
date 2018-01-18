@@ -8,13 +8,22 @@ import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
-import org.openjdk.jmh.runner.options.OptionsBuilder;
-import static org.openjdk.jmh.runner.options.TimeValue.milliseconds;
+import stincmale.ratmex.util.JmhOptions;
+import stincmale.ratmex.util.PerformanceTestTag;
 
+/**
+ * <pre>{@code
+ * Benchmark                                Mode  Cnt  Score   Error   Units
+ * RemainderPerformanceTest.bitwise        thrpt   15  2.627 ± 0.020  ops/ms
+ * RemainderPerformanceTest.remainder      thrpt   15  1.268 ± 0.019  ops/ms
+ * RemainderPerformanceTest.remainderPow2  thrpt   15  2.220 ± 0.022  ops/ms
+ * }</pre>
+ */
 @Tag(PerformanceTestTag.VALUE)
-public class RemainderPerformanceTest {
+public class RemainderPerformanceTest {//TODO get rid of cycles
   private static final int ITERATIONS = 1_000_000;
-  private static final long DENOMINATOR_POW2 = BigInteger.TWO.pow(10).longValueExact();
+  private static final long DENOMINATOR_POW2 = BigInteger.TWO.pow(10)
+      .longValueExact();
   private static final long BITWISE_DENOMINATOR_POW2 = DENOMINATOR_POW2 - 1;
   private static final long DENOMINATOR = BITWISE_DENOMINATOR_POW2 - 1;
 
@@ -22,23 +31,10 @@ public class RemainderPerformanceTest {
   }
 
   @Test
-  public void serial_throughput_baseline() throws RunnerException {
-    new Runner(new OptionsBuilder()
-            .jvmArgsPrepend("-server")
-            .jvmArgsAppend("-disableassertions")
-            .syncIterations(true)
-            .shouldFailOnError(true)
-            .shouldDoGC(false)
-            .timeout(milliseconds(10_000))
-            .warmupTime(milliseconds(750))
-            .warmupIterations(3)
-            .measurementTime(milliseconds(1000))
-            .measurementIterations(3)
-            .forks(3)
-        .mode(Mode.AverageTime)
-        .timeUnit(TimeUnit.MICROSECONDS)
-        .include(getClass().getName() + ".*")
-        .threads(1)
+  public void run() throws RunnerException {
+    new Runner(JmhOptions.includingClass(getClass())
+        .mode(Mode.Throughput)
+        .timeUnit(TimeUnit.MILLISECONDS)
         .build())
         .run();
   }

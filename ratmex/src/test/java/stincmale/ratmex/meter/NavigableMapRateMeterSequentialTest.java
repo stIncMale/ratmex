@@ -1,7 +1,7 @@
 package stincmale.ratmex.meter;
 
 import org.junit.jupiter.api.Tag;
-import stincmale.ratmex.ConcurrencyTestTag;
+import stincmale.ratmex.util.ConcurrencyTestTag;
 import stincmale.ratmex.meter.RateMeterConfig.Builder;
 
 @Tag(ConcurrencyTestTag.VALUE)

@@ -18,12 +18,11 @@ import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
-import org.openjdk.jmh.infra.Blackhole;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.ChainedOptionsBuilder;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
-import stincmale.ratmex.PerformanceTestTag;
+import stincmale.ratmex.util.PerformanceTestTag;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.openjdk.jmh.runner.options.TimeValue.milliseconds;
 
@@ -69,17 +68,6 @@ public class RateMeterPerformanceTest {
   };
 
   public RateMeterPerformanceTest() {
-  }
-
-  @Test
-  public void serial_throughput_baseline() throws RunnerException {
-    new Runner(jmhOptionsBuilderSupplier.get()
-        .mode(Mode.Throughput)
-        .timeUnit(TimeUnit.MILLISECONDS)
-        .include(getClass().getName() + ".*baseline_.*")
-        .threads(1)
-        .build())
-        .run();
   }
 
   @Test
@@ -183,16 +171,16 @@ public class RateMeterPerformanceTest {
         .run();
   }
 
-//  @Test
-//  public void serial_latency_simpleRateMeter() throws RunnerException {TODO implement
-//    new Runner(jmhOptionsBuilderSupplier.get()
-//        .mode(Mode.AverageTime)
-//        .timeUnit(TimeUnit.NANOSECONDS)
-//        .include(getClass().getName() + ".*serial_.*simpleRateMeter")
-//        .threads(1)
-//        .build())
-//        .run();
-//  }
+  //  @Test
+  //  public void serial_latency_simpleRateMeter() throws RunnerException {TODO implement
+  //    new Runner(jmhOptionsBuilderSupplier.get()
+  //        .mode(Mode.AverageTime)
+  //        .timeUnit(TimeUnit.NANOSECONDS)
+  //        .include(getClass().getName() + ".*serial_.*simpleRateMeter")
+  //        .threads(1)
+  //        .build())
+  //        .run();
+  //  }
 
   @Test
   public void serial_latency_concurrentSimpleRateMeter() throws RunnerException {
@@ -202,17 +190,6 @@ public class RateMeterPerformanceTest {
         .include(getClass().getName() + ".*serial_tick_concurrentSimpleRateMeter")
         .include(getClass().getName() + ".*serial_tick\\$1rate\\$10_concurrentSimpleRateMeter")
         .threads(1)
-        .build())
-        .run();
-  }
-
-  @Test
-  public void parallel4_throughput_baseline() throws RunnerException {
-    new Runner(jmhOptionsBuilderSupplier.get()
-        .mode(Mode.Throughput)
-        .timeUnit(TimeUnit.MILLISECONDS)
-        .include(RateMeterPerformanceTest.class.getName() + ".baseline_.*")
-        .threads(4)
         .build())
         .run();
   }
@@ -290,69 +267,23 @@ public class RateMeterPerformanceTest {
   }
 
   @Benchmark
-  public void baseline_empty() {
-  }
-
-  @Benchmark
-  public void baseline_blackholeConsume(final Blackhole bh) {
-    bh.consume(0);
-  }
-
-  @Benchmark
-  public void baseline_nanoTime(final Blackhole bh) {//for latency and granularity see https://github.com/shipilev/timers-bench
-    bh.consume(nanoTime());
-  }
-
-  @Benchmark
-  @Group("baseline_intIncrementAndModulo")
-  @GroupThreads(1)
-  public void baseline_intIncrementAndModulo(IntContainer_ThreadScope counter, final Blackhole bh) {
-    counter.v++;
-    bh.consume(counter.v % 10);
-  }
-
-  @Benchmark
-  public void baseline_atomicLongGetAndAdd(ConcurrentContainer_BenchmarkScope atomicContainer) {
-    atomicContainer.v.getAndAdd(1);
-  }
-
-  @Benchmark
-  public void baseline_atomicLongArrayGetAndAdd(ConcurrentContainer_BenchmarkScope atomicContainer) {
-    atomicContainer.arr.getAndAdd(0, 1);
-  }
-
-  @Benchmark
-  public void baseline_longAdderAdd(ConcurrentContainer_BenchmarkScope atomicContainer) {
-    atomicContainer.la.add(1);
-  }
-
-  @Benchmark
   public void serial_tick_navigableMapRateMeter(final RateMeterContainer_ThreadScope state) {
     tick(state.navigableMapRateMeter);
   }
 
   @Benchmark
-  public void serial_tick$10rate$1_navigableMapRateMeter(
-      final RateMeterContainer_ThreadScope state,
-      final IntContainer_ThreadScope counter,
-      final Blackhole bh) {
-    tickAndRate(state.navigableMapRateMeter, bh, counter.v++, 10);
+  public long serial_tick$10rate$1_navigableMapRateMeter(final RateMeterContainer_ThreadScope state, final IntContainer_ThreadScope counter) {
+    return tickAndRate(state.navigableMapRateMeter, counter.v++, 10);
   }
 
   @Benchmark
-  public void serial_tick$1rate$1_navigableMapRateMeter(
-      final RateMeterContainer_ThreadScope state,
-      final IntContainer_ThreadScope counter,
-      final Blackhole bh) {
-    tickAndRate(state.navigableMapRateMeter, bh, counter.v++, 1);
+  public long serial_tick$1rate$1_navigableMapRateMeter(final RateMeterContainer_ThreadScope state, final IntContainer_ThreadScope counter) {
+    return tickAndRate(state.navigableMapRateMeter, counter.v++, 1);
   }
 
   @Benchmark
-  public void serial_tick$1rate$10_navigableMapRateMeter(
-      final RateMeterContainer_ThreadScope state,
-      final IntContainer_ThreadScope counter,
-      final Blackhole bh) {
-    rateAndTick(state.navigableMapRateMeter, bh, counter.v++, 10);
+  public long serial_tick$1rate$10_navigableMapRateMeter(final RateMeterContainer_ThreadScope state, final IntContainer_ThreadScope counter) {
+    return rateAndTick(state.navigableMapRateMeter, counter.v++, 10);
   }
 
   @Benchmark
@@ -361,27 +292,24 @@ public class RateMeterPerformanceTest {
   }
 
   @Benchmark
-  public void serial_tick$10rate$1_concurrentNavigableMapRateMeter(
+  public long serial_tick$10rate$1_concurrentNavigableMapRateMeter(
       final RateMeterContainer_ThreadScope state,
-      final IntContainer_ThreadScope counter,
-      final Blackhole bh) {
-    tickAndRate(state.concurrentNavigableMapRateMeter, bh, counter.v++, 10);
+      final IntContainer_ThreadScope counter) {
+    return tickAndRate(state.concurrentNavigableMapRateMeter, counter.v++, 10);
   }
 
   @Benchmark
-  public void serial_tick$1rate$1_concurrentNavigableMapRateMeter(
+  public long serial_tick$1rate$1_concurrentNavigableMapRateMeter(
       final RateMeterContainer_ThreadScope state,
-      final IntContainer_ThreadScope counter,
-      final Blackhole bh) {
-    tickAndRate(state.concurrentNavigableMapRateMeter, bh, counter.v++, 1);
+      final IntContainer_ThreadScope counter) {
+    return tickAndRate(state.concurrentNavigableMapRateMeter, counter.v++, 1);
   }
 
   @Benchmark
-  public void serial_tick$1rate$10_concurrentNavigableMapRateMeter(
+  public long serial_tick$1rate$10_concurrentNavigableMapRateMeter(
       final RateMeterContainer_ThreadScope state,
-      final IntContainer_ThreadScope counter,
-      final Blackhole bh) {
-    rateAndTick(state.concurrentNavigableMapRateMeter, bh, counter.v++, 10);
+      final IntContainer_ThreadScope counter) {
+    return rateAndTick(state.concurrentNavigableMapRateMeter, counter.v++, 10);
   }
 
   @Benchmark
@@ -390,27 +318,18 @@ public class RateMeterPerformanceTest {
   }
 
   @Benchmark
-  public void serial_tick$10rate$1_ringBufferRateMeter(
-      final RateMeterContainer_ThreadScope state,
-      final IntContainer_ThreadScope counter,
-      final Blackhole bh) {
-    tickAndRate(state.ringBufferRateMeter, bh, counter.v++, 10);
+  public long serial_tick$10rate$1_ringBufferRateMeter(final RateMeterContainer_ThreadScope state, final IntContainer_ThreadScope counter) {
+    return tickAndRate(state.ringBufferRateMeter, counter.v++, 10);
   }
 
   @Benchmark
-  public void serial_tick$1rate$1_ringBufferRateMeter(
-      final RateMeterContainer_ThreadScope state,
-      final IntContainer_ThreadScope counter,
-      final Blackhole bh) {
-    tickAndRate(state.ringBufferRateMeter, bh, counter.v++, 1);
+  public long serial_tick$1rate$1_ringBufferRateMeter(final RateMeterContainer_ThreadScope state, final IntContainer_ThreadScope counter) {
+    return tickAndRate(state.ringBufferRateMeter, counter.v++, 1);
   }
 
   @Benchmark
-  public void serial_tick$1rate$10_ringBufferRateMeter(
-      final RateMeterContainer_ThreadScope state,
-      final IntContainer_ThreadScope counter,
-      final Blackhole bh) {
-    rateAndTick(state.ringBufferRateMeter, bh, counter.v++, 10);
+  public long serial_tick$1rate$10_ringBufferRateMeter(final RateMeterContainer_ThreadScope state, final IntContainer_ThreadScope counter) {
+    return rateAndTick(state.ringBufferRateMeter, counter.v++, 10);
   }
 
   @Benchmark
@@ -419,27 +338,18 @@ public class RateMeterPerformanceTest {
   }
 
   @Benchmark
-  public void serial_tick$10rate$1_concurrentRingBufferRateMeter(
-      final RateMeterContainer_ThreadScope state,
-      final IntContainer_ThreadScope counter,
-      final Blackhole bh) {
-    tickAndRate(state.concurrentRingBufferRateMeter, bh, counter.v++, 10);
+  public long serial_tick$10rate$1_concurrentRingBufferRateMeter(final RateMeterContainer_ThreadScope state, final IntContainer_ThreadScope counter) {
+    return tickAndRate(state.concurrentRingBufferRateMeter, counter.v++, 10);
   }
 
   @Benchmark
-  public void serial_tick$1rate$1_concurrentRingBufferRateMeter(
-      final RateMeterContainer_ThreadScope state,
-      final IntContainer_ThreadScope counter,
-      final Blackhole bh) {
-    tickAndRate(state.concurrentRingBufferRateMeter, bh, counter.v++, 1);
+  public long serial_tick$1rate$1_concurrentRingBufferRateMeter(final RateMeterContainer_ThreadScope state, final IntContainer_ThreadScope counter) {
+    return tickAndRate(state.concurrentRingBufferRateMeter, counter.v++, 1);
   }
 
   @Benchmark
-  public void serial_tick$1rate$10_concurrentRingBufferRateMeter(
-      final RateMeterContainer_ThreadScope state,
-      final IntContainer_ThreadScope counter,
-      final Blackhole bh) {
-    rateAndTick(state.concurrentRingBufferRateMeter, bh, counter.v++, 10);
+  public long serial_tick$1rate$10_concurrentRingBufferRateMeter(final RateMeterContainer_ThreadScope state, final IntContainer_ThreadScope counter) {
+    return rateAndTick(state.concurrentRingBufferRateMeter, counter.v++, 10);
   }
 
   @Benchmark
@@ -448,27 +358,18 @@ public class RateMeterPerformanceTest {
   }
 
   @Benchmark
-  public void serial_tick$10rate$1_concurrentSimpleRateMeter(
-      final RateMeterContainer_ThreadScope state,
-      final IntContainer_ThreadScope counter,
-      final Blackhole bh) {
-    tickAndRate(state.concurrentSimpleRateMeter, bh, counter.v++, 10);
+  public long serial_tick$10rate$1_concurrentSimpleRateMeter(final RateMeterContainer_ThreadScope state, final IntContainer_ThreadScope counter) {
+    return tickAndRate(state.concurrentSimpleRateMeter, counter.v++, 10);
   }
 
   @Benchmark
-  public void serial_tick$1rate$1_concurrentSimpleRateMeter(
-      final RateMeterContainer_ThreadScope state,
-      final IntContainer_ThreadScope counter,
-      final Blackhole bh) {
-    tickAndRate(state.concurrentSimpleRateMeter, bh, counter.v++, 1);
+  public long serial_tick$1rate$1_concurrentSimpleRateMeter(final RateMeterContainer_ThreadScope state, final IntContainer_ThreadScope counter) {
+    return tickAndRate(state.concurrentSimpleRateMeter, counter.v++, 1);
   }
 
   @Benchmark
-  public void serial_tick$1rate$10_concurrentSimpleRateMeter(
-      final RateMeterContainer_ThreadScope state,
-      final IntContainer_ThreadScope counter,
-      final Blackhole bh) {
-    rateAndTick(state.concurrentSimpleRateMeter, bh, counter.v++, 10);
+  public long serial_tick$1rate$10_concurrentSimpleRateMeter(final RateMeterContainer_ThreadScope state, final IntContainer_ThreadScope counter) {
+    return rateAndTick(state.concurrentSimpleRateMeter, counter.v++, 10);
   }
 
   @Benchmark
@@ -481,31 +382,28 @@ public class RateMeterPerformanceTest {
   @Benchmark
   @Group("parallel4_tick$10rate$1_concurrentNavigableMapRateMeter")
   @GroupThreads(4)
-  public void parallel4_tick$10rate$1_concurrentNavigableMapRateMeter(
+  public long parallel4_tick$10rate$1_concurrentNavigableMapRateMeter(
       final RateMeterContainer_GroupScope state,
-      final IntContainer_ThreadScope counter,
-      final Blackhole bh) {
-    tickAndRate(state.concurrentNavigableMapRateMeter, bh, counter.v++, 10);
+      final IntContainer_ThreadScope counter) {
+    return tickAndRate(state.concurrentNavigableMapRateMeter, counter.v++, 10);
   }
 
   @Benchmark
   @Group("parallel4_tick$1rate$1_concurrentNavigableMapRateMeter")
   @GroupThreads(4)
-  public void parallel4_tick$1rate$1_concurrentNavigableMapRateMeter(
+  public long parallel4_tick$1rate$1_concurrentNavigableMapRateMeter(
       final RateMeterContainer_GroupScope state,
-      final IntContainer_ThreadScope counter,
-      final Blackhole bh) {
-    tickAndRate(state.concurrentNavigableMapRateMeter, bh, counter.v++, 1);
+      final IntContainer_ThreadScope counter) {
+    return tickAndRate(state.concurrentNavigableMapRateMeter, counter.v++, 1);
   }
 
   @Benchmark
   @Group("parallel4_tick$1rate$10_concurrentNavigableMapRateMeter")
   @GroupThreads(4)
-  public void parallel4_tick$1rate$10_concurrentNavigableMapRateMeter(
+  public long parallel4_tick$1rate$10_concurrentNavigableMapRateMeter(
       final RateMeterContainer_GroupScope state,
-      final IntContainer_ThreadScope counter,
-      final Blackhole bh) {
-    rateAndTick(state.concurrentNavigableMapRateMeter, bh, counter.v++, 10);
+      final IntContainer_ThreadScope counter) {
+    return rateAndTick(state.concurrentNavigableMapRateMeter, counter.v++, 10);
   }
 
   @Benchmark
@@ -518,8 +416,8 @@ public class RateMeterPerformanceTest {
   @Benchmark
   @Group("parallel4_tick$1_rate$1_concurrentNavigableMapRateMeter")
   @GroupThreads(2)
-  public void parallel4_tick$1_RATE$1_concurrentNavigableMapRateMeter(final RateMeterContainer_GroupScope state, final Blackhole bh) {
-    rate(state.concurrentNavigableMapRateMeter, bh);
+  public long parallel4_tick$1_RATE$1_concurrentNavigableMapRateMeter(final RateMeterContainer_GroupScope state) {
+    return rate(state.concurrentNavigableMapRateMeter);
   }
 
   @Benchmark
@@ -532,8 +430,8 @@ public class RateMeterPerformanceTest {
   @Benchmark
   @Group("parallel4_tick$1_rate$3_concurrentNavigableMapRateMeter")
   @GroupThreads(3)
-  public void parallel4_tick$1_RATE$3_concurrentNavigableMapRateMeter(final RateMeterContainer_GroupScope state, final Blackhole bh) {
-    rate(state.concurrentNavigableMapRateMeter, bh);
+  public long parallel4_tick$1_RATE$3_concurrentNavigableMapRateMeter(final RateMeterContainer_GroupScope state) {
+    return rate(state.concurrentNavigableMapRateMeter);
   }
 
   @Benchmark
@@ -546,31 +444,28 @@ public class RateMeterPerformanceTest {
   @Benchmark
   @Group("parallel4_tick$10rate$1_concurrentRingBufferRateMeter")
   @GroupThreads(4)
-  public void parallel4_tick$10rate$1_concurrentRingBufferRateMeter(
+  public long parallel4_tick$10rate$1_concurrentRingBufferRateMeter(
       final RateMeterContainer_GroupScope state,
-      final IntContainer_ThreadScope counter,
-      final Blackhole bh) {
-    tickAndRate(state.concurrentRingBufferRateMeter, bh, counter.v++, 10);
+      final IntContainer_ThreadScope counter) {
+    return tickAndRate(state.concurrentRingBufferRateMeter, counter.v++, 10);
   }
 
   @Benchmark
   @Group("parallel4_tick$1rate$1_concurrentRingBufferRateMeter")
   @GroupThreads(4)
-  public void parallel4_tick$1rate$1_concurrentRingBufferRateMeter(
+  public long parallel4_tick$1rate$1_concurrentRingBufferRateMeter(
       final RateMeterContainer_GroupScope state,
-      final IntContainer_ThreadScope counter,
-      final Blackhole bh) {
-    tickAndRate(state.concurrentRingBufferRateMeter, bh, counter.v++, 1);
+      final IntContainer_ThreadScope counter) {
+    return tickAndRate(state.concurrentRingBufferRateMeter, counter.v++, 1);
   }
 
   @Benchmark
   @Group("parallel4_tick$1rate$10_concurrentRingBufferRateMeter")
   @GroupThreads(4)
-  public void parallel4_tick$1rate$10_concurrentRingBufferRateMeter(
+  public long parallel4_tick$1rate$10_concurrentRingBufferRateMeter(
       final RateMeterContainer_GroupScope state,
-      final IntContainer_ThreadScope counter,
-      final Blackhole bh) {
-    rateAndTick(state.concurrentRingBufferRateMeter, bh, counter.v++, 10);
+      final IntContainer_ThreadScope counter) {
+    return rateAndTick(state.concurrentRingBufferRateMeter, counter.v++, 10);
   }
 
   @Benchmark
@@ -583,8 +478,8 @@ public class RateMeterPerformanceTest {
   @Benchmark
   @Group("parallel4_tick$1_rate$1_concurrentRingBufferRateMeter")
   @GroupThreads(2)
-  public void parallel4_tick$1_RATE$1_concurrentRingBufferRateMeter(final RateMeterContainer_GroupScope state, final Blackhole bh) {
-    rate(state.concurrentRingBufferRateMeter, bh);
+  public long parallel4_tick$1_RATE$1_concurrentRingBufferRateMeter(final RateMeterContainer_GroupScope state) {
+    return rate(state.concurrentRingBufferRateMeter);
   }
 
   @Benchmark
@@ -597,8 +492,8 @@ public class RateMeterPerformanceTest {
   @Benchmark
   @Group("parallel4_tick$1_rate$3_concurrentRingBufferRateMeter")
   @GroupThreads(3)
-  public void parallel4_tick$1_RATE$3_concurrentRingBufferRateMeter(final RateMeterContainer_GroupScope state, final Blackhole bh) {
-    rate(state.concurrentRingBufferRateMeter, bh);
+  public long parallel4_tick$1_RATE$3_concurrentRingBufferRateMeter(final RateMeterContainer_GroupScope state) {
+    return rate(state.concurrentRingBufferRateMeter);
   }
 
   @Benchmark
@@ -611,31 +506,22 @@ public class RateMeterPerformanceTest {
   @Benchmark
   @Group("parallel4_tick$10rate$1_concurrentSimpleRateMeter")
   @GroupThreads(4)
-  public void parallel4_tick$10rate$1_concurrentSimpleRateMeter(
-      final RateMeterContainer_GroupScope state,
-      final IntContainer_ThreadScope counter,
-      final Blackhole bh) {
-    tickAndRate(state.concurrentSimpleRateMeter, bh, counter.v++, 10);
+  public long parallel4_tick$10rate$1_concurrentSimpleRateMeter(final RateMeterContainer_GroupScope state, final IntContainer_ThreadScope counter) {
+    return tickAndRate(state.concurrentSimpleRateMeter, counter.v++, 10);
   }
 
   @Benchmark
   @Group("parallel4_tick$1rate$1_concurrentSimpleRateMeter")
   @GroupThreads(4)
-  public void parallel4_tick$1rate$1_concurrentSimpleRateMeter(
-      final RateMeterContainer_GroupScope state,
-      final IntContainer_ThreadScope counter,
-      final Blackhole bh) {
-    tickAndRate(state.concurrentSimpleRateMeter, bh, counter.v++, 1);
+  public long parallel4_tick$1rate$1_concurrentSimpleRateMeter(final RateMeterContainer_GroupScope state, final IntContainer_ThreadScope counter) {
+    return tickAndRate(state.concurrentSimpleRateMeter, counter.v++, 1);
   }
 
   @Benchmark
   @Group("parallel4_tick$1rate$10_concurrentSimpleRateMeter")
   @GroupThreads(4)
-  public void parallel4_tick$1rate$10_concurrentSimpleRateMeter(
-      final RateMeterContainer_GroupScope state,
-      final IntContainer_ThreadScope counter,
-      final Blackhole bh) {
-    rateAndTick(state.concurrentSimpleRateMeter, bh, counter.v++, 10);
+  public long parallel4_tick$1rate$10_concurrentSimpleRateMeter(final RateMeterContainer_GroupScope state, final IntContainer_ThreadScope counter) {
+    return rateAndTick(state.concurrentSimpleRateMeter, counter.v++, 10);
   }
 
   @Benchmark
@@ -648,8 +534,8 @@ public class RateMeterPerformanceTest {
   @Benchmark
   @Group("parallel4_tick$1_rate$1_concurrentSimpleRateMeter")
   @GroupThreads(2)
-  public void parallel4_tick$1_RATE$1_concurrentSimpleRateMeter(final RateMeterContainer_GroupScope state, final Blackhole bh) {
-    rate(state.concurrentSimpleRateMeter, bh);
+  public long parallel4_tick$1_RATE$1_concurrentSimpleRateMeter(final RateMeterContainer_GroupScope state) {
+    return rate(state.concurrentSimpleRateMeter);
   }
 
   @Benchmark
@@ -662,34 +548,36 @@ public class RateMeterPerformanceTest {
   @Benchmark
   @Group("parallel4_tick$1_rate$3_concurrentSimpleRateMeter")
   @GroupThreads(3)
-  public void parallel4_tick$1_RATE$3_concurrentSimpleRateMeter(final RateMeterContainer_GroupScope state, final Blackhole bh) {
-    rate(state.concurrentSimpleRateMeter, bh);
+  public long parallel4_tick$1_RATE$3_concurrentSimpleRateMeter(final RateMeterContainer_GroupScope state) {
+    return rate(state.concurrentSimpleRateMeter);
   }
 
   private static final void tick(final RateMeter<?> rm) {
     rm.tick(1, nanoTime());
   }
 
-  private static final void rate(final RateMeter<?> rm, final Blackhole bh) {
-    bh.consume(rm.rate());
+  private static final long rate(final RateMeter<?> rm) {
+    return rm.rate();
     //    bh.consume(rm.rate(new RateMeterReading()));
     //    bh.consume(rm.rate(samplesInterval));
     //    bh.consume(rm.rate(rm.rightSamplesWindowBoundary()));
   }
 
-  private static final void tickAndRate(final RateMeter<?> rm, final Blackhole bh, final int counter, final int tickToRateRatio) {
+  private static final long tickAndRate(final RateMeter<?> rm, final int counter, final int tickToRateRatio) {//TODO use & instead of %
     if (counter % (tickToRateRatio + 1) == 0) {
-      rate(rm, bh);
+      return rate(rm);
     } else {
       rm.tick(1, nanoTime());
+      return 0;
     }
   }
 
-  private static final void rateAndTick(final RateMeter<?> rm, final Blackhole bh, final int counter, final int rateToTickRatio) {
+  private static final long rateAndTick(final RateMeter<?> rm, final int counter, final int rateToTickRatio) {
     if (counter % (rateToTickRatio + 1) == 0) {
       rm.tick(1, nanoTime());
+      return 0;
     } else {
-      rate(rm, bh);
+      return rate(rm);
     }
   }
 
@@ -769,23 +657,6 @@ public class RateMeterPerformanceTest {
     @Setup(Level.Iteration)
     public final void setup() {
       v = 0;
-    }
-  }
-
-  @State(Scope.Benchmark)
-  public static class ConcurrentContainer_BenchmarkScope {
-    AtomicLong v;
-    AtomicLongArray arr;
-    LongAdder la;
-
-    public ConcurrentContainer_BenchmarkScope() {
-    }
-
-    @Setup(Level.Iteration)
-    public final void setup() {
-      v = new AtomicLong();
-      arr = new AtomicLongArray(1);
-      la = new LongAdder();
     }
   }
 }
