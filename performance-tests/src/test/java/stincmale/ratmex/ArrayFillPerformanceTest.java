@@ -1,6 +1,7 @@
 package stincmale.ratmex;
 
 import java.util.concurrent.TimeUnit;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.openjdk.jmh.annotations.Benchmark;
@@ -19,6 +20,7 @@ import stincmale.ratmex.util.PerformanceTestTag;
  * ArrayFillPerformanceTest.systemArrayCopy  thrpt   15  105.536 ± 1.747  ops/ms
  * }</pre>
  */
+@Disabled
 @Tag(PerformanceTestTag.VALUE)
 public class ArrayFillPerformanceTest {
   private static final int ARRAY_SIZE = 20_000;

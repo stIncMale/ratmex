@@ -2,6 +2,7 @@ package stincmale.ratmex;
 
 import java.math.BigInteger;
 import java.util.concurrent.TimeUnit;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.openjdk.jmh.annotations.Benchmark;
@@ -19,6 +20,7 @@ import stincmale.ratmex.util.PerformanceTestTag;
  * RemainderPerformanceTest.remainderPow2  thrpt   15  2.220 ± 0.022  ops/ms
  * }</pre>
  */
+@Disabled
 @Tag(PerformanceTestTag.VALUE)
 public class RemainderPerformanceTest {//TODO get rid of cycles
   private static final int ITERATIONS = 1_000_000;

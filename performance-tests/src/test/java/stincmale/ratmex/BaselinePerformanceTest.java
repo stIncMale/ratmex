@@ -4,6 +4,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.concurrent.atomic.LongAdder;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.openjdk.jmh.annotations.Benchmark;
@@ -15,7 +16,9 @@ import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import stincmale.ratmex.util.JmhOptions;
 import stincmale.ratmex.util.PerformanceTestTag;
+import static stincmale.ratmex.util.Utils.format;
 
+@Disabled
 @Tag(PerformanceTestTag.VALUE)
 public class BaselinePerformanceTest {
 
@@ -43,90 +46,86 @@ public class BaselinePerformanceTest {
 
   @Test
   public void run_parallel4_throughput() throws RunnerException {
-    new Runner(JmhOptions.get()
-        .include(getClass().getName() + ".(?!serial_).*")
-        .mode(Mode.Throughput)
-        .timeUnit(TimeUnit.MILLISECONDS)
-        .threads(4)
-        .build())
-        .run();
+    run_parallelN_throughput(4);
   }
 
   @Test
   public void run_parallel4_latency() throws RunnerException {
-    new Runner(JmhOptions.get()
-        .include(getClass().getName() + ".(?!serial_).*")
-        .mode(Mode.AverageTime)
-        .timeUnit(TimeUnit.NANOSECONDS)
-        .threads(4)
-        .build())
-        .run();
+    run_parallelN_latency(4);
   }
 
   @Test
   public void run_parallel8_throughput() throws RunnerException {
-    new Runner(JmhOptions.get()
-        .include(getClass().getName() + ".(?!serial_).*")
-        .mode(Mode.Throughput)
-        .timeUnit(TimeUnit.MILLISECONDS)
-        .threads(8)
-        .build())
-        .run();
+    run_parallelN_throughput(8);
   }
 
   @Test
   public void run_parallel8_latency() throws RunnerException {
-    new Runner(JmhOptions.get()
-        .include(getClass().getName() + ".(?!serial_).*")
-        .mode(Mode.AverageTime)
-        .timeUnit(TimeUnit.NANOSECONDS)
-        .threads(8)
-        .build())
-        .run();
+    run_parallelN_latency(8);
   }
 
   @Test
   public void run_parallel16_throughput() throws RunnerException {
-    new Runner(JmhOptions.get()
-        .include(getClass().getName() + ".(?!serial_).*")
-        .mode(Mode.Throughput)
-        .timeUnit(TimeUnit.MILLISECONDS)
-        .threads(16)
-        .build())
-        .run();
+    run_parallelN_throughput(16);
   }
 
   @Test
   public void run_parallel16_latency() throws RunnerException {
-    new Runner(JmhOptions.get()
-        .include(getClass().getName() + ".(?!serial_).*")
-        .mode(Mode.AverageTime)
-        .timeUnit(TimeUnit.NANOSECONDS)
-        .threads(16)
-        .build())
-        .run();
+    run_parallelN_latency(16);
   }
 
   @Test
   public void run_parallel32_throughput() throws RunnerException {
-    new Runner(JmhOptions.get()
-        .include(getClass().getName() + ".(?!serial_).*")
-        .mode(Mode.Throughput)
-        .timeUnit(TimeUnit.MILLISECONDS)
-        .threads(32)
-        .build())
-        .run();
+    run_parallelN_throughput(32);
   }
 
   @Test
   public void run_parallel32_latency() throws RunnerException {
-    new Runner(JmhOptions.get()
-        .include(getClass().getName() + ".(?!serial_).*")
-        .mode(Mode.AverageTime)
-        .timeUnit(TimeUnit.NANOSECONDS)
-        .threads(32)
-        .build())
-        .run();
+    run_parallelN_latency(32);
+  }
+
+  private final void run_parallelN_throughput(final int numberOfThreads) {
+    final int availableProcessors = Runtime.getRuntime().availableProcessors();
+    if (availableProcessors < numberOfThreads) {
+      System.out.println();
+      System.out.println(format("The run was skipped because there are not enough processors. Required %s, available %s",
+              numberOfThreads, availableProcessors));
+      System.out.println();
+    } else {
+      try {
+        new Runner(JmhOptions.get()
+                .include(getClass().getName() + ".(?!serial_).*")
+                .mode(Mode.Throughput)
+                .timeUnit(TimeUnit.MILLISECONDS)
+                .threads(numberOfThreads)
+                .build())
+                .run();
+      } catch (final RunnerException e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+
+  private final void run_parallelN_latency(final int numberOfThreads) {
+    final int availableProcessors = Runtime.getRuntime().availableProcessors();
+    if (availableProcessors < numberOfThreads) {
+      System.out.println();
+      System.out.println(format("The run was skipped because there are not enough processors. Required %s, available %s",
+              numberOfThreads, availableProcessors));
+      System.out.println();
+    } else {
+      try {
+        new Runner(JmhOptions.get()
+                .include(getClass().getName() + ".(?!serial_).*")
+                .mode(Mode.AverageTime)
+                .timeUnit(TimeUnit.NANOSECONDS)
+                .threads(numberOfThreads)
+                .build())
+                .run();
+      } catch (final RunnerException e) {
+        throw new RuntimeException(e);
+      }
+    }
   }
 
   @Benchmark
