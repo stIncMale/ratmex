@@ -5,6 +5,8 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.runner.Runner;
@@ -22,6 +24,7 @@ import stincmale.ratmex.util.PerformanceTestTag;
  */
 @Disabled
 @Tag(PerformanceTestTag.VALUE)
+@TestInstance(Lifecycle.PER_METHOD)
 public class RemainderPerformanceTest {//TODO get rid of cycles
   private static final int ITERATIONS = 1_000_000;
   private static final long DENOMINATOR_POW2 = BigInteger.TWO.pow(10)

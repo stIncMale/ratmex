@@ -4,6 +4,8 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.Scope;
@@ -22,6 +24,7 @@ import stincmale.ratmex.util.PerformanceTestTag;
  */
 @Disabled
 @Tag(PerformanceTestTag.VALUE)
+@TestInstance(Lifecycle.PER_METHOD)
 public class ArrayFillPerformanceTest {
   private static final int ARRAY_SIZE = 20_000;
   private static final long[] arrFilledWithZeros = new long[ARRAY_SIZE];

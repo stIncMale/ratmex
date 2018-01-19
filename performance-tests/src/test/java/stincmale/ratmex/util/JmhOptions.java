@@ -34,7 +34,7 @@ public final class JmhOptions {
       result.forks(3)
           .timeout(milliseconds(10_000))
           .warmupTime(milliseconds(200))
-          .warmupIterations(5)
+          .warmupIterations(7)
           .measurementTime(milliseconds(200))
           .measurementIterations(5);
     }

@@ -21,15 +21,17 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
 import stincmale.ratmex.NanosComparator;
 import stincmale.ratmex.util.ConcurrencyTestTag;
 import stincmale.ratmex.internal.util.Utils;
 import stincmale.ratmex.meter.RateMeterConfig.Builder;
 import static java.time.Duration.ofNanos;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag(ConcurrencyTestTag.VALUE)
+@TestInstance(Lifecycle.PER_METHOD)
 public abstract class AbstractRateMeterConcurrencyTest<B extends Builder, C extends RateMeterConfig> extends AbstractRateMeterTest<B, C> {
   private final int numberOfThreads;
   private ExecutorService ex;
@@ -112,7 +114,10 @@ public abstract class AbstractRateMeterConcurrencyTest<B extends Builder, C exte
         rm.ticksCount(reading)
             .getValueLong(),
         Utils.format("Iteration#%s, %s", iterationIdx, tp));
-    Assertions.assertEquals(tickGenerator.countRightmost(tp.samplesInterval.toNanos()), rm.ticksCount(), Utils.format("Iteration#%s, %s", iterationIdx, tp));
+    Assertions.assertEquals(
+        tickGenerator.countRightmost(tp.samplesInterval.toNanos()),
+        rm.ticksCount(),
+        Utils.format("Iteration#%s, %s", iterationIdx, tp));
     Assertions.assertEquals(rm.ticksCount(reading)
         .getTNanos(), rm.rightSamplesWindowBoundary(), Utils.format("Iteration#%s, %s", iterationIdx, tp));
     Assertions.assertEquals(rm.ticksCount(reading)

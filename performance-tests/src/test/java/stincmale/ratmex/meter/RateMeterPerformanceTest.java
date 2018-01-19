@@ -10,6 +10,8 @@ import java.util.function.Supplier;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Group;
 import org.openjdk.jmh.annotations.GroupThreads;
@@ -29,6 +31,7 @@ import static org.openjdk.jmh.runner.options.TimeValue.milliseconds;
 
 @Disabled
 @Tag(PerformanceTestTag.VALUE)
+@TestInstance(Lifecycle.PER_METHOD)
 public class RateMeterPerformanceTest {
   private static final boolean QUICK = true;
   private static final boolean JAVA_SERVER = true;

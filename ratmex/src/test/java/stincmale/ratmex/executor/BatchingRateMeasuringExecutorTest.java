@@ -23,6 +23,8 @@ import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
 import stincmale.ratmex.meter.LongTicksCounter;
 import stincmale.ratmex.meter.ParkWaitStrategy;
 import stincmale.ratmex.meter.StampedLockStrategy;
@@ -37,6 +39,7 @@ import static java.lang.Math.round;
 import static java.time.Duration.of;
 import static stincmale.ratmex.internal.util.Constants.EXCLUDE_ASSERTIONS_FROM_BYTECODE;
 
+@TestInstance(Lifecycle.PER_METHOD)
 public final class BatchingRateMeasuringExecutorTest {
   public BatchingRateMeasuringExecutorTest() {
   }

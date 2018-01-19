@@ -1,11 +1,14 @@
 package stincmale.ratmex;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static stincmale.ratmex.internal.util.Utils.format;
 
+@TestInstance(Lifecycle.PER_METHOD)
 public final class NanosComparatorTest {
   private static final Sample[] samples = {
       new Sample(Long.MIN_VALUE, Long.MIN_VALUE, CompareResult.EQUAL),

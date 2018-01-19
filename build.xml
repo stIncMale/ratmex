@@ -62,7 +62,8 @@
             <parallel>${ratmex.maven-surefire-plugin.parallel}</parallel>
             <threadCount>5</threadCount>
             <properties>
-              <includeTags>${ratmex.maven-surefire-plugin.includeTags}</includeTags><!-- TODO will not work until https://github.com/junit-team/junit5/issues/809#issuecomment-352654645 -->
+              <includeTags>${ratmex.maven-surefire-plugin.includeTags}
+              </includeTags><!-- TODO will not work until https://github.com/junit-team/junit5/issues/809#issuecomment-352654645 -->
               <excludeTags>${ratmex.maven-surefire-plugin.excludeTags}</excludeTags>
               <argLine>-enableassertions</argLine>
             </properties>
@@ -121,16 +122,15 @@
             <encoding>${ratmex.charset}</encoding>
             <header>
               <![CDATA[
-								<a href="${ratmex.url}">ratmex</a>
-								<br></br>
+								<a href="${ratmex.url}">RatMeX</a><br>
 								Java Source Code Documentation
 							]]>
             </header>
             <footer>
-              <![CDATA[Licensed under <a href="${ratmex.licenseUrl}">${ratmex.licenseName}</a>]]>
+              <![CDATA[Licensed under the <a href="${ratmex.licenseUrl}">${ratmex.licenseName}</a>]]>
             </footer>
             <locale>en</locale>
-            <windowtitle>ratmex Java Source Code Documentation</windowtitle>
+            <windowtitle>RatMeX Java Source Code Documentation</windowtitle>
             <groups>
               <group>
                 <title>All</title>
@@ -197,7 +197,7 @@
       <id>unitTest</id>
       <properties>
         <maven.test.skip>false</maven.test.skip>
-        <ratmex.maven-surefire-plugin.parallel>all</ratmex.maven-surefire-plugin.parallel>
+        <ratmex.maven-surefire-plugin.parallel>classes</ratmex.maven-surefire-plugin.parallel>
         <ratmex.maven-surefire-plugin.includeTags/>
         <ratmex.maven-surefire-plugin.excludeTags>performance, concurrency</ratmex.maven-surefire-plugin.excludeTags>
       </properties>
