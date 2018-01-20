@@ -213,32 +213,30 @@ public abstract class AbstractNavigableMapRateMeter<C extends ConcurrentRateMete
     checkArgument(tNanos, "tNanos");
     if (count != 0) {
       final long rightNanos = rightSamplesWindowBoundary();
-      final long leftHistoryNanos = rightNanos - getConfig().getHistoryLength() * getSamplesIntervalNanos();
+      final long historyDurationNanos = getConfig().getHistoryLength() * getSamplesIntervalNanos();
+      final long leftHistoryNanos = rightNanos - historyDurationNanos;
       if (NanosComparator.compare(leftHistoryNanos, tNanos) < 0) {//tNanos is ahead of or within the samples history
         @Nullable
         final TicksCounter existingSample;
-        final long ticksCountWriteLockStamp;
+        final long ticksCountExclusiveLockStamp;
         if (sequential) {
-          ticksCountWriteLockStamp = 0;
+          ticksCountExclusiveLockStamp = 0;
         } else {
           assert EXCLUDE_ASSERTIONS_FROM_BYTECODE || ticksCountLock != null;
-          /*We acquire the write lock only when see the read lock acquired by tickCount method,
-            which acquires the read lock to prevent concurrently running tick methods from moving the samples window too far.
-            There is a race condition which still may lead to the samples window being moved,
-            though the likelihood of such situation is now much less, and tickCount method expresses failed reads via RateMeterReading*/
-          ticksCountWriteLockStamp = ticksCountLock.isSharedLocked() ? ticksCountLock.lock() : 0;
+          ticksCountExclusiveLockStamp = ticksCountLock.isSharedLocked() ? ticksCountLock.lock() : 0;
         }
         try {
           final long timeSensitivityNanos = getTimeSensitivityNanos();
-          if (timeSensitivityNanos == 1) {
+          if (timeSensitivityNanos == 1) {//TODO remove this if ?
             final TicksCounter newSample = getConfig().getTicksCounterSupplier()
                 .apply(count);
             existingSample = samplesHistory.putIfAbsent(tNanos, newSample);
           } else {
             @Nullable
             final Entry<Long, TicksCounter> existingEntry = samplesHistory.floorEntry(tNanos);
-            if (existingEntry != null && (tNanos - existingEntry.getKey()) <= timeSensitivityNanos) {
-              assert EXCLUDE_ASSERTIONS_FROM_BYTECODE || tNanos - existingEntry.getKey() >= 0;
+            if (existingEntry != null && (tNanos - existingEntry.getKey()) < timeSensitivityNanos) {
+              assert EXCLUDE_ASSERTIONS_FROM_BYTECODE || NanosComparator.compare(existingEntry.getKey()
+                  .longValue(), tNanos) <= 0;
               existingSample = existingEntry.getValue();
             } else {
               final TicksCounter newSample = getConfig().getTicksCounterSupplier()
@@ -247,11 +245,11 @@ public abstract class AbstractNavigableMapRateMeter<C extends ConcurrentRateMete
             }
           }
         } finally {
-          if (ticksCountWriteLockStamp != 0) {
-            ticksCountLock.unlock(ticksCountWriteLockStamp);
+          if (ticksCountExclusiveLockStamp != 0) {
+            ticksCountLock.unlock(ticksCountExclusiveLockStamp);
           }
         }
-        if (existingSample != null) {//we need to merge samples
+        if (existingSample != null) {//we need to merge samples, and this can be safely done outside the exclusive ticksCountLock
           existingSample.add(count);
         }
       }
@@ -399,17 +397,21 @@ public abstract class AbstractNavigableMapRateMeter<C extends ConcurrentRateMete
   }
 
   private final boolean cleanRequired(final long rightSamplesWindowBoundary) {
-    final long samplesWindowShiftNanos;
+    final long shiftNanos;
     if (sequential) {
-      samplesWindowShiftNanos = rightSamplesWindowBoundary - cleanLastRightSamplesWindowBoundary;
+      shiftNanos = rightSamplesWindowBoundary - cleanLastRightSamplesWindowBoundary;
     } else {
-      samplesWindowShiftNanos = rightSamplesWindowBoundary - volatileCleanLastRightSamplesWindowBoundary;
+      shiftNanos = rightSamplesWindowBoundary - volatileCleanLastRightSamplesWindowBoundary;
     }
     final long samplesIntervalNanos = getSamplesIntervalNanos();
-    //cleanRatio belongs to (0; 1], the bigger, the less frequently clean happens, but the older elements are maintained in the samples history
-    final double cleanRatio = 0.3;
-    final double maxRatio = getConfig().getHistoryLength() + cleanRatio;
-    return maxRatio <= (double)samplesWindowShiftNanos / samplesIntervalNanos;
+    final boolean result;
+    if (shiftNanos > samplesIntervalNanos) {
+      final long historyDurationNanos = getConfig().getHistoryLength() * samplesIntervalNanos;
+      result = shiftNanos > (historyDurationNanos / 2);
+    } else {
+      result = false;
+    }
+    return result;
   }
 
   private final void clean(final long rightSamplesWindowBoundary) {
@@ -421,11 +423,12 @@ public abstract class AbstractNavigableMapRateMeter<C extends ConcurrentRateMete
         } else {
           volatileCleanLastRightSamplesWindowBoundary = rightSamplesWindowBoundary;
         }
-        final long leftNanos = rightSamplesWindowBoundary - getConfig().getHistoryLength() * getSamplesIntervalNanos();
+        final long historyDurationNanos = getConfig().getHistoryLength() * getSamplesIntervalNanos();
+        final long leftHistoryNanos = rightSamplesWindowBoundary - historyDurationNanos;
         @Nullable
         final Long firstNanos = samplesHistory.firstKey();
-        if (firstNanos != null && NanosComparator.compare(firstNanos.longValue(), leftNanos) < 0) {
-          samplesHistory.subMap(firstNanos, true, leftNanos, false)//do not delete sample at leftNanos, because we still need it
+        if (firstNanos != null && NanosComparator.compare(firstNanos.longValue(), leftHistoryNanos) < 0) {
+          samplesHistory.subMap(firstNanos, true, leftHistoryNanos, false)
               .clear();
         }
       } finally {

@@ -76,15 +76,12 @@ public class RateMeterConfig {
 
   /**
    * Specifies the length of samples history measured in {@linkplain RateMeter#getSamplesInterval() samplesInterval} units.
-   * Actual samples history duration maintained by {@link RateMeter} must be within
-   * [historyLength * {@linkplain RateMeter#getSamplesInterval() samplesInterval};
-   * (historyLength + 1) * {@linkplain RateMeter#getSamplesInterval() samplesInterval}].
+   * A {@link RateMeter} may choose to maintain samples history longer than specified by this property.
    * <p>
    * Note that the specification of {@link RateMeter} states that any {@link RateMeter}
    * must maintain samples history for at least 2{@linkplain RateMeter#getSamplesInterval() samplesInterval}.
    * <p>
-   * The longer history a {@link RateMeter} maintains, the less likely a measurement can be {@linkplain RateMeterReading#isAccurate() inaccurate},
-   * but the more memory it occupies. Long history may also negatively affect the performance of a {@link RateMeter}.
+   * The longer history a {@link RateMeter} maintains, the less likely a measurement can be {@linkplain RateMeterReading#isAccurate() inaccurate}.
    */
   public final int getHistoryLength() {
     return historyLength;
