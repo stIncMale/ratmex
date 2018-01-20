@@ -8,7 +8,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.Setup;
+import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import stincmale.ratmex.util.JmhOptions;
@@ -16,17 +20,16 @@ import stincmale.ratmex.util.PerformanceTestTag;
 
 /**
  * <pre>{@code
- * Benchmark                                Mode  Cnt  Score   Error   Units
- * RemainderPerformanceTest.bitwise        thrpt   15  2.627 ± 0.020  ops/ms
- * RemainderPerformanceTest.remainder      thrpt   15  1.268 ± 0.019  ops/ms
- * RemainderPerformanceTest.remainderPow2  thrpt   15  2.220 ± 0.022  ops/ms
+ * Benchmark                                   Mode  Cnt    Score    Error   Units
+ * RemainderPerformanceTest.bitwiseRemainder  thrpt   15  387.239 ± 15.700  ops/us
+ * RemainderPerformanceTest.remainder         thrpt   15  300.034 ±  9.423  ops/us
+ * RemainderPerformanceTest.remainderPow2     thrpt   15  343.877 ±  9.826  ops/us
  * }</pre>
  */
 @Disabled
 @Tag(PerformanceTestTag.VALUE)
 @TestInstance(Lifecycle.PER_METHOD)
-public class RemainderPerformanceTest {//TODO get rid of cycles
-  private static final int ITERATIONS = 1_000_000;
+public class RemainderPerformanceTest {
   private static final long DENOMINATOR_POW2 = BigInteger.TWO.pow(10)
       .longValueExact();
   private static final long BITWISE_DENOMINATOR_POW2 = DENOMINATOR_POW2 - 1;
@@ -39,35 +42,36 @@ public class RemainderPerformanceTest {//TODO get rid of cycles
   public void run() throws RunnerException {
     new Runner(JmhOptions.includingClass(getClass())
         .mode(Mode.Throughput)
-        .timeUnit(TimeUnit.MILLISECONDS)
+        .timeUnit(TimeUnit.MICROSECONDS)
         .build())
         .run();
   }
 
   @Benchmark
-  public long remainder() {
-    long s = 0;
-    for (int i = 1; i < ITERATIONS; i++) {
-      s += i % DENOMINATOR;
-    }
-    return s;
+  public long remainder(final ThreadState state) {
+    return (state.counter++) % DENOMINATOR;
   }
 
   @Benchmark
-  public long remainderPow2() {
-    long s = 0;
-    for (int i = 1; i < ITERATIONS; i++) {
-      s += i % DENOMINATOR_POW2;
-    }
-    return s;
+  public long remainderPow2(final ThreadState state) {
+    return (state.counter++) % DENOMINATOR_POW2;
   }
 
   @Benchmark
-  public long bitwise() {
-    long s = 0;
-    for (int i = 1; i < ITERATIONS; i++) {
-      s += i & BITWISE_DENOMINATOR_POW2;
+  public long bitwiseRemainder(final ThreadState state) {
+    return (state.counter++) & BITWISE_DENOMINATOR_POW2;
+  }
+
+  @State(Scope.Thread)
+  public static class ThreadState {
+    private long counter;
+
+    public ThreadState() {
     }
-    return s;
+
+    @Setup(Level.Iteration)
+    public final void setup() {
+      counter = 0;
+    }
   }
 }
