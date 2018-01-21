@@ -8,15 +8,6 @@ import javax.annotation.concurrent.ThreadSafe;
 /**
  * A thread-safe implementation of {@link AbstractRingBufferRateMeter},
  * which uses {@link AtomikLongArray} implementation of {@link LongArray} (this might be changed in the future).
- * <p>
- * There are two modes:
- * <ul>
- * <li>strict (default) - {@link ConcurrentRateMeterConfig#isStrictTick()} is true.</li>
- * <li>relaxed (recommended) - {@link ConcurrentRateMeterConfig#isStrictTick()} is false.
- * Displays much better performance in terms of both throughput and latency,
- * and does not {@linkplain ConcurrentRateMeterStats#incorrectlyRegisteredTicksEventsCount() fail to correctly register} ticks
- * with {@link #tick(long, long)} in reasonable practical situations in spite of allowing such incorrectness in theory.</li>
- * </ul>
  */
 @ThreadSafe
 public final class ConcurrentRingBufferRateMeter extends AbstractRingBufferRateMeter<ConcurrentRateMeterStats, ConcurrentRateMeterConfig> {

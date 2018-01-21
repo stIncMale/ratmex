@@ -23,6 +23,15 @@ import static stincmale.ratmex.internal.util.Utils.format;
  * This implementation of {@link RateMeter} uses a ring buffer with the underlying {@link LongArray}
  * to store and access a samples history.
  * <p>
+ * There are two modes in thread-safe implementation:
+ * <ul>
+ * <li>strict (default) - {@link ConcurrentRateMeterConfig#isStrictTick()} is true.</li>
+ * <li>relaxed (recommended) - {@link ConcurrentRateMeterConfig#isStrictTick()} is false.
+ * Displays much better performance in terms of both throughput and latency,
+ * and does not {@linkplain ConcurrentRateMeterStats#incorrectlyRegisteredTicksEventsCount() fail to correctly register} ticks
+ * with {@link #tick(long, long)} in reasonable practical situations in spite of allowing such incorrectness in theory.</li>
+ * </ul>
+ * <p>
  * <i>Advantages</i><br>
  * <ul>
  * <li>Unlike {@link AbstractNavigableMapRateMeter}, this implementation does not produces garbage,
