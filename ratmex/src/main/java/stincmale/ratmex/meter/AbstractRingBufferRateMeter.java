@@ -302,9 +302,18 @@ public abstract class AbstractRingBufferRateMeter<S, C extends ConcurrentRateMet
           final long ticksCountExclusiveLockStamp = ticksCountLock.isSharedLocked() ? ticksCountLock.lock() : 0;
           while (shiftSteps < targetShiftSteps) {//try moving the samples window
             final long ticksAccumulateExclusiveLockStamp = ticksAccumulateLock == null ? 0 : ticksAccumulateLock.lock();
-            try {//TODO improve for locked scenario
-              //the only place where we change atomicSamplesWindowShiftSteps
-              moved = atomicSamplesWindowShiftSteps.compareAndSet(shiftSteps, targetShiftSteps);
+            try {
+              //this if-else block is the only place where we change atomicSamplesWindowShiftSteps
+              if (ticksAccumulateExclusiveLockStamp != 0) {//we are keeping an exclusive lock, hence can use get&set instead of compareAndSet
+                shiftSteps = atomicSamplesWindowShiftSteps.get();
+                if (shiftSteps < targetShiftSteps) {
+                  assert EXCLUDE_ASSERTIONS_FROM_BYTECODE || shiftSteps == atomicSamplesWindowShiftSteps.get();
+                  atomicSamplesWindowShiftSteps.set(targetShiftSteps);
+                  moved = true;
+                }
+              } else {
+                moved = atomicSamplesWindowShiftSteps.compareAndSet(shiftSteps, targetShiftSteps);
+              }
             } finally {
               if (ticksAccumulateExclusiveLockStamp != 0) {
                 ticksAccumulateLock.unlock(ticksAccumulateExclusiveLockStamp);
@@ -325,6 +334,7 @@ public abstract class AbstractRingBufferRateMeter<S, C extends ConcurrentRateMet
               waitStrategy.await(() -> waitForCompletedWindowShiftSteps <= completedSamplesWindowShiftSteps);//"serializing waiting condition"
               /*We are going to reset some (or all) samples because we need to reuse them (this is a ring buffer).
                 Note that no other threads can concurrently reset samples because they are waiting on the "serializing waiting condition" above.*/
+              //this if-else block is the only place where we change completedSamplesWindowShiftSteps
               if (numberOfSteps <= historyLength) {//samples history is shifting step by step
                 reset(shiftSteps + 1,
                     (int)numberOfSteps,//it's safe to cast to int
@@ -337,7 +347,6 @@ public abstract class AbstractRingBufferRateMeter<S, C extends ConcurrentRateMet
               } else {//shift samples history with a single leap
                 resetAll(targetIdx, count);
                 assert EXCLUDE_ASSERTIONS_FROM_BYTECODE || shiftSteps == completedSamplesWindowShiftSteps;
-                //this and the above if block are the only places where we change completedSamplesWindowShiftSteps
                 completedSamplesWindowShiftSteps = targetShiftSteps;//complete all steps at once (leap)
               }
             } else {
