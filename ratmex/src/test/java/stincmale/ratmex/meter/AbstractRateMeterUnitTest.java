@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestInstance(Lifecycle.PER_METHOD)
-public abstract class AbstractRateMeterUnitTest<B extends Builder, C extends RateMeterConfig> extends AbstractRateMeterTest<B, C> {
+abstract class AbstractRateMeterUnitTest<B extends Builder, C extends RateMeterConfig> extends AbstractRateMeterTest<B, C> {
   protected AbstractRateMeterUnitTest(final Supplier<B> rateMeterConfigBuilderSupplier, final RateMeterCreator<C> rateMeterCreator) {
     super(rateMeterConfigBuilderSupplier, rateMeterCreator);
   }
@@ -338,10 +338,7 @@ public abstract class AbstractRateMeterUnitTest<B extends Builder, C extends Rat
         .get()
         .setTimeSensitivity(timeSensitivity)
         .build();
-    return getRateMeterCreator().create(
-        startNanos,
-        samplesInterval,
-        rateMeterConfig);
+    return getRateMeterCreator().create(startNanos, samplesInterval, rateMeterConfig);
   }
 
   private static final void assertDoubleEquals(final double expected, final double actual) {

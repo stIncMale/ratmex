@@ -7,7 +7,7 @@ import static org.openjdk.jmh.runner.options.TimeValue.milliseconds;
 
 @NotThreadSafe
 public final class JmhOptions {
-  private static final boolean DRY_RUN = false;
+  public static final boolean DRY_RUN = true;
   private static final boolean JAVA_SERVER = true;
   private static final boolean JAVA_ASSERTIONS = false;
 
@@ -19,7 +19,7 @@ public final class JmhOptions {
     final ChainedOptionsBuilder result = new OptionsBuilder()
         .jvmArgsAppend(JAVA_SERVER ? "-server" : "-client")
         .jvmArgsAppend(JAVA_ASSERTIONS ? "-enableassertions" : "-disableassertions")
-        .shouldDoGC(false)
+        .shouldDoGC(true)
         .syncIterations(true)
         .shouldFailOnError(true)
         .threads(1);
@@ -32,7 +32,7 @@ public final class JmhOptions {
           .measurementIterations(1);
     } else {
       result.forks(3)
-          .timeout(milliseconds(10_000))
+          .timeout(milliseconds(5_000))
           .warmupTime(milliseconds(200))
           .warmupIterations(7)
           .measurementTime(milliseconds(200))

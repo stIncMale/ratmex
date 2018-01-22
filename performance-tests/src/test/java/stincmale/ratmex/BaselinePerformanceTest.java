@@ -3,9 +3,12 @@ package stincmale.ratmex;
 import java.awt.Color;
 import java.io.IOException;
 import java.util.AbstractMap.SimpleImmutableEntry;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -14,6 +17,7 @@ import java.util.concurrent.atomic.LongAdder;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -40,60 +44,21 @@ import stincmale.ratmex.util.PerformanceTestTag;
 import static stincmale.ratmex.util.Utils.format;
 import static stincmale.ratmex.util.Utils.isHeadless;
 
+@Disabled
 @Tag(PerformanceTestTag.VALUE)
 @TestInstance(Lifecycle.PER_METHOD)
 public class BaselinePerformanceTest {
+  private static final Set<Integer> numbersOfThreads = new HashSet<>(Arrays.asList(1, 2, 4, 8, 16, 32));
+
   public BaselinePerformanceTest() {
   }
 
   @Test
-  public void run_serial_throughput() {
-    run_throughput(1);
-  }
-
-  @Test
-  public void run_serial_latency() {
-    run_latency(1);
-  }
-
-  @Test
-  public void run_parallel4_throughput() throws RunnerException {
-    run_throughput(4);
-  }
-
-  @Test
-  public void run_parallel4_latency() throws RunnerException {
-    run_latency(4);
-  }
-
-  @Test
-  public void run_parallel8_throughput() throws RunnerException {
-    run_throughput(8);
-  }
-
-  @Test
-  public void run_parallel8_latency() throws RunnerException {
-    run_latency(8);
-  }
-
-  @Test
-  public void run_parallel16_throughput() throws RunnerException {
-    run_throughput(16);
-  }
-
-  @Test
-  public void run_parallel16_latency() throws RunnerException {
-    run_latency(16);
-  }
-
-  @Test
-  public void run_parallel32_throughput() throws RunnerException {
-    run_throughput(32);
-  }
-
-  @Test
-  public void run_parallel32_latency() throws RunnerException {
-    run_latency(32);
+  public void run() {
+    for (int numberOfThreads : numbersOfThreads) {
+      runThroughput(numberOfThreads);
+      runLatency(numberOfThreads);
+    }
   }
 
   @Benchmark
@@ -144,51 +109,33 @@ public class BaselinePerformanceTest {
     }
   }
 
-  private final void run_throughput(final int numberOfThreads) {
-    final int availableProcessors = Runtime.getRuntime()
-        .availableProcessors();
-    if (availableProcessors < 0) {
-      System.out.println();
-      System.out.println(format("The run was skipped because there are not enough processors. Required %s, available %s.",
-          numberOfThreads, availableProcessors));
-      System.out.println();
-    } else {
-      try {
-        throughputRunResults.put(numberOfThreads, new Runner(JmhOptions.get()
-            .include(getClass().getName() + ".(?!granularity).*")
-            .mode(Mode.Throughput)
-            .timeUnit(TimeUnit.MICROSECONDS)
-            .threads(numberOfThreads)
-            .build())
-            .run());
-      } catch (final RunnerException e) {
-        throw new RuntimeException(e);
-      }
+  private final void runThroughput(final int numberOfThreads) {
+    try {
+      throughputRunResults.put(numberOfThreads, new Runner(JmhOptions.get()
+          .include(getClass().getName() + ".(?!granularity).*")
+          .mode(Mode.Throughput)
+          .timeUnit(TimeUnit.MICROSECONDS)
+          .threads(numberOfThreads)
+          .build())
+          .run());
+    } catch (final RunnerException e) {
+      throw new RuntimeException(e);
     }
   }
 
-  private final void run_latency(final int numberOfThreads) {
-    final int availableProcessors = Runtime.getRuntime()
-        .availableProcessors();
-    if (availableProcessors < 0) {
-      System.out.println();
-      System.out.println(format("The run was skipped because there are not enough processors. Required %s, available %s.",
-          numberOfThreads, availableProcessors));
-      System.out.println();
-    } else {
-      try {
-        latencyRunResults.put(numberOfThreads, new Runner(JmhOptions.get()
-            .include(numberOfThreads == 1
-                ? getClass().getName() + ".*"
-                : getClass().getName() + ".(?!granularity).*")
-            .mode(Mode.AverageTime)
-            .timeUnit(TimeUnit.NANOSECONDS)
-            .threads(numberOfThreads)
-            .build())
-            .run());
-      } catch (final RunnerException e) {
-        throw new RuntimeException(e);
-      }
+  private final void runLatency(final int numberOfThreads) {
+    try {
+      latencyRunResults.put(numberOfThreads, new Runner(JmhOptions.get()
+          .include(numberOfThreads == 1
+              ? getClass().getName() + ".*"
+              : getClass().getName() + ".(?!granularity).*")
+          .mode(Mode.AverageTime)
+          .timeUnit(TimeUnit.NANOSECONDS)
+          .threads(numberOfThreads)
+          .build())
+          .run());
+    } catch (final RunnerException e) {
+      throw new RuntimeException(e);
     }
   }
 

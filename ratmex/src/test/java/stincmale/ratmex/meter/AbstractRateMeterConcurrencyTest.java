@@ -19,20 +19,17 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import stincmale.ratmex.NanosComparator;
-import stincmale.ratmex.util.ConcurrencyTestTag;
 import stincmale.ratmex.internal.util.Utils;
 import stincmale.ratmex.meter.RateMeterConfig.Builder;
 import static java.time.Duration.ofNanos;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Tag(ConcurrencyTestTag.VALUE)
 @TestInstance(Lifecycle.PER_METHOD)
-public abstract class AbstractRateMeterConcurrencyTest<B extends Builder, C extends RateMeterConfig> extends AbstractRateMeterTest<B, C> {
+abstract class AbstractRateMeterConcurrencyTest<B extends Builder, C extends RateMeterConfig> extends AbstractRateMeterTest<B, C> {
   private final int numberOfThreads;
   private ExecutorService ex;
 
