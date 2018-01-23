@@ -4,10 +4,13 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -27,8 +30,10 @@ import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.ChainedOptionsBuilder;
 import stincmale.ratmex.util.JmhOptions;
-import stincmale.ratmex.util.PerformanceTestResult;
+import stincmale.ratmex.util.JmhPerformanceTestResult;
 import stincmale.ratmex.util.PerformanceTestTag;
+import stincmale.ratmex.util.PerformanceTestResult;
+import stincmale.ratmex.util.Utils;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.openjdk.jmh.runner.options.TimeValue.milliseconds;
 import static stincmale.ratmex.util.JmhOptions.DRY_RUN;
@@ -38,7 +43,9 @@ import static stincmale.ratmex.util.JmhOptions.DRY_RUN;
 public class RateMeterPerformanceTest {
   private static final long ACCEPTABLE_INCORRECTLY_REGISTERED_TICKS_EVENTS_COUNT_PER_TRIAL = 0;
   private static final Duration samplesInterval = Duration.of(1, ChronoUnit.MILLIS);
-  private static final Set<Integer> numbersOfThreads = new HashSet<>(Arrays.asList(1));
+  private static final Set<Integer> numbersOfThreads = new HashSet<>(Arrays.asList(1, 1));
+  @SuppressWarnings("rawtypes")
+  private static final Class<? extends RateMeter> rateMeterClass = ConcurrentRingBufferRateMeter.class;
   private static final Supplier<ChainedOptionsBuilder> jmhOptions = () -> {
     final ChainedOptionsBuilder result = JmhOptions.get();
     if (!DRY_RUN) {
@@ -50,6 +57,39 @@ public class RateMeterPerformanceTest {
     }
     return result;
   };
+  @SuppressWarnings("rawtypes")
+  private static final Map<Class<? extends RateMeter>, Function<Long, RateMeter<?>>> rateMeterSuppliers;
+
+  static {
+    rateMeterSuppliers = new HashMap<>();
+    rateMeterSuppliers.put(
+        NavigableMapRateMeter.class,
+        startNanos -> new NavigableMapRateMeter(startNanos, samplesInterval, NavigableMapRateMeter.defaultConfig()));
+    rateMeterSuppliers.put(
+        ConcurrentNavigableMapRateMeter.class,
+        startNanos -> new ConcurrentNavigableMapRateMeter(startNanos, samplesInterval, ConcurrentNavigableMapRateMeter.defaultConfig()));
+    rateMeterSuppliers.put(
+        RingBufferRateMeter.class,
+        startNanos -> new RingBufferRateMeter(startNanos, samplesInterval, RingBufferRateMeter.defaultConfig()));
+    rateMeterSuppliers.put(
+        ConcurrentRingBufferRateMeter.class,
+        startNanos -> new ConcurrentRingBufferRateMeter(
+            startNanos,
+            samplesInterval,
+            ConcurrentRingBufferRateMeter.defaultConfig()
+                .toBuilder()
+                //                .setWaitStrategySupplier(YieldWaitStrategy::instance)
+                //                .setLockStrategySupplier(() -> new SpinLockStrategy(YieldWaitStrategy.instance()))
+                //                .setStrictTick(false)
+                .build()));
+    rateMeterSuppliers.put(
+        ConcurrentSimpleRateMeter.class,
+        startNanos -> new ConcurrentSimpleRateMeter<>(
+            rateMeterSuppliers.get(RingBufferRateMeter.class)
+                .apply(startNanos),
+            new StampedLockStrategy()));
+    rateMeterSuppliers.get(rateMeterClass);
+  }
 
   public RateMeterPerformanceTest() {
   }
@@ -103,13 +143,8 @@ public class RateMeterPerformanceTest {
 
     @Setup(Level.Trial)
     public final void setup() {
-      rateMeter = new ConcurrentRingBufferRateMeter(nanoTime(), samplesInterval,
-          ConcurrentRingBufferRateMeter.defaultConfig()
-              .toBuilder()
-              //              .setWaitStrategySupplier(YieldWaitStrategy::instance)
-              //              .setLockStrategySupplier(() -> new SpinLockStrategy(YieldWaitStrategy.instance()))
-              //              .setStrictTick(false)
-              .build());
+      rateMeter = rateMeterSuppliers.get(rateMeterClass)
+          .apply(nanoTime());
     }
 
     @TearDown(Level.Trial)
@@ -136,7 +171,12 @@ public class RateMeterPerformanceTest {
 
   @AfterAll
   public static final void afterAll() {
-    new PerformanceTestResult(RateMeterPerformanceTest.class.getSimpleName(), RateMeterPerformanceTest.class, runResults).export();
+    final String testName = rateMeterClass.getSimpleName() + "PerformanceTest";
+    new JmhPerformanceTestResult(testName, RateMeterPerformanceTest.class, runResults).save();
+    if (!Utils.isHeadless()) {
+      final PerformanceTestResult ptr = new PerformanceTestResult(testName, RateMeterPerformanceTest.class)
+          .load();
+    }
   }
 
   private final void runThroughput(final int numberOfThreads) {

@@ -1,8 +1,6 @@
 package stincmale.ratmex.util;
 
-import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
-import java.awt.HeadlessException;
 import java.util.Locale;
 
 public final class Utils {
@@ -11,21 +9,9 @@ public final class Utils {
   }
 
   public static final boolean isHeadless() {
-    boolean result;
-    if (GraphicsEnvironment.isHeadless() ||
+    return GraphicsEnvironment.isHeadless() ||
         GraphicsEnvironment.getLocalGraphicsEnvironment()
-            .isHeadlessInstance()) {
-      result = true;
-    } else {
-      try {
-        final GraphicsDevice[] screenDevices = GraphicsEnvironment.getLocalGraphicsEnvironment()
-            .getScreenDevices();
-        result = screenDevices.length == 0;
-      } catch (final HeadlessException e) {
-        result = true;
-      }
-    }
-    return result;
+            .isHeadlessInstance();
   }
 
   private Utils() {
