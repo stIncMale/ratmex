@@ -13,14 +13,14 @@ import static java.nio.file.attribute.PosixFilePermission.OWNER_WRITE;
 import static java.nio.file.attribute.PosixFilePermissions.asFileAttribute;
 
 class AbstractPerformanceTestResult {
-  private final String testName;
+  private final String testId;
   private final Class<?> testClass;
   private final Path path;
 
-  protected AbstractPerformanceTestResult(final String testName, final Class<?> testClass) {
-    this.testName = testName;
+  protected AbstractPerformanceTestResult(final String testId, final Class<?> testClass) {
+    this.testId = testId;
     this.testClass = testClass;
-    path = getDirectoryPath(testClass).resolve(testName + ".json");
+    path = getDirectoryPath(testClass).resolve(testId + ".json");
   }
 
   protected final Path getPath() {
@@ -30,7 +30,7 @@ class AbstractPerformanceTestResult {
   @Override
   public String toString() {
     return getClass().getSimpleName() +
-        "{testName='" + testName +
+        "{testId='" + testId +
         ", testClass=" + testClass +
         ", path=" + path +
         '}';
@@ -43,7 +43,8 @@ class AbstractPerformanceTestResult {
   }
 
   private static final Path getBasePath(final Class<?> klass) {
-    final String packageName = klass.getPackageName();
+    final String packageName = klass.getPackage()
+        .getName();
     final long numberOfHopsToBaseDirectory = 2 + packageName.codePoints()
         .filter(codePoint -> codePoint == '.')
         .count();

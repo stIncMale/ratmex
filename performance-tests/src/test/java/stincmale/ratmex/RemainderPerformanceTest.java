@@ -30,7 +30,8 @@ import stincmale.ratmex.util.PerformanceTestTag;
 @Tag(PerformanceTestTag.VALUE)
 @TestInstance(Lifecycle.PER_METHOD)
 public class RemainderPerformanceTest {
-  private static final long DENOMINATOR_POW2 = BigInteger.TWO.pow(10)
+  private static final long DENOMINATOR_POW2 = BigInteger.valueOf(2)
+      .pow(10)
       .longValueExact();
   private static final long BITWISE_DENOMINATOR_POW2 = DENOMINATOR_POW2 - 1;
   private static final long DENOMINATOR = BITWISE_DENOMINATOR_POW2 - 1;

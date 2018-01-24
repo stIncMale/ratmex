@@ -17,8 +17,8 @@ import static java.nio.file.StandardOpenOption.WRITE;
 public final class JmhPerformanceTestResult extends AbstractPerformanceTestResult {
   private final Collection<RunResult> runResults;
 
-  public JmhPerformanceTestResult(final String testName, final Class<?> testClass, final Collection<? extends RunResult> runResults) {
-    super(testName, testClass);
+  public JmhPerformanceTestResult(final String testId, final Class<?> testClass, final Collection<? extends RunResult> runResults) {
+    super(testId, testClass);
     this.runResults = Collections.unmodifiableCollection(runResults);
   }
 

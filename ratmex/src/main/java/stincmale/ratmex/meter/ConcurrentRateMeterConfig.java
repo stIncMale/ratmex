@@ -94,7 +94,7 @@ public class ConcurrentRateMeterConfig extends RateMeterConfig {
    *
    * @see ConcurrentRateMeterStats#incorrectlyRegisteredTicksEventsCount()
    */
-  public final boolean isStrictTick() {
+  public final boolean isStrictTick() {//TODO refactor to enum; make relaxed mode the default option
     return strictTick;
   }
 

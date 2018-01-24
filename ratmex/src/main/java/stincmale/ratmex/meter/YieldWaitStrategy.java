@@ -25,7 +25,7 @@ public final class YieldWaitStrategy implements WaitStrategy {
   public final void await(final BooleanSupplier condition) {
     Preconditions.checkNotNull(condition, "condition");
     while (!condition.getAsBoolean()) {
-      Thread.onSpinWait();
+      //      Thread.onSpinWait(); TODO multi-release JAR ?
       Thread.yield();
     }
   }
