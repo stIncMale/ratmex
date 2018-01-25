@@ -20,6 +20,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
+import stincmale.ratmex.meter.ConcurrentRateMeterConfig.Mode;
 import stincmale.ratmex.meter.ConcurrentRateMeterStats;
 import stincmale.ratmex.meter.ConcurrentRingBufferRateMeter;
 import stincmale.ratmex.meter.RateMeter;
@@ -81,7 +82,7 @@ public class SubmitterWorkerRateMeasuringExecutorService
             targetRate.getUnit(),
             ConcurrentRingBufferRateMeter.defaultConfig()
                 .toBuilder()
-                .setStrictTick(false)
+                .setMode(Mode.RELAXED_TICKS)
                 .setCollectStats(true)
                 .build()))
         .setRateListener(defaultRateListenerInstance());

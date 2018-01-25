@@ -8,6 +8,7 @@ import java.util.function.LongConsumer;
 import javax.annotation.Nullable;
 import stincmale.ratmex.internal.util.ConversionsAndChecks;
 import stincmale.ratmex.internal.util.Preconditions;
+import stincmale.ratmex.meter.ConcurrentRateMeterConfig.Mode;
 import static java.lang.Math.addExact;
 import static java.lang.Math.min;
 import static stincmale.ratmex.internal.util.Constants.EXCLUDE_ASSERTIONS_FROM_BYTECODE;
@@ -23,13 +24,18 @@ import static stincmale.ratmex.internal.util.Utils.format;
  * This implementation of {@link RateMeter} uses a ring buffer with the underlying {@link LongArray}
  * to store and access a samples history.
  * <p>
- * There are two modes in thread-safe implementation:
+ * There are two {@linkplain ConcurrentRateMeterConfig.Mode modes} in thread-safe implementation:
  * <ul>
- * <li>strict (default) - {@link ConcurrentRateMeterConfig#isStrictTick()} is true.</li>
- * <li>relaxed (recommended) - {@link ConcurrentRateMeterConfig#isStrictTick()} is false.
- * Displays much better performance in terms of both throughput and latency,
- * and does not {@linkplain ConcurrentRateMeterStats#incorrectlyRegisteredTicksEventsCount() fail to correctly register} ticks
- * with {@link #tick(long, long)} in reasonable practical situations in spite of allowing such incorrectness in theory.</li>
+ * <li>{@link ConcurrentRateMeterConfig.Mode#STRICT} (default)</li>
+ * <li>{@link ConcurrentRateMeterConfig.Mode#RELAXED_TICKS} (strongly recommended) - {@link ConcurrentRateMeterConfig#getMode()} is false.
+ * Displays much better performance in terms of both throughput and latency than in {@link ConcurrentRateMeterConfig.Mode#STRICT} mode,
+ * and yet manages to correctly {@linkplain #tick(long, long) register} all ticks in practice
+ * (the greater the {@linkplain ConcurrentRateMeterConfig#getHistoryLength() samples history length} the less probable an incorrect registration).
+ * <p>
+ * The number of situations in which {@link AbstractRingBufferRateMeter} might have incorrectly registered ticks can be accessed via
+ * {@link ConcurrentRateMeterStats#incorrectlyRegisteredTicksEventsCount()}.
+ * If this method returns 0, then it is guaranteed that all ticks which registrations happened before the invocation of the method
+ * were registered correctly.</li>
  * </ul>
  * <p>
  * <i>Advantages</i><br>
@@ -123,7 +129,7 @@ public abstract class AbstractRingBufferRateMeter<S, C extends ConcurrentRateMet
     } else {
       ticksCountLock = config.getLockStrategySupplier()
           .get();
-      if (config.isStrictTick()) {
+      if (config.getMode() == Mode.STRICT) {
         ticksAccumulateLock = config.getLockStrategySupplier()
             .get();
       } else {
@@ -528,7 +534,7 @@ public abstract class AbstractRingBufferRateMeter<S, C extends ConcurrentRateMet
    * when there is a chance that it might have failed to correctly register ticks.
    * Such a failure can only happen if this object is being used concurrently
    * (see {@link #AbstractRingBufferRateMeter(long, Duration, ConcurrentRateMeterConfig, Function, boolean)})
-   * and {@link ConcurrentRateMeterConfig#isStrictTick()} is false.
+   * and {@link ConcurrentRateMeterConfig#getMode()} is false.
    */
   protected void registerIncorrectlyRegisteredTicksEvent() {
   }

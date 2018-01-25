@@ -25,6 +25,7 @@ import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
+import stincmale.ratmex.meter.ConcurrentRateMeterConfig.Mode;
 import stincmale.ratmex.meter.LongTicksCounter;
 import stincmale.ratmex.meter.ParkWaitStrategy;
 import stincmale.ratmex.meter.StampedLockStrategy;
@@ -142,7 +143,7 @@ public final class BatchingRateMeasuringExecutorTest {
             .build());
     final ConcurrentRateMeterConfig.Builder concurrentRmCfgBuilder = ConcurrentRingBufferRateMeter.defaultConfig()
         .toBuilder()
-        .setStrictTick(false)
+        .setMode(Mode.RELAXED_TICKS)
         .setLockStrategySupplier(StampedLockStrategy::new)
         .setWaitStrategySupplier(ParkWaitStrategy::defaultInstance);
     concurrentRmCfgBuilder.setCollectStats(true)

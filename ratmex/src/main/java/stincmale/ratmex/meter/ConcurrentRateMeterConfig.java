@@ -19,7 +19,7 @@ import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;
  * <li>{@link #getTicksCounterSupplier()} - {@link LongAdderTicksCounter}{@code ::}{@link LongAdderTicksCounter#LongAdderTicksCounter(long) new}</li>
  * <li>{@link #getHistoryLength()} - 30</li>
  * <li>{@link #getMaxTicksCountAttempts()} - 6</li>
- * <li>{@link #isStrictTick()} - true</li>
+ * <li>{@link #getMode()} - {@link Mode#STRICT}</li>
  * <li>{@link #isCollectStats()} - false</li>
  * <li>{@link #getWaitStrategySupplier()} - {@link ParkWaitStrategy}{@code ::}{@link ParkWaitStrategy#defaultInstance() defaultInstance}</li>
  * <li>{@link #getLockStrategySupplier()} - {@link StampedLockStrategy}{@code ::}{@link StampedLockStrategy#StampedLockStrategy new}</li>
@@ -28,7 +28,7 @@ import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;
 @Immutable
 public class ConcurrentRateMeterConfig extends RateMeterConfig {
   private final int maxTicksCountAttempts;
-  private final boolean strictTick;
+  private final Mode mode;
   private final boolean collectStats;
   private final Supplier<? extends WaitStrategy> waitStrategySupplier;
   private final Supplier<? extends LockStrategy> lockStrategySupplier;
@@ -38,7 +38,7 @@ public class ConcurrentRateMeterConfig extends RateMeterConfig {
    * @param timeSensitivity See {@link RateMeterConfig#RateMeterConfig(Function, Duration, int)}.
    * @param historyLength See {@link RateMeterConfig#RateMeterConfig(Function, Duration, int)}.
    * @param maxTicksCountAttempts See {@link Builder#setMaxTicksCountAttempts(int)}.
-   * @param strictTick See {@link Builder#setStrictTick(boolean)}.
+   * @param mode See {@link Builder#setMode(Mode)}.
    * @param collectStats See {@link Builder#setCollectStats(boolean)}.
    * @param waitStrategySupplier See {@link Builder#setWaitStrategySupplier(Supplier)}.
    * @param lockStrategySupplier See {@link Builder#setLockStrategySupplier(Supplier)}.
@@ -48,7 +48,7 @@ public class ConcurrentRateMeterConfig extends RateMeterConfig {
       @Nullable final Duration timeSensitivity,
       final int historyLength,
       final int maxTicksCountAttempts,
-      final boolean strictTick,
+      final Mode mode,
       final boolean collectStats,
       final Supplier<? extends WaitStrategy> waitStrategySupplier,
       final Supplier<? extends LockStrategy> lockStrategySupplier) {
@@ -60,7 +60,7 @@ public class ConcurrentRateMeterConfig extends RateMeterConfig {
     checkNotNull(waitStrategySupplier, "waitStrategySupplier");
     checkNotNull(lockStrategySupplier, "lockStrategySupplier");
     this.maxTicksCountAttempts = maxTicksCountAttempts;
-    this.strictTick = strictTick;
+    this.mode = mode;
     this.collectStats = collectStats;
     this.waitStrategySupplier = waitStrategySupplier;
     this.lockStrategySupplier = lockStrategySupplier;
@@ -89,13 +89,12 @@ public class ConcurrentRateMeterConfig extends RateMeterConfig {
   }
 
   /**
-   * Specifies if {@link ConcurrentRingBufferRateMeter} (or any other {@link RateMeter} which explicitly says it does this)
-   * must guarantee a strict behavior of {@link RateMeter#tick(long, long)} method.
+   * Specifies a {@linkplain Mode mode} of a {@link RateMeter}.
    *
    * @see ConcurrentRateMeterStats#incorrectlyRegisteredTicksEventsCount()
    */
-  public final boolean isStrictTick() {//TODO refactor to enum; make relaxed mode the default option
-    return strictTick;
+  public final Mode getMode() {
+    return mode;
   }
 
   /**
@@ -126,7 +125,7 @@ public class ConcurrentRateMeterConfig extends RateMeterConfig {
         ", timeSensitivity=" + getTimeSensitivity().orElse(null) +
         ", historyLength=" + getHistoryLength() +
         ", maxTicksCountAttempts=" + maxTicksCountAttempts +
-        ", strictTick=" + strictTick +
+        ", mode=" + mode +
         ", collectStats=" + collectStats +
         ", waitStrategySupplier=" + waitStrategySupplier +
         ", lockStrategySupplier=" + lockStrategySupplier +
@@ -136,7 +135,7 @@ public class ConcurrentRateMeterConfig extends RateMeterConfig {
   @NotThreadSafe
   public static class Builder extends RateMeterConfig.Builder {
     protected int maxTicksCountAttempts;
-    protected boolean strictTick;
+    protected Mode mode;
     protected boolean collectStats;
     protected Supplier<? extends WaitStrategy> waitStrategySupplier;
     protected Supplier<? extends LockStrategy> lockStrategySupplier;
@@ -145,7 +144,7 @@ public class ConcurrentRateMeterConfig extends RateMeterConfig {
       ticksCounterSupplier = LongAdderTicksCounter::new;
       historyLength = 30;
       maxTicksCountAttempts = 6;
-      strictTick = true;
+      mode = Mode.STRICT;
       collectStats = false;
       waitStrategySupplier = ParkWaitStrategy::defaultInstance;
       lockStrategySupplier = StampedLockStrategy::new;
@@ -158,7 +157,7 @@ public class ConcurrentRateMeterConfig extends RateMeterConfig {
       checkNotNull(config, "config");
       set((RateMeterConfig)config);
       maxTicksCountAttempts = config.getMaxTicksCountAttempts();
-      strictTick = config.isStrictTick();
+      mode = config.getMode();
       collectStats = config.isCollectStats();
       waitStrategySupplier = config.getWaitStrategySupplier();
       lockStrategySupplier = config.getLockStrategySupplier();
@@ -177,10 +176,12 @@ public class ConcurrentRateMeterConfig extends RateMeterConfig {
     }
 
     /**
-     * @see ConcurrentRateMeterConfig#isStrictTick()
+     * @param mode Must not be null.
+     *
+     * @see ConcurrentRateMeterConfig#getMode()
      */
-    public final Builder setStrictTick(final boolean strictTick) {
-      this.strictTick = strictTick;
+    public final Builder setMode(final Mode mode) {
+      this.mode = mode;
       return this;
     }
 
@@ -221,10 +222,31 @@ public class ConcurrentRateMeterConfig extends RateMeterConfig {
           timeSensitivity,
           historyLength,
           maxTicksCountAttempts,
-          strictTick,
+          mode,
           collectStats,
           waitStrategySupplier,
           lockStrategySupplier);
     }
+  }
+
+  /**
+   * A mode of {@link RateMeter}.
+   * Implementations must specify supported modes and should explain semantics.
+   */
+  public enum Mode {
+    /**
+     * In this mode {@link RateMeter} is allowed to {@linkplain RateMeter#tick(long, long) register} ticks incorrectly
+     * (i.e. either loose some ticks, or register them at the incorrect instant).
+     * Such a relaxation may allow an implementation to display drastically better performance.
+     * <p>
+     * Implementations should provide information about such incorrect registrations on the best effort basis
+     * (e.g. via {@linkplain ConcurrentRateMeterStats#incorrectlyRegisteredTicksEventsCount()}).
+     */
+    RELAXED_TICKS,
+    /**
+     * A default mode.
+     * In this mode {@link RateMeter} is guaranteed to correctly {@linkplain RateMeter#tick(long, long) register} all ticks.
+     */
+    STRICT
   }
 }

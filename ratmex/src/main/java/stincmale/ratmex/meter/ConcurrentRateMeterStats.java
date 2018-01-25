@@ -9,8 +9,10 @@ import javax.annotation.concurrent.ThreadSafe;
 @ThreadSafe
 public interface ConcurrentRateMeterStats {
   /**
-   * @return The number of situations
-   * when {@link RateMeter} might have {@linkplain RateMeter#tick(long, long) registered ticks} at an incorrect instant.
+   * @return The number of situations in which
+   * {@link RateMeter} might have {@linkplain RateMeter#tick(long, long) registered ticks} at an incorrect instant, or just lost ticks.
+   *
+   * @see ConcurrentRateMeterConfig.Mode#RELAXED_TICKS
    */
   long incorrectlyRegisteredTicksEventsCount();
 }
