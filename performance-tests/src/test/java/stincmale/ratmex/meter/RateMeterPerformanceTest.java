@@ -2,6 +2,7 @@ package stincmale.ratmex.meter;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -15,7 +16,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
@@ -40,8 +40,6 @@ import stincmale.ratmex.util.PerformanceTestResult;
 import stincmale.ratmex.util.Utils;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.openjdk.jmh.runner.options.TimeValue.milliseconds;
-import static stincmale.ratmex.meter.RateMeterPerformanceTest.TestDescriptor.NAVIGABLE_MAP_RATE_METER_DEFAULT;
-import static stincmale.ratmex.meter.RateMeterPerformanceTest.TestDescriptor.RING_BUFFER_RATE_METER_DEFAULT;
 import static stincmale.ratmex.util.JmhOptions.DRY_RUN;
 import static stincmale.ratmex.util.Utils.format;
 
@@ -49,6 +47,7 @@ import static stincmale.ratmex.util.Utils.format;
 @TestInstance(Lifecycle.PER_METHOD)
 public class RateMeterPerformanceTest {
   private static final long ACCEPTABLE_INCORRECTLY_REGISTERED_TICKS_EVENTS_COUNT_PER_TRIAL = 0;
+  private static final String SYSTEM_PROPERTY_GROUP_OF_RUNS_DESCRIPTOR = "groupOfRunsDescriptor";
   private static final Duration samplesInterval = Duration.of(1, ChronoUnit.MILLIS);
   private static final Integer[] numbersOfThreads = new Integer[] {1, 2, 4, 8, 16, 32};
   private static final Supplier<ChainedOptionsBuilder> jmhOptions = () -> {
@@ -62,17 +61,22 @@ public class RateMeterPerformanceTest {
     }
     return result;
   };
-  private static final SortedSet<TestDescriptor> testDescriptors;
-  private static AtomicReference<TestDescriptor> currentTestDescriptor;
+  private static final SortedSet<GroupOfRunsDescriptor> groupOfRunsDescriptors;
+  /*We supply groupOfRunsDescriptor to JMH via the static field groupOfRunsDescriptor,
+    and hence we must be sure that this field refers to the same GroupOfRunsDescriptor during the test.*/
+  private static final AtomicReference<GroupOfRunsDescriptor> groupOfRunsDescriptor;
 
   static {
-    testDescriptors = new TreeSet<>();
-    testDescriptors.add(NAVIGABLE_MAP_RATE_METER_DEFAULT);
-    testDescriptors.add(RING_BUFFER_RATE_METER_DEFAULT);
-    currentTestDescriptor = new AtomicReference<>(testDescriptors.first());
+    groupOfRunsDescriptors = new TreeSet<>();
+    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.NAVIGABLE_MAP_RATE_METER_DEFAULT);
+    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_NAVIGABLE_MAP_RATE_METER_DEFAULT);
+    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.RING_BUFFER_RATE_METER_DEFAULT);
+    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_RING_BUFFER_RATE_METER_DEFAULT);
+    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_SIMPLE_RATE_METER_WITH_DEFAULT_RING_BUFFER_RATE_METER_AND_STAMPED_LOCK_STRATEGY);
+    groupOfRunsDescriptor = new AtomicReference<>(groupOfRunsDescriptors.first());
   }
 
-  enum TestDescriptor {
+  private enum GroupOfRunsDescriptor {
     NAVIGABLE_MAP_RATE_METER_DEFAULT(
         format("Default %s performance test", NavigableMapRateMeter.class.getSimpleName()),
         new Integer[] {1},
@@ -88,31 +92,25 @@ public class RateMeterPerformanceTest {
     CONCURRENT_RING_BUFFER_RATE_METER_DEFAULT(
         format("Default %s performance test", ConcurrentRingBufferRateMeter.class.getSimpleName()),
         RateMeterPerformanceTest.numbersOfThreads,
-        startNanos -> new ConcurrentRingBufferRateMeter(startNanos, samplesInterval));
+        startNanos -> new ConcurrentRingBufferRateMeter(startNanos, samplesInterval)),
+    CONCURRENT_SIMPLE_RATE_METER_WITH_DEFAULT_RING_BUFFER_RATE_METER_AND_STAMPED_LOCK_STRATEGY(
+        format("%s with default %s performance test", ConcurrentSimpleRateMeter.class.getSimpleName(), RingBufferRateMeter.class.getSimpleName()),
+        RateMeterPerformanceTest.numbersOfThreads,
+        startNanos -> new ConcurrentSimpleRateMeter<>(RING_BUFFER_RATE_METER_DEFAULT.rateMeterCreator.apply(startNanos), new StampedLockStrategy()));
 
     private final String description;
     private final Set<Integer> numbersOfThreads;
     private final Function<Long, ? extends RateMeter<?>> rateMeterCreator;
 
-    TestDescriptor(
+    GroupOfRunsDescriptor(
         final String name,
         final Integer[] numbersOfThreads,
         final Function<Long, ? extends RateMeter<?>> rateMeterCreator) {
       this.description = name;
-      this.numbersOfThreads = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(numbersOfThreads)));
+      @SuppressWarnings("all")//prevent an IDE from warning us about not using JDK 9 API here
+      final Set<Integer> numberOfThreads = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(numbersOfThreads)));
+      this.numbersOfThreads = numberOfThreads;
       this.rateMeterCreator = rateMeterCreator;
-    }
-
-    public final String getDescription() {
-      return description;
-    }
-
-    public final Set<Integer> getNumbersOfThreads() {
-      return numbersOfThreads;
-    }
-
-    public final Function<Long, ? extends RateMeter<?>> getRateMeterCreator() {
-      return rateMeterCreator;
     }
   }
 
@@ -121,14 +119,14 @@ public class RateMeterPerformanceTest {
 
   @Test
   public final void run() {
-    TestDescriptor guard = testDescriptors.first();
-    for (final TestDescriptor testDescriptor : testDescriptors) {
-      if (currentTestDescriptor.compareAndSet(guard, testDescriptor)) {
-        run(testDescriptor);
-        guard = testDescriptor;
+    GroupOfRunsDescriptor guard = groupOfRunsDescriptors.first();
+    for (final GroupOfRunsDescriptor groupOfRunsDescriptor : groupOfRunsDescriptors) {
+      if (RateMeterPerformanceTest.groupOfRunsDescriptor.compareAndSet(guard, groupOfRunsDescriptor)) {
+        run(groupOfRunsDescriptor);
+        guard = groupOfRunsDescriptor;
       } else {
-        /*We supply TestDescriptor.getRateMeterCreator to JMH via the static field currentTestDescriptor,
-          and hence we must be sure that this field refers to the same TestDescriptor during the test.*/
+        /*We supply groupOfRunsDescriptor to JMH via the static field groupOfRunsDescriptor,
+          and hence we must be sure that this field refers to the same GroupOfRunsDescriptor during the test.*/
         throw new RuntimeException("Concurrent execution of the test");
       }
     }
@@ -175,13 +173,8 @@ public class RateMeterPerformanceTest {
 
     @Setup(Level.Trial)
     public final void setup() {
-      @Nullable
-      final TestDescriptor testDescriptor = currentTestDescriptor.get();
-      if (testDescriptor == null) {
-        throw new NullPointerException("currentTestDescriptor");
-      }
-      rateMeter = testDescriptor.getRateMeterCreator()
-          .apply(nanoTime());
+      final GroupOfRunsDescriptor groupOfRunsDescriptor = GroupOfRunsDescriptor.valueOf(System.getProperty(SYSTEM_PROPERTY_GROUP_OF_RUNS_DESCRIPTOR));
+      rateMeter = groupOfRunsDescriptor.rateMeterCreator.apply(nanoTime());
     }
 
     @TearDown(Level.Trial)
@@ -199,7 +192,7 @@ public class RateMeterPerformanceTest {
     }
   }
 
-  private static ConcurrentMap<TestDescriptor, Collection<RunResult>> testResults;
+  private static ConcurrentMap<GroupOfRunsDescriptor, Collection<RunResult>> testResults;
 
   @BeforeAll
   public static final void beforeAll() {
@@ -208,8 +201,8 @@ public class RateMeterPerformanceTest {
 
   @AfterAll
   public static final void afterAll() {
-    testResults.forEach((testDescriptor, runResults) -> {
-      final String testId = testDescriptor.name();
+    testResults.forEach((groupOfRunsDescriptor, runResults) -> {
+      final String testId = groupOfRunsDescriptor.name();
       new JmhPerformanceTestResult(testId, RateMeterPerformanceTest.class, runResults).save();
       if (!Utils.isHeadless()) {
         final PerformanceTestResult ptr = new PerformanceTestResult(testId, RateMeterPerformanceTest.class)
@@ -218,24 +211,25 @@ public class RateMeterPerformanceTest {
     });
   }
 
-  private final void run(final TestDescriptor testDescriptor) {
-    for (int numberOfThreads : testDescriptor.getNumbersOfThreads()) {
-      final Collection<RunResult> runResults = runThroughput(testDescriptor, numberOfThreads);
-      runResults.addAll(runLatency(testDescriptor, numberOfThreads));
-      testResults.merge(testDescriptor, runResults, (oldValue, value) -> {
-        oldValue.addAll(value);
-        return oldValue;
+  private final void run(final GroupOfRunsDescriptor groupOfRunsDescriptor) {
+    for (int numberOfThreads : groupOfRunsDescriptor.numbersOfThreads) {
+      final Collection<RunResult> runResults = runThroughput(groupOfRunsDescriptor, numberOfThreads);
+      runResults.addAll(runLatency(groupOfRunsDescriptor, numberOfThreads));
+      testResults.merge(groupOfRunsDescriptor, runResults, (oldValue, value) -> {
+        final ArrayList<RunResult> result = new ArrayList<>(oldValue);
+        result.addAll(value);
+        return result;
       });
     }
   }
 
-  private final Collection<RunResult> runThroughput(final TestDescriptor testDescriptor, final int numberOfThreads) {
+  private final Collection<RunResult> runThroughput(final GroupOfRunsDescriptor groupOfRunsDescriptor, final int numberOfThreads) {
     final Collection<RunResult> runResults;
     try {
       runResults = new Runner(JmhOptions.includingClass(getClass())
-          .jvmArgsAppend("-D" + testDescriptor.name())
+          .jvmArgsAppend(format("-D%s=%s", SYSTEM_PROPERTY_GROUP_OF_RUNS_DESCRIPTOR, groupOfRunsDescriptor.name()))
           .mode(Mode.Throughput)
-          .timeUnit(TimeUnit.MILLISECONDS)
+          .timeUnit(TimeUnit.MICROSECONDS)
           .threads(numberOfThreads)
           .build())
           .run();
@@ -245,11 +239,11 @@ public class RateMeterPerformanceTest {
     return runResults;
   }
 
-  private final Collection<RunResult> runLatency(final TestDescriptor testDescriptor, final int numberOfThreads) {
+  private final Collection<RunResult> runLatency(final GroupOfRunsDescriptor groupOfRunsDescriptor, final int numberOfThreads) {
     final Collection<RunResult> runResults;
     try {
       runResults = new Runner(JmhOptions.includingClass(getClass())
-          .jvmArgsAppend("-D_" + testDescriptor.name())
+          .jvmArgsAppend(format("-D%s=%s", SYSTEM_PROPERTY_GROUP_OF_RUNS_DESCRIPTOR, groupOfRunsDescriptor.name()))
           .mode(Mode.AverageTime)
           .timeUnit(TimeUnit.NANOSECONDS)
           .threads(numberOfThreads)

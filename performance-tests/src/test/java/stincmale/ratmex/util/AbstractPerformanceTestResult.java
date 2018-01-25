@@ -23,6 +23,10 @@ class AbstractPerformanceTestResult {
     path = getDirectoryPath(testClass).resolve(testId + ".json");
   }
 
+  protected final String getTestId() {
+    return testId;
+  }
+
   protected final Path getPath() {
     return path;
   }
@@ -30,7 +34,7 @@ class AbstractPerformanceTestResult {
   @Override
   public String toString() {
     return getClass().getSimpleName() +
-        "{testId='" + testId +
+        "{testId=" + testId +
         ", testClass=" + testClass +
         ", path=" + path +
         '}';
