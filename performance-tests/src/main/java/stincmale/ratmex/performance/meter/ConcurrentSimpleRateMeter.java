@@ -1,9 +1,12 @@
-package stincmale.ratmex.meter;
+package stincmale.ratmex.performance.meter;
 
 import java.time.Duration;
 import java.util.Optional;
 import javax.annotation.concurrent.ThreadSafe;
 import stincmale.ratmex.internal.util.Preconditions;
+import stincmale.ratmex.meter.LockStrategy;
+import stincmale.ratmex.meter.RateMeter;
+import stincmale.ratmex.meter.RateMeterReading;
 
 @ThreadSafe
 public final class ConcurrentSimpleRateMeter<S> implements RateMeter<S> {

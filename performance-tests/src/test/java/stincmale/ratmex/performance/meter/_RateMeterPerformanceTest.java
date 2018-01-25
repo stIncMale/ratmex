@@ -1,4 +1,4 @@
-package stincmale.ratmex.meter;
+package stincmale.ratmex.performance.meter;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -22,10 +22,20 @@ import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.ChainedOptionsBuilder;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
-import stincmale.ratmex.util.PerformanceTestTag;
+import stincmale.ratmex.meter.ConcurrentNavigableMapRateMeter;
+import stincmale.ratmex.meter.ConcurrentRateMeterConfig;
+import stincmale.ratmex.meter.ConcurrentRateMeterConfig.Builder;
+import stincmale.ratmex.meter.ConcurrentRingBufferRateMeter;
+import stincmale.ratmex.meter.LockStrategy;
+import stincmale.ratmex.meter.NavigableMapRateMeter;
+import stincmale.ratmex.meter.RateMeter;
+import stincmale.ratmex.meter.RingBufferRateMeter;
+import stincmale.ratmex.meter.SpinLockStrategy;
+import stincmale.ratmex.meter.YieldWaitStrategy;
+import stincmale.ratmex.performance.util.PerformanceTestTag;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.openjdk.jmh.runner.options.TimeValue.milliseconds;
-import static stincmale.ratmex.util.JmhOptions.DRY_RUN;
+import static stincmale.ratmex.performance.util.JmhOptions.DRY_RUN;
 
 @Disabled
 @Tag(PerformanceTestTag.VALUE)
@@ -36,11 +46,11 @@ public class _RateMeterPerformanceTest {
   private static final double ACCEPTABLE_FAILED_ACCURACY_EVENTS_COUNT_PER_TRIAL = 0d + Double.MIN_VALUE;
   private static final Duration samplesInterval = Duration.of(1, ChronoUnit.MILLIS);
   private static final Supplier<LockStrategy> lockStrategySupplier = () -> new SpinLockStrategy(YieldWaitStrategy.instance());
-  private static final Supplier<ConcurrentRateMeterConfig.Builder> concurrentRateMeterConfigBuilderSupplier = () -> {
-    final ConcurrentRateMeterConfig.Builder result = ConcurrentRateMeterConfig.newBuilder();
+  private static final Supplier<Builder> concurrentRateMeterConfigBuilderSupplier = () -> {
+    final Builder result = ConcurrentRateMeterConfig.newBuilder();
     //    result.setWaitStrategySupplier(YieldWaitStrategy::instance);
     //    result.setLockStrategySupplier(() -> new SpinLockStrategy(YieldWaitStrategy.instance()));
-    result.setStrictTick(false);
+    result.setMode(ConcurrentRateMeterConfig.Mode.RELAXED_TICKS);
     return result;
   };
   private static final Supplier<ChainedOptionsBuilder> jmhOptionsSupplier = () -> {

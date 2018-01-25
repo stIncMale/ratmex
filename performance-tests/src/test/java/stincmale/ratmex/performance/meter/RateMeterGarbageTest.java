@@ -1,4 +1,4 @@
-package stincmale.ratmex.meter;
+package stincmale.ratmex.performance.meter;
 
 import java.time.Duration;
 import java.util.concurrent.ExecutorService;
@@ -11,6 +11,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.openjdk.jmh.runner.RunnerException;
+import stincmale.ratmex.meter.ConcurrentRingBufferRateMeter;
+import stincmale.ratmex.meter.RateMeter;
+import stincmale.ratmex.meter.RateMeterReading;
 
 /**
  * Use Java Mission Control or a similar tool to monitor JVM heap.

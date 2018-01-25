@@ -1,4 +1,4 @@
-package stincmale.ratmex;
+package stincmale.ratmex.performance;
 
 import java.math.BigInteger;
 import java.util.concurrent.TimeUnit;
@@ -15,8 +15,8 @@ import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
-import stincmale.ratmex.util.JmhOptions;
-import stincmale.ratmex.util.PerformanceTestTag;
+import stincmale.ratmex.performance.util.JmhOptions;
+import stincmale.ratmex.performance.util.PerformanceTestTag;
 
 /**
  * <pre>{@code

@@ -1,9 +1,8 @@
-package stincmale.ratmex.meter;
+package stincmale.ratmex.performance.meter;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -33,15 +32,24 @@ import org.openjdk.jmh.results.RunResult;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.ChainedOptionsBuilder;
-import stincmale.ratmex.util.JmhOptions;
-import stincmale.ratmex.util.JmhPerformanceTestResult;
-import stincmale.ratmex.util.PerformanceTestTag;
-import stincmale.ratmex.util.PerformanceTestResult;
-import stincmale.ratmex.util.Utils;
+import stincmale.ratmex.meter.ConcurrentNavigableMapRateMeter;
+import stincmale.ratmex.meter.ConcurrentRateMeterConfig;
+import stincmale.ratmex.meter.ConcurrentRateMeterStats;
+import stincmale.ratmex.meter.ConcurrentRingBufferRateMeter;
+import stincmale.ratmex.meter.NavigableMapRateMeter;
+import stincmale.ratmex.meter.RateMeter;
+import stincmale.ratmex.meter.RateMeterReading;
+import stincmale.ratmex.meter.RingBufferRateMeter;
+import stincmale.ratmex.meter.StampedLockStrategy;
+import stincmale.ratmex.performance.util.JmhOptions;
+import stincmale.ratmex.performance.util.JmhPerformanceTestResult;
+import stincmale.ratmex.performance.util.PerformanceTestTag;
+import stincmale.ratmex.performance.util.PerformanceTestResult;
+import stincmale.ratmex.performance.util.Utils;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.openjdk.jmh.runner.options.TimeValue.milliseconds;
-import static stincmale.ratmex.util.JmhOptions.DRY_RUN;
-import static stincmale.ratmex.util.Utils.format;
+import static stincmale.ratmex.performance.util.JmhOptions.DRY_RUN;
+import static stincmale.ratmex.performance.util.Utils.format;
 
 @Tag(PerformanceTestTag.VALUE)
 @TestInstance(Lifecycle.PER_METHOD)
@@ -49,7 +57,6 @@ public class RateMeterPerformanceTest {
   private static final long ACCEPTABLE_INCORRECTLY_REGISTERED_TICKS_EVENTS_COUNT_PER_TRIAL = 0;
   private static final String SYSTEM_PROPERTY_GROUP_OF_RUNS_DESCRIPTOR = "groupOfRunsDescriptor";
   private static final Duration samplesInterval = Duration.of(1, ChronoUnit.MILLIS);
-  private static final Integer[] numbersOfThreads = new Integer[] {1, 2, 4, 8, 16, 32};
   private static final Supplier<ChainedOptionsBuilder> jmhOptions = () -> {
     final ChainedOptionsBuilder result = JmhOptions.get();
     if (!DRY_RUN) {
@@ -69,33 +76,44 @@ public class RateMeterPerformanceTest {
   static {
     groupOfRunsDescriptors = new TreeSet<>();
     groupOfRunsDescriptors.add(GroupOfRunsDescriptor.NAVIGABLE_MAP_RATE_METER_DEFAULT);
-    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_NAVIGABLE_MAP_RATE_METER_DEFAULT);
-    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.RING_BUFFER_RATE_METER_DEFAULT);
-    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_RING_BUFFER_RATE_METER_DEFAULT);
-    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_SIMPLE_RATE_METER_WITH_DEFAULT_RING_BUFFER_RATE_METER_AND_STAMPED_LOCK_STRATEGY);
+    //    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_NAVIGABLE_MAP_RATE_METER_DEFAULT);
+    //    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.RING_BUFFER_RATE_METER_DEFAULT);
+    //    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_RING_BUFFER_RATE_METER_DEFAULT);
+    //    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_RING_BUFFER_RATE_METER_RELAXED_TICKS);
+    //    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_SIMPLE_RATE_METER_WITH_DEFAULT_RING_BUFFER_RATE_METER_AND_STAMPED_LOCK_STRATEGY);
     groupOfRunsDescriptor = new AtomicReference<>(groupOfRunsDescriptors.first());
   }
 
   private enum GroupOfRunsDescriptor {
     NAVIGABLE_MAP_RATE_METER_DEFAULT(
         format("Default %s performance test", NavigableMapRateMeter.class.getSimpleName()),
-        new Integer[] {1},
+        Collections.singleton(1),
         startNanos -> new NavigableMapRateMeter(startNanos, samplesInterval)),
     CONCURRENT_NAVIGABLE_MAP_RATE_METER_DEFAULT(
         format("Default %s performance test", ConcurrentNavigableMapRateMeter.class.getSimpleName()),
-        RateMeterPerformanceTest.numbersOfThreads,
+        JmhOptions.numbersOfThreads,
         startNanos -> new ConcurrentNavigableMapRateMeter(startNanos, samplesInterval)),
     RING_BUFFER_RATE_METER_DEFAULT(
         format("Default %s performance test", RingBufferRateMeter.class.getSimpleName()),
-        new Integer[] {1},
+        Collections.singleton(1),
         startNanos -> new RingBufferRateMeter(startNanos, samplesInterval)),
     CONCURRENT_RING_BUFFER_RATE_METER_DEFAULT(
         format("Default %s performance test", ConcurrentRingBufferRateMeter.class.getSimpleName()),
-        RateMeterPerformanceTest.numbersOfThreads,
+        JmhOptions.numbersOfThreads,
         startNanos -> new ConcurrentRingBufferRateMeter(startNanos, samplesInterval)),
+    CONCURRENT_RING_BUFFER_RATE_METER_RELAXED_TICKS(
+        format("%s with relaxed ticks performance test", ConcurrentRingBufferRateMeter.class.getSimpleName()),
+        JmhOptions.numbersOfThreads,
+        startNanos -> new ConcurrentRingBufferRateMeter(
+            startNanos,
+            samplesInterval,
+            ConcurrentRingBufferRateMeter.defaultConfig()
+                .toBuilder()
+                .setMode(ConcurrentRateMeterConfig.Mode.RELAXED_TICKS)
+                .build())),
     CONCURRENT_SIMPLE_RATE_METER_WITH_DEFAULT_RING_BUFFER_RATE_METER_AND_STAMPED_LOCK_STRATEGY(
         format("%s with default %s performance test", ConcurrentSimpleRateMeter.class.getSimpleName(), RingBufferRateMeter.class.getSimpleName()),
-        RateMeterPerformanceTest.numbersOfThreads,
+        JmhOptions.numbersOfThreads,
         startNanos -> new ConcurrentSimpleRateMeter<>(RING_BUFFER_RATE_METER_DEFAULT.rateMeterCreator.apply(startNanos), new StampedLockStrategy()));
 
     private final String description;
@@ -104,12 +122,10 @@ public class RateMeterPerformanceTest {
 
     GroupOfRunsDescriptor(
         final String name,
-        final Integer[] numbersOfThreads,
+        final Collection<Integer> numbersOfThreads,
         final Function<Long, ? extends RateMeter<?>> rateMeterCreator) {
       this.description = name;
-      @SuppressWarnings("all")//prevent an IDE from warning us about not using JDK 9 API here
-      final Set<Integer> numberOfThreads = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(numbersOfThreads)));
-      this.numbersOfThreads = numberOfThreads;
+      this.numbersOfThreads = Collections.unmodifiableSet(new HashSet<>(numbersOfThreads));
       this.rateMeterCreator = rateMeterCreator;
     }
   }

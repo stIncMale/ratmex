@@ -1,15 +1,12 @@
-package stincmale.ratmex;
+package stincmale.ratmex.performance;
 
 import java.awt.Color;
-import java.io.IOException;
 import java.util.AbstractMap.SimpleImmutableEntry;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
@@ -22,8 +19,6 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
-import org.knowm.xchart.BitmapEncoder;
-import org.knowm.xchart.BitmapEncoder.BitmapFormat;
 import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYChartBuilder;
 import org.knowm.xchart.XYSeries;
@@ -39,25 +34,25 @@ import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.results.RunResult;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
-import stincmale.ratmex.util.JmhOptions;
-import stincmale.ratmex.util.PerformanceTestTag;
-import static stincmale.ratmex.util.Utils.format;
-import static stincmale.ratmex.util.Utils.isHeadless;
+import stincmale.ratmex.performance.util.JmhOptions;
+import stincmale.ratmex.performance.util.JmhPerformanceTestResult;
+import stincmale.ratmex.performance.util.PerformanceTestResult;
+import stincmale.ratmex.performance.util.PerformanceTestTag;
+import stincmale.ratmex.performance.util.Utils;
+import static stincmale.ratmex.performance.util.Utils.format;
 
 @Disabled
 @Tag(PerformanceTestTag.VALUE)
 @TestInstance(Lifecycle.PER_METHOD)
 public class BaselinePerformanceTest {
-  private static final Set<Integer> numbersOfThreads = new HashSet<>(Arrays.asList(1, 2, 4, 8, 16, 32));
-
   public BaselinePerformanceTest() {
   }
 
   @Test
   public void run() {
-    for (int numberOfThreads : numbersOfThreads) {
-      runThroughput(numberOfThreads);
-      runLatency(numberOfThreads);
+    for (int numberOfThreads : JmhOptions.numbersOfThreads) {
+      testResults.addAll(runThroughput(numberOfThreads));
+      testResults.addAll(runLatency(numberOfThreads));
     }
   }
 
@@ -109,23 +104,26 @@ public class BaselinePerformanceTest {
     }
   }
 
-  private final void runThroughput(final int numberOfThreads) {
+  private final Collection<RunResult> runThroughput(final int numberOfThreads) {
+    final Collection<RunResult> runResults;
     try {
-      throughputRunResults.put(numberOfThreads, new Runner(JmhOptions.get()
+      runResults = new Runner(JmhOptions.get()
           .include(getClass().getName() + ".(?!granularity).*")
           .mode(Mode.Throughput)
           .timeUnit(TimeUnit.MICROSECONDS)
           .threads(numberOfThreads)
           .build())
-          .run());
+          .run();
     } catch (final RunnerException e) {
       throw new RuntimeException(e);
     }
+    return runResults;
   }
 
-  private final void runLatency(final int numberOfThreads) {
+  private final Collection<RunResult> runLatency(final int numberOfThreads) {
+    final Collection<RunResult> runResults;
     try {
-      latencyRunResults.put(numberOfThreads, new Runner(JmhOptions.get()
+      runResults = new Runner(JmhOptions.get()
           .include(numberOfThreads == 1
               ? getClass().getName() + ".*"
               : getClass().getName() + ".(?!granularity).*")
@@ -133,40 +131,46 @@ public class BaselinePerformanceTest {
           .timeUnit(TimeUnit.NANOSECONDS)
           .threads(numberOfThreads)
           .build())
-          .run());
+          .run();
     } catch (final RunnerException e) {
       throw new RuntimeException(e);
     }
+    return runResults;
   }
 
-  private static Map<Integer, Collection<RunResult>> throughputRunResults;
-  private static Map<Integer, Collection<RunResult>> latencyRunResults;
+  private static Collection<RunResult> testResults;
 
   @BeforeAll
   public static final void beforeAll() {
-    throughputRunResults = new TreeMap<>();
-    latencyRunResults = new TreeMap<>();
+    testResults = new CopyOnWriteArrayList<>();
   }
 
   @AfterAll
   public static final void afterAll() {
-    final XYChart throughputChart = buildChart(regroupRunResults(throughputRunResults),
-        BaselinePerformanceTest.class.getSimpleName() + ", " + environmentDescription(),
-        "number of threads", "throughput, s\u207B\u00B9", 1, "### mln");
-    final XYChart latencyChart = buildChart(regroupRunResults(latencyRunResults),
-        BaselinePerformanceTest.class.getSimpleName() + ", " + environmentDescription(),
-        "number of threads", "latency, ns", 1, null);
-    if (!isHeadless()) {
-      try {
-        final String path = "../";
-        BitmapEncoder.saveBitmap(throughputChart, path + BaselinePerformanceTest.class.getSimpleName() + "-throughput", BitmapFormat.PNG);
-        BitmapEncoder.saveBitmap(latencyChart, path + BaselinePerformanceTest.class.getSimpleName() + "-latency", BitmapFormat.PNG);
-      } catch (final IOException e) {
-        throw new RuntimeException(e);
-      }
-    } else {
-      //TODO save CSV
+    final String testId = BaselinePerformanceTest.class.getSimpleName();
+    new JmhPerformanceTestResult(testId, BaselinePerformanceTest.class, testResults).save();
+    if (!Utils.isHeadless()) {
+      final PerformanceTestResult ptr = new PerformanceTestResult(testId, BaselinePerformanceTest.class)
+          .load();
     }
+
+    //    final XYChart throughputChart = buildChart(regroupRunResults(throughputRunResults),
+    //        BaselinePerformanceTest.class.getSimpleName() + ", " + environmentDescription(),
+    //        "number of threads", "throughput, s\u207B\u00B9", 1, "### mln");
+    //    final XYChart latencyChart = buildChart(regroupRunResults(latencyRunResults),
+    //        BaselinePerformanceTest.class.getSimpleName() + ", " + environmentDescription(),
+    //        "number of threads", "latency, ns", 1, null);
+    //    if (!isHeadless()) {
+    //      try {
+    //        final String path = "../";
+    //        BitmapEncoder.saveBitmap(throughputChart, path + BaselinePerformanceTest.class.getSimpleName() + "-throughput", BitmapFormat.PNG);
+    //        BitmapEncoder.saveBitmap(latencyChart, path + BaselinePerformanceTest.class.getSimpleName() + "-latency", BitmapFormat.PNG);
+    //      } catch (final IOException e) {
+    //        throw new RuntimeException(e);
+    //      }
+    //    } else {
+    //      //TODO save CSV
+    //    }
   }
 
   private static final String environmentDescription() {
