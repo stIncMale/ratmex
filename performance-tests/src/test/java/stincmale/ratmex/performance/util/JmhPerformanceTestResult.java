@@ -24,7 +24,7 @@ public final class JmhPerformanceTestResult extends AbstractPerformanceTestResul
 
   public final void save() {
     try (final PrintStream printStream = new PrintStream(
-        Files.newOutputStream(getPath(), CREATE, WRITE, TRUNCATE_EXISTING),
+        Files.newOutputStream(getDataFilePath(), CREATE, WRITE, TRUNCATE_EXISTING),
         false,
         StandardCharsets.UTF_8.name())) {
       final ResultFormat resultFormat = ResultFormatFactory.getInstance(ResultFormatType.JSON, printStream);

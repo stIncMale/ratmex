@@ -2,8 +2,16 @@ package stincmale.ratmex.performance.util;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import javax.annotation.Nullable;
 import javax.json.Json;
 import javax.json.JsonNumber;
 import javax.json.JsonObject;
@@ -11,28 +19,165 @@ import javax.json.JsonReader;
 import javax.json.JsonString;
 import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
+import org.knowm.xchart.BitmapEncoder;
+import org.knowm.xchart.BitmapEncoder.BitmapFormat;
+import org.knowm.xchart.XYChart;
+import org.knowm.xchart.XYChartBuilder;
+import org.knowm.xchart.XYSeries;
+import org.knowm.xchart.XYSeries.XYSeriesRenderStyle;
+import org.knowm.xchart.style.Styler.ChartTheme;
+import org.knowm.xchart.style.Styler.LegendPosition;
+import org.knowm.xchart.style.XYStyler;
 import org.openjdk.jmh.annotations.Mode;
+import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.READ;
+import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
+import static java.nio.file.StandardOpenOption.WRITE;
+import static stincmale.ratmex.performance.util.Utils.format;
 
 public final class PerformanceTestResult extends AbstractPerformanceTestResult {
+  @Nullable
+  private SortedMap<String, SortedMap<Mode, SortedMap<Integer, BenchmarkResult>>> benchmark_mode_numberOfThreads_result;
+
   public PerformanceTestResult(final String testId, final Class<?> testClass) {
     super(testId, testClass);
+    benchmark_mode_numberOfThreads_result = null;
   }
 
   /**
    * @return {@code this}.
    */
   public final PerformanceTestResult load() {
-    try (final JsonReader jsonReader = Json.createReader(new InputStreamReader(Files.newInputStream(getPath(), READ), StandardCharsets.UTF_8))) {
+    try (final JsonReader jsonReader = Json.createReader(new InputStreamReader(
+        Files.newInputStream(getDataFilePath(), READ),
+        StandardCharsets.UTF_8))) {
+      final SortedMap<String, SortedMap<Mode, SortedMap<Integer, BenchmarkResult>>> benchmark_mode_numberOfThreads_result = new TreeMap<>();
       jsonReader.readArray()
           .stream()
           .map(JsonValue::asJsonObject)
           .map(jsonObj -> new BenchmarkResult(getTestId(), jsonObj))
-          .forEach(System.out::println);
+          .forEach(br -> benchmark_mode_numberOfThreads_result.compute(br.benchmark, (k1, v1) -> {
+            final SortedMap<Mode, SortedMap<Integer, BenchmarkResult>> mode_numberOfThreads_result = v1 == null ? new TreeMap<>() : v1;
+            mode_numberOfThreads_result.compute(br.mode, (k2, v2) -> {
+              final SortedMap<Integer, BenchmarkResult> numberOfThreads_result = v2 == null ? new TreeMap<>() : v2;
+              numberOfThreads_result.compute(br.numberOfThreads, (k3, v3) -> {
+                final BenchmarkResult result;
+                if (v3 == null) {
+                  result = br;
+                } else {
+                  throw new RuntimeException(format("Duplicate %s and %s", v3, br));
+                }
+                return result;
+              });
+              return numberOfThreads_result;
+            });
+            return mode_numberOfThreads_result;
+          }));
+      this.benchmark_mode_numberOfThreads_result = benchmark_mode_numberOfThreads_result;
     } catch (final IOException e) {
       throw new RuntimeException(e);
     }
     return this;
+  }
+
+  public final void save(
+      final Mode mode,
+      final String chartTitle,
+      final String xAxisTitle,
+      final String yAxisTitle,
+      @Nullable final String yAxisDecimalPattern,
+      @Nullable final Map<String, Function<XYSeries, XYSeries>> benchmarkSeriesProcessors) {
+    ensureLoaded();
+    final XYChart chart = createChart(
+        format("%s, %s", chartTitle, getEnvironmentDescription()),
+        xAxisTitle,
+        yAxisTitle,
+        yAxisDecimalPattern);
+    if (benchmarkSeriesProcessors == null) {
+      addSeries(chart, mode, benchmarkSeriesProcessors, null);
+    } else {//add specially processed series the last
+      addSeries(chart, mode, benchmarkSeriesProcessors,
+          benchmarkSeriesProcessors == null ? null : benchmark -> !benchmarkSeriesProcessors.containsKey(benchmark));
+      addSeries(chart, mode, benchmarkSeriesProcessors,
+          benchmarkSeriesProcessors == null ? null : benchmarkSeriesProcessors::containsKey);
+    }
+    try (final OutputStream outputStream =
+        Files.newOutputStream(getDirectoryPath().resolve(format("%s-%s.png", getTestId(), mode.shortLabel())), CREATE, WRITE, TRUNCATE_EXISTING)) {
+      BitmapEncoder.saveBitmap(chart, outputStream, BitmapFormat.PNG);
+    } catch (final IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private static final XYChart createChart(
+      final String chartTitle,
+      final String xAxisTitle,
+      final String yAxisTitle,
+      @Nullable final String yAxisDecimalPattern) {
+    final XYChart chart = new XYChartBuilder()
+        .theme(ChartTheme.Matlab)
+        .width(1280)
+        .height(720)
+        .title(chartTitle)
+        .xAxisTitle(xAxisTitle)
+        .yAxisTitle(yAxisTitle)
+        .build();
+    final XYStyler styler = chart.getStyler();
+    styler.setChartTitleVisible(true);
+    styler.setLegendPosition(LegendPosition.OutsideE);
+    styler.setDefaultSeriesRenderStyle(XYSeriesRenderStyle.Line);
+    styler.setAntiAlias(true);
+    styler.setMarkerSize(8);
+    if (yAxisDecimalPattern != null) {
+      styler.setYAxisDecimalPattern(yAxisDecimalPattern);
+    }
+    return chart;
+  }
+
+  private final void addSeries(
+      final XYChart chart,
+      final Mode targetMode,
+      @Nullable final Map<String, Function<XYSeries, XYSeries>> benchmarkSeriesProcessors,
+      @Nullable final Predicate<String> filterBenchmarks) {
+    benchmark_mode_numberOfThreads_result.forEach((benchmark, mode_numberOfThreads_result) -> {
+      if (filterBenchmarks == null || filterBenchmarks.test(benchmark)) {
+        mode_numberOfThreads_result.forEach((mode, numberOfThreads_result) -> {
+          if (mode == targetMode) {
+            final double[] xData = new double[numberOfThreads_result.size()];
+            final double[] yData = new double[numberOfThreads_result.size()];
+            final double[] errorBars = new double[numberOfThreads_result.size()];
+            int idx = 0;
+            for (final Entry<Integer, BenchmarkResult> entry : numberOfThreads_result.entrySet()) {
+              final BenchmarkResult br = entry.getValue();
+              xData[idx] = br.numberOfThreads;
+              yData[idx] = br.score;
+              errorBars[idx] = Double.isNaN(br.error) ? 0 : br.error;
+              idx++;
+            }
+            final XYSeries series = chart.addSeries(benchmark, xData, yData, errorBars);
+            @Nullable
+            final Function<XYSeries, XYSeries> seriesProcessor = benchmarkSeriesProcessors == null ? null : benchmarkSeriesProcessors.get(benchmark);
+            if (seriesProcessor != null) {
+              seriesProcessor.apply(series);
+            }
+          }
+        });
+      }
+    });
+  }
+
+  private final void ensureLoaded() {
+    if (benchmark_mode_numberOfThreads_result == null) {
+      throw new IllegalStateException("Data has not been loaded");
+    }
+  }
+
+  private static final String getEnvironmentDescription() {
+    final int availableProcessors = Runtime.getRuntime()
+        .availableProcessors();
+    final String jvm = format("JVM: %s %s", System.getProperty("java.vm.vendor"), System.getProperty("java.vm.version"));
+    final String os = format("OS: %s %s %s", System.getProperty("os.name"), System.getProperty("os.version"), System.getProperty("os.arch"));
+    return format("%s, %s, processors: %s", jvm, os, availableProcessors);
   }
 
   public static final class BenchmarkResult {

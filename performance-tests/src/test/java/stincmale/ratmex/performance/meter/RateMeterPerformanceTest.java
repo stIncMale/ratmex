@@ -76,33 +76,33 @@ public class RateMeterPerformanceTest {
   static {
     groupOfRunsDescriptors = new TreeSet<>();
     groupOfRunsDescriptors.add(GroupOfRunsDescriptor.NAVIGABLE_MAP_RATE_METER_DEFAULT);
-    //    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_NAVIGABLE_MAP_RATE_METER_DEFAULT);
-    //    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.RING_BUFFER_RATE_METER_DEFAULT);
-    //    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_RING_BUFFER_RATE_METER_DEFAULT);
-    //    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_RING_BUFFER_RATE_METER_RELAXED_TICKS);
-    //    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_SIMPLE_RATE_METER_WITH_DEFAULT_RING_BUFFER_RATE_METER_AND_STAMPED_LOCK_STRATEGY);
+    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_NAVIGABLE_MAP_RATE_METER_DEFAULT);
+    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.RING_BUFFER_RATE_METER_DEFAULT);
+    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_RING_BUFFER_RATE_METER_DEFAULT);
+    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_RING_BUFFER_RATE_METER_RELAXED_TICKS);
+    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_SIMPLE_RATE_METER_WITH_DEFAULT_RING_BUFFER_RATE_METER_AND_STAMPED_LOCK_STRATEGY);
     groupOfRunsDescriptor = new AtomicReference<>(groupOfRunsDescriptors.first());
   }
 
   private enum GroupOfRunsDescriptor {
     NAVIGABLE_MAP_RATE_METER_DEFAULT(
-        format("Default %s performance test", NavigableMapRateMeter.class.getSimpleName()),
+        format("default %s", NavigableMapRateMeter.class.getSimpleName()),
         Collections.singleton(1),
         startNanos -> new NavigableMapRateMeter(startNanos, samplesInterval)),
     CONCURRENT_NAVIGABLE_MAP_RATE_METER_DEFAULT(
-        format("Default %s performance test", ConcurrentNavigableMapRateMeter.class.getSimpleName()),
+        format("default %s", ConcurrentNavigableMapRateMeter.class.getSimpleName()),
         JmhOptions.numbersOfThreads,
         startNanos -> new ConcurrentNavigableMapRateMeter(startNanos, samplesInterval)),
     RING_BUFFER_RATE_METER_DEFAULT(
-        format("Default %s performance test", RingBufferRateMeter.class.getSimpleName()),
+        format("default %s", RingBufferRateMeter.class.getSimpleName()),
         Collections.singleton(1),
         startNanos -> new RingBufferRateMeter(startNanos, samplesInterval)),
     CONCURRENT_RING_BUFFER_RATE_METER_DEFAULT(
-        format("Default %s performance test", ConcurrentRingBufferRateMeter.class.getSimpleName()),
+        format("default %s", ConcurrentRingBufferRateMeter.class.getSimpleName()),
         JmhOptions.numbersOfThreads,
         startNanos -> new ConcurrentRingBufferRateMeter(startNanos, samplesInterval)),
     CONCURRENT_RING_BUFFER_RATE_METER_RELAXED_TICKS(
-        format("%s with relaxed ticks performance test", ConcurrentRingBufferRateMeter.class.getSimpleName()),
+        format("%s with relaxed ticks", ConcurrentRingBufferRateMeter.class.getSimpleName()),
         JmhOptions.numbersOfThreads,
         startNanos -> new ConcurrentRingBufferRateMeter(
             startNanos,
@@ -112,7 +112,7 @@ public class RateMeterPerformanceTest {
                 .setMode(ConcurrentRateMeterConfig.Mode.RELAXED_TICKS)
                 .build())),
     CONCURRENT_SIMPLE_RATE_METER_WITH_DEFAULT_RING_BUFFER_RATE_METER_AND_STAMPED_LOCK_STRATEGY(
-        format("%s with default %s performance test", ConcurrentSimpleRateMeter.class.getSimpleName(), RingBufferRateMeter.class.getSimpleName()),
+        format("%s with default %s", ConcurrentSimpleRateMeter.class.getSimpleName(), RingBufferRateMeter.class.getSimpleName()),
         JmhOptions.numbersOfThreads,
         startNanos -> new ConcurrentSimpleRateMeter<>(RING_BUFFER_RATE_METER_DEFAULT.rateMeterCreator.apply(startNanos), new StampedLockStrategy()));
 
@@ -223,6 +223,8 @@ public class RateMeterPerformanceTest {
       if (!Utils.isHeadless()) {
         final PerformanceTestResult ptr = new PerformanceTestResult(testId, RateMeterPerformanceTest.class)
             .load();
+        ptr.save(Mode.Throughput, groupOfRunsDescriptor.description, "number of threads", "throughput, ops/s", "#.# mln", null);
+        ptr.save(Mode.AverageTime, groupOfRunsDescriptor.description, "number of threads", "latency, ns", null, null);
       }
     });
   }

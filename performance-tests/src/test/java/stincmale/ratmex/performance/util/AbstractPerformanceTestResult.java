@@ -12,23 +12,29 @@ import static java.nio.file.attribute.PosixFilePermission.OWNER_READ;
 import static java.nio.file.attribute.PosixFilePermission.OWNER_WRITE;
 import static java.nio.file.attribute.PosixFilePermissions.asFileAttribute;
 
-class AbstractPerformanceTestResult {
+abstract class AbstractPerformanceTestResult {
   private final String testId;
   private final Class<?> testClass;
-  private final Path path;
+  private final Path directoryPath;
+  private final Path dataFilePath;
 
   protected AbstractPerformanceTestResult(final String testId, final Class<?> testClass) {
     this.testId = testId;
     this.testClass = testClass;
-    path = getDirectoryPath(testClass).resolve(testId + ".json");
+    directoryPath = getDirectoryPath(testClass);
+    dataFilePath = directoryPath.resolve(testId + ".json");
   }
 
   protected final String getTestId() {
     return testId;
   }
 
-  protected final Path getPath() {
-    return path;
+  protected final Path getDirectoryPath() {
+    return directoryPath;
+  }
+
+  protected final Path getDataFilePath() {
+    return dataFilePath;
   }
 
   @Override
@@ -36,7 +42,8 @@ class AbstractPerformanceTestResult {
     return getClass().getSimpleName() +
         "{testId=" + testId +
         ", testClass=" + testClass +
-        ", path=" + path +
+        ", directoryPath=" + directoryPath +
+        ", dataFilePath=" + dataFilePath +
         '}';
   }
 
