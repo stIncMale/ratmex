@@ -38,10 +38,13 @@ import stincmale.ratmex.meter.ConcurrentRateMeterConfig;
 import stincmale.ratmex.meter.ConcurrentRateMeterStats;
 import stincmale.ratmex.meter.ConcurrentRingBufferRateMeter;
 import stincmale.ratmex.meter.NavigableMapRateMeter;
+import stincmale.ratmex.meter.ParkWaitStrategy;
 import stincmale.ratmex.meter.RateMeter;
 import stincmale.ratmex.meter.RateMeterReading;
 import stincmale.ratmex.meter.RingBufferRateMeter;
+import stincmale.ratmex.meter.SpinLockStrategy;
 import stincmale.ratmex.meter.StampedLockStrategy;
+import stincmale.ratmex.meter.YieldWaitStrategy;
 import stincmale.ratmex.performance.util.JmhOptions;
 import stincmale.ratmex.performance.util.JmhPerformanceTestResult;
 import stincmale.ratmex.performance.util.PerformanceTestTag;
@@ -76,34 +79,39 @@ public class RateMeterPerformanceTest {
 
   static {
     groupOfRunsDescriptors = new TreeSet<>();
-    //    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.NAVIGABLE_MAP_RATE_METER_DEFAULT);
-    //    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_NAVIGABLE_MAP_RATE_METER_DEFAULT);
-    //    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.RING_BUFFER_RATE_METER_DEFAULT);
-    //    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_RING_BUFFER_RATE_METER_DEFAULT);
-    //    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_RING_BUFFER_RATE_METER_RELAXED_TICKS);
+    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.NAVIGABLE_MAP_RATE_METER_DEFAULT);
+    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_NAVIGABLE_MAP_RATE_METER_DEFAULT);
+    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.RING_BUFFER_RATE_METER_DEFAULT);
+    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_RING_BUFFER_RATE_METER_DEFAULT);
+    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_RING_BUFFER_RATE_METER_RELAXED_TICKS);
     groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_SIMPLE_RATE_METER_WITH_DEFAULT_RING_BUFFER_RATE_METER_AND_STAMPED_LOCK_STRATEGY);
+    groupOfRunsDescriptors.add(
+        GroupOfRunsDescriptor.CONCURRENT_SIMPLE_RATE_METER_WITH_DEFAULT_RING_BUFFER_RATE_METER_AND_SPIN_LOCK_STRATEGY_WITH_PARK_WAIT_STRATEGY);
+    groupOfRunsDescriptors.add(
+        GroupOfRunsDescriptor.CONCURRENT_SIMPLE_RATE_METER_WITH_DEFAULT_RING_BUFFER_RATE_METER_AND_SPIN_LOCK_STRATEGY_WITH_YIELD_WAIT_STRATEGY);
+    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.SYNCHRONIZED_RATE_METER_WITH_DEFAULT_RING_BUFFER_RATE_METER);
     groupOfRunsDescriptor = new AtomicReference<>(groupOfRunsDescriptors.first());
   }
 
   private enum GroupOfRunsDescriptor {
     NAVIGABLE_MAP_RATE_METER_DEFAULT(
-        format("default %s", NavigableMapRateMeter.class.getSimpleName()),
+        format("%s, samples interval: %sms", NavigableMapRateMeter.class.getSimpleName(), samplesInterval.toMillis()),
         Collections.singleton(1),
         startNanos -> new NavigableMapRateMeter(startNanos, samplesInterval)),
     CONCURRENT_NAVIGABLE_MAP_RATE_METER_DEFAULT(
-        format("default %s", ConcurrentNavigableMapRateMeter.class.getSimpleName()),
+        format("%s, samples interval: %sms", ConcurrentNavigableMapRateMeter.class.getSimpleName(), samplesInterval.toMillis()),
         JmhOptions.numbersOfThreads,
         startNanos -> new ConcurrentNavigableMapRateMeter(startNanos, samplesInterval)),
     RING_BUFFER_RATE_METER_DEFAULT(
-        format("default %s", RingBufferRateMeter.class.getSimpleName()),
+        format("%s, samples interval: %sms", RingBufferRateMeter.class.getSimpleName(), samplesInterval.toMillis()),
         Collections.singleton(1),
         startNanos -> new RingBufferRateMeter(startNanos, samplesInterval)),
     CONCURRENT_RING_BUFFER_RATE_METER_DEFAULT(
-        format("default %s", ConcurrentRingBufferRateMeter.class.getSimpleName()),
+        format("%s, samples interval: %sms", ConcurrentRingBufferRateMeter.class.getSimpleName(), samplesInterval.toMillis()),
         JmhOptions.numbersOfThreads,
         startNanos -> new ConcurrentRingBufferRateMeter(startNanos, samplesInterval)),
     CONCURRENT_RING_BUFFER_RATE_METER_RELAXED_TICKS(
-        format("%s with relaxed ticks", ConcurrentRingBufferRateMeter.class.getSimpleName()),
+        format("%s, relaxed ticks, samples interval: %sms", ConcurrentRingBufferRateMeter.class.getSimpleName(), samplesInterval.toMillis()),
         JmhOptions.numbersOfThreads,
         startNanos -> new ConcurrentRingBufferRateMeter(
             startNanos,
@@ -113,9 +121,27 @@ public class RateMeterPerformanceTest {
                 .setMode(ConcurrentRateMeterConfig.Mode.RELAXED_TICKS)
                 .build())),
     CONCURRENT_SIMPLE_RATE_METER_WITH_DEFAULT_RING_BUFFER_RATE_METER_AND_STAMPED_LOCK_STRATEGY(
-        format("%s with default %s", ConcurrentSimpleRateMeter.class.getSimpleName(), RingBufferRateMeter.class.getSimpleName()),
+        format("%s with %s, stamped LS, samples interval: %sms",
+            ConcurrentSimpleRateMeter.class.getSimpleName(), RingBufferRateMeter.class.getSimpleName(), samplesInterval.toMillis()),
         JmhOptions.numbersOfThreads,
-        startNanos -> new ConcurrentSimpleRateMeter<>(RING_BUFFER_RATE_METER_DEFAULT.rateMeterCreator.apply(startNanos), new StampedLockStrategy()));
+        startNanos -> new ConcurrentSimpleRateMeter<>(RING_BUFFER_RATE_METER_DEFAULT.rateMeterCreator.apply(startNanos), new StampedLockStrategy())),
+    CONCURRENT_SIMPLE_RATE_METER_WITH_DEFAULT_RING_BUFFER_RATE_METER_AND_SPIN_LOCK_STRATEGY_WITH_PARK_WAIT_STRATEGY(
+        format("%s with %s, spin LS & park WS, samples interval: %sms",
+            ConcurrentSimpleRateMeter.class.getSimpleName(), RingBufferRateMeter.class.getSimpleName(), samplesInterval.toMillis()),
+        JmhOptions.numbersOfThreads,
+        startNanos -> new ConcurrentSimpleRateMeter<>(
+            RING_BUFFER_RATE_METER_DEFAULT.rateMeterCreator.apply(startNanos), new SpinLockStrategy(ParkWaitStrategy.defaultInstance()))),
+    CONCURRENT_SIMPLE_RATE_METER_WITH_DEFAULT_RING_BUFFER_RATE_METER_AND_SPIN_LOCK_STRATEGY_WITH_YIELD_WAIT_STRATEGY(
+        format("%s with %s, spin LS & yield WS, samples interval: %sms",
+            ConcurrentSimpleRateMeter.class.getSimpleName(), RingBufferRateMeter.class.getSimpleName(), samplesInterval.toMillis()),
+        JmhOptions.numbersOfThreads,
+        startNanos -> new ConcurrentSimpleRateMeter<>(
+            RING_BUFFER_RATE_METER_DEFAULT.rateMeterCreator.apply(startNanos), new SpinLockStrategy(YieldWaitStrategy.instance()))),
+    SYNCHRONIZED_RATE_METER_WITH_DEFAULT_RING_BUFFER_RATE_METER(
+        format("%s with %s, samples interval: %sms",
+            SynchronizedRateMeter.class.getSimpleName(), RingBufferRateMeter.class.getSimpleName(), samplesInterval.toMillis()),
+        JmhOptions.numbersOfThreads,
+        startNanos -> new SynchronizedRateMeter<>(RING_BUFFER_RATE_METER_DEFAULT.rateMeterCreator.apply(startNanos)));
 
     private final String description;
     private final Set<Integer> numbersOfThreads;

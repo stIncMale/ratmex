@@ -1,5 +1,6 @@
 package stincmale.ratmex.performance.util;
 
+import java.awt.Font;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -154,8 +155,8 @@ public final class PerformanceTestResult extends AbstractPerformanceTestResult {
       @Nullable final String yAxisDecimalPattern) {
     final XYChart chart = new XYChartBuilder()
         .theme(ChartTheme.Matlab)
-        .width(1280)
-        .height(720)
+        .width(1600)
+        .height(900)
         .title(chartTitle)
         .xAxisTitle(xAxisTitle)
         .yAxisTitle(yAxisTitle)

@@ -11,8 +11,8 @@ import static org.openjdk.jmh.runner.options.TimeValue.milliseconds;
 public final class JmhOptions {
   public static final boolean DRY_RUN = false;
   private static final boolean JAVA_SERVER = true;
-  private static final boolean JAVA_ASSERTIONS = false;
-  public static final Collection<Integer> numbersOfThreads = Arrays.asList(1);
+  private static final boolean JAVA_ASSERTIONS = DRY_RUN;
+  public static final Collection<Integer> numbersOfThreads = DRY_RUN ? Arrays.asList(1, 4) : Arrays.asList(1, 2, 4, 8, 16);
 
   public static final ChainedOptionsBuilder includingClass(final Class<?> klass) {
     return get().include(klass.getName() + ".*");
