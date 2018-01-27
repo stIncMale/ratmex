@@ -2,7 +2,7 @@ package stincmale.ratmex.performance.meter;
 
 import java.time.Duration;
 import java.util.Optional;
-import javax.annotation.concurrent.ThreadSafe;
+import stincmale.ratmex.doc.ThreadSafe;
 import stincmale.ratmex.internal.util.Preconditions;
 import stincmale.ratmex.meter.LockStrategy;
 import stincmale.ratmex.meter.RateMeter;

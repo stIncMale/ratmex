@@ -1,7 +1,7 @@
 package stincmale.ratmex.internal.util;
 
 import java.util.function.Supplier;
-import javax.annotation.Nullable;
+import stincmale.ratmex.doc.Nullable;
 import static stincmale.ratmex.internal.util.Utils.format;
 
 public final class Preconditions {

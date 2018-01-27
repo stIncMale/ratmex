@@ -2,12 +2,11 @@ package stincmale.ratmex.executor;
 
 import java.time.Duration;
 import java.util.Optional;
-import javax.annotation.Nullable;
-import javax.annotation.concurrent.Immutable;
-import javax.annotation.concurrent.NotThreadSafe;
+import stincmale.ratmex.doc.Nullable;
+import stincmale.ratmex.doc.Immutable;
+import stincmale.ratmex.doc.NotThreadSafe;
 import stincmale.ratmex.internal.util.ConversionsAndChecks;
 import stincmale.ratmex.internal.util.Preconditions;
-import static stincmale.ratmex.internal.util.Preconditions.checkArgument;
 
 /**
  * A configuration of a {@linkplain RateMeasuringExecutorService#scheduleAtFixedRate(Runnable, Rate, ScheduledTaskConfig) scheduled task}.

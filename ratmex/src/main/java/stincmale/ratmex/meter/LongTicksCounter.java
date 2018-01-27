@@ -1,6 +1,6 @@
 package stincmale.ratmex.meter;
 
-import javax.annotation.concurrent.NotThreadSafe;
+import stincmale.ratmex.doc.NotThreadSafe;
 
 /**
  * This {@link TicksCounter} uses plain long field to store its {@linkplain #get() value}.

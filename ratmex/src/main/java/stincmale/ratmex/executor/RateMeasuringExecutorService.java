@@ -6,7 +6,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import javax.annotation.concurrent.ThreadSafe;
+import stincmale.ratmex.doc.ThreadSafe;
 
 /**
  * A <b>Rat</b>e-<b>Me</b>asuring e<b>X</b>ecutor service (hence <b>RatMeX</b>)
@@ -15,13 +15,13 @@ import javax.annotation.concurrent.ThreadSafe;
  * and allows one to {@linkplain RateListener monitor the rate and react} if the executor has failed to conform to the target rate.
  * <p>
  * <b>The reasoning behind {@link RateMeasuringExecutorService}</b><br>
- * The functionality described by this interface can not be directly obtained from
+ * The functionality described by this interface cannot be directly obtained from
  * {@link ScheduledExecutorService#scheduleAtFixedRate(Runnable, long, long, TimeUnit)}, which says the following regarding the task being scheduled:
  * <i>"If any execution of this task takes longer than its period, then subsequent executions may start late, but will not concurrently execute"</i>.
  * This tells us that:
  * <ul>
  * <li>{@link ScheduledExecutorService} is allowed to execute tasks with a lower rate than the target (and there is no easy way to check).</li>
- * <li>{@link ScheduledExecutorService} executes a scheduled task serially, which means that you can not easily benefit from multithreading,
+ * <li>{@link ScheduledExecutorService} executes a scheduled task serially, which means that you cannot easily benefit from multithreading,
  * and the rate is heavily limited by the time the task takes to complete.</li>
  * </ul>
  * {@link RateMeasuringExecutorService} overcomes both of the above points.

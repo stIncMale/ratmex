@@ -1,6 +1,6 @@
 package stincmale.ratmex.meter;
 
-import javax.annotation.concurrent.ThreadSafe;
+import stincmale.ratmex.doc.ThreadSafe;
 
 /**
  * A lock abstraction which allows implementations with different semantics,

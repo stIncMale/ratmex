@@ -1,6 +1,6 @@
 package stincmale.ratmex.executor;
 
-import javax.annotation.concurrent.NotThreadSafe;
+import stincmale.ratmex.doc.NotThreadSafe;
 import stincmale.ratmex.meter.RateMeterReading;
 import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;
 

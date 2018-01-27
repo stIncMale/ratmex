@@ -4,7 +4,7 @@ import java.time.Duration;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.locks.LockSupport;
 import java.util.function.BooleanSupplier;
-import javax.annotation.concurrent.ThreadSafe;
+import stincmale.ratmex.doc.ThreadSafe;
 import static stincmale.ratmex.internal.util.ConversionsAndChecks.checkDuration;
 import static stincmale.ratmex.internal.util.Preconditions.checkArgument;
 import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;

@@ -1,7 +1,7 @@
 package stincmale.ratmex.meter;
 
 import java.util.Arrays;
-import javax.annotation.concurrent.NotThreadSafe;
+import stincmale.ratmex.doc.NotThreadSafe;
 import static stincmale.ratmex.internal.util.Preconditions.checkArgument;
 
 /**

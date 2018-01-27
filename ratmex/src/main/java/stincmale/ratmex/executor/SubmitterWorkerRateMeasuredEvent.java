@@ -1,8 +1,8 @@
 package stincmale.ratmex.executor;
 
 import java.util.Optional;
-import javax.annotation.Nullable;
-import javax.annotation.concurrent.NotThreadSafe;
+import stincmale.ratmex.doc.Nullable;
+import stincmale.ratmex.doc.NotThreadSafe;
 import stincmale.ratmex.meter.RateMeter;
 import stincmale.ratmex.meter.RateMeterReading;
 import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;

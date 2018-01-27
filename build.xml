@@ -65,7 +65,7 @@
               <includeTags>${ratmex.maven-surefire-plugin.includeTags}
               </includeTags><!-- TODO will not work until https://github.com/junit-team/junit5/issues/809#issuecomment-352654645 -->
               <excludeTags>${ratmex.maven-surefire-plugin.excludeTags}</excludeTags>
-              <argLine>-enableassertions</argLine>
+              <argLine>${ratmex.maven-surefire-plugin.assertions}</argLine>
             </properties>
           </configuration>
           <dependencies>
@@ -112,7 +112,7 @@
           <artifactId>maven-javadoc-plugin</artifactId>
           <configuration>
             <detectJavaApiLink>false</detectJavaApiLink>
-            <doctitle>ratmex ${project.version} Java Source Code Documentation</doctitle>
+            <doctitle>ratmex ${project.version} Java API Documentation</doctitle>
             <author>false</author>
             <show>protected</show>
             <linksource>false</linksource>
@@ -123,14 +123,14 @@
             <header>
               <![CDATA[
 								<a href="${ratmex.url}">RatMeX</a><br>
-								Java Source Code Documentation
+								Java API Documentation
 							]]>
             </header>
             <footer>
               <![CDATA[Licensed under the <a href="${ratmex.licenseUrl}">${ratmex.licenseName}</a>]]>
             </footer>
             <locale>en</locale>
-            <windowtitle>RatMeX Java Source Code Documentation</windowtitle>
+            <windowtitle>RatMeX Java API Documentation</windowtitle>
             <groups>
               <group>
                 <title>All</title>
@@ -142,7 +142,7 @@
             <links>
               <link>https://docs.oracle.com/javase/9/docs/api</link>
               <link>https://javaee.github.io/javaee-spec/javadocs</link>
-              <link>https://www.javadoc.io/doc/com.google.code.findbugs/jsr305/3.0.2</link>
+              <!-- TODO get rid of JSR305, use own annotations-->
             </links>
             <validateLinks>true</validateLinks>
             <includeDependencySources>false</includeDependencySources>
@@ -200,6 +200,7 @@
         <ratmex.maven-surefire-plugin.parallel>classes</ratmex.maven-surefire-plugin.parallel>
         <ratmex.maven-surefire-plugin.includeTags/>
         <ratmex.maven-surefire-plugin.excludeTags>performance, concurrency</ratmex.maven-surefire-plugin.excludeTags>
+        <ratmex.maven-surefire-plugin.assertions>-enableassertions</ratmex.maven-surefire-plugin.assertions>
       </properties>
     </profile>
     <profile>
@@ -209,6 +210,7 @@
         <ratmex.maven-surefire-plugin.parallel/>
         <ratmex.maven-surefire-plugin.includeTags>performance</ratmex.maven-surefire-plugin.includeTags>
         <ratmex.maven-surefire-plugin.excludeTags>concurrency</ratmex.maven-surefire-plugin.excludeTags>
+        <ratmex.maven-surefire-plugin.assertions/>
       </properties>
     </profile>
     <profile>
@@ -218,6 +220,7 @@
         <ratmex.maven-surefire-plugin.parallel/>
         <ratmex.maven-surefire-plugin.includeTags>concurrency</ratmex.maven-surefire-plugin.includeTags>
         <ratmex.maven-surefire-plugin.excludeTags>performance</ratmex.maven-surefire-plugin.excludeTags>
+        <ratmex.maven-surefire-plugin.assertions>-enableassertions</ratmex.maven-surefire-plugin.assertions>
       </properties>
     </profile>
     <profile>

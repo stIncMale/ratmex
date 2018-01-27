@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.StampedLock;
 import java.util.function.Function;
 import java.util.function.LongConsumer;
-import javax.annotation.Nullable;
+import stincmale.ratmex.doc.Nullable;
 import stincmale.ratmex.internal.util.ConversionsAndChecks;
 import stincmale.ratmex.internal.util.Preconditions;
 import stincmale.ratmex.meter.ConcurrentRateMeterConfig.Mode;
@@ -49,7 +49,7 @@ import static stincmale.ratmex.internal.util.Utils.format;
  * <p>
  * <i>Disadvantages</i><br>
  * <ul>
- * <li>Unlike {@link AbstractNavigableMapRateMeter}, this implementation can not tolerate a large ratio of
+ * <li>Unlike {@link AbstractNavigableMapRateMeter}, this implementation cannot tolerate a large ratio of
  * {@link #getSamplesInterval()} to {@link #getTimeSensitivity()}.
  * The reason for this is that a ring buffer requires all objects representing samples to always exist,
  * and if the number of such objects (which is the same as the aforementioned ratio) is large,
@@ -105,7 +105,7 @@ public abstract class AbstractRingBufferRateMeter<S, C extends ConcurrentRateMet
             getTimeSensitivityNanos(), getSamplesIntervalNanos()));
     Preconditions.checkArgument(getSamplesIntervalNanos() % getTimeSensitivityNanos() == 0,
         "samplesInterval", () -> format("The specified samplesInterval=%sns and timeSensitivity=%sns " +
-                "can not be used together because samplesInterval is not a multiple of timeSensitivity",
+                "cannot be used together because samplesInterval is not a multiple of timeSensitivity",
             getSamplesIntervalNanos(), getTimeSensitivityNanos()));
     final int samplesIntervalArrayLength = (int)(getSamplesIntervalNanos() / getTimeSensitivityNanos());
     Preconditions.checkArgument(getSamplesIntervalNanos() == samplesIntervalArrayLength * getTimeSensitivityNanos(), "samplesInterval",
@@ -667,7 +667,7 @@ public abstract class AbstractRingBufferRateMeter<S, C extends ConcurrentRateMet
 
   private final int samplesHistoryIdx(final long samplesWindowShiftSteps) {
     final int historyLength = samplesHistory.length();
-    //the result can not be greater than samples.length, which is int, so it is a safe cast to int
+    //the result cannot be greater than samples.length, which is int, so it is a safe cast to int
     return (int)((samplesWindowShiftSteps + historyLength - 1) % historyLength);
   }
 }

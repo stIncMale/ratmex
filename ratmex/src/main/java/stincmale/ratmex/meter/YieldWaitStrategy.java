@@ -1,7 +1,7 @@
 package stincmale.ratmex.meter;
 
 import java.util.function.BooleanSupplier;
-import javax.annotation.concurrent.ThreadSafe;
+import stincmale.ratmex.doc.ThreadSafe;
 import stincmale.ratmex.internal.util.Preconditions;
 
 /**

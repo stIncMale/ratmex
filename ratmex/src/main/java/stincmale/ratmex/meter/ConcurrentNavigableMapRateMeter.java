@@ -3,7 +3,7 @@ package stincmale.ratmex.meter;
 import java.time.Duration;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
-import javax.annotation.concurrent.ThreadSafe;
+import stincmale.ratmex.doc.ThreadSafe;
 import stincmale.ratmex.NanosComparator;
 
 /**

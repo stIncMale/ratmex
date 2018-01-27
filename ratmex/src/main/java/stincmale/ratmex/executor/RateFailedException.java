@@ -1,6 +1,6 @@
 package stincmale.ratmex.executor;
 
-import javax.annotation.Nullable;
+import stincmale.ratmex.doc.Nullable;
 import stincmale.ratmex.internal.util.Preconditions;
 import stincmale.ratmex.internal.util.Utils;
 

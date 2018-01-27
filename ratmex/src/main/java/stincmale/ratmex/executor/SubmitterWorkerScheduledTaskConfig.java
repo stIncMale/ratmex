@@ -2,9 +2,9 @@ package stincmale.ratmex.executor;
 
 import java.time.Duration;
 import java.util.function.BiFunction;
-import javax.annotation.Nullable;
-import javax.annotation.concurrent.Immutable;
-import javax.annotation.concurrent.NotThreadSafe;
+import stincmale.ratmex.doc.Nullable;
+import stincmale.ratmex.doc.Immutable;
+import stincmale.ratmex.doc.NotThreadSafe;
 import stincmale.ratmex.internal.util.Preconditions;
 import stincmale.ratmex.meter.RateMeter;
 

@@ -1,8 +1,8 @@
 package stincmale.ratmex.executor;
 
 import java.util.concurrent.ThreadFactory;
-import javax.annotation.Nullable;
-import javax.annotation.concurrent.ThreadSafe;
+import stincmale.ratmex.doc.Nullable;
+import stincmale.ratmex.doc.ThreadSafe;
 import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;
 
 @ThreadSafe

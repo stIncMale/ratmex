@@ -3,7 +3,7 @@ package stincmale.ratmex.meter;
 import java.time.Duration;
 import java.util.NavigableMap;
 import java.util.TreeMap;
-import javax.annotation.concurrent.NotThreadSafe;
+import stincmale.ratmex.doc.NotThreadSafe;
 import stincmale.ratmex.NanosComparator;
 
 /**

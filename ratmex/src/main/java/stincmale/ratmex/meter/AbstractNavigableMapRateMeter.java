@@ -6,7 +6,7 @@ import java.util.NavigableMap;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
-import javax.annotation.Nullable;
+import stincmale.ratmex.doc.Nullable;
 import stincmale.ratmex.NanosComparator;
 import stincmale.ratmex.internal.util.ConversionsAndChecks;
 import stincmale.ratmex.internal.util.Preconditions;

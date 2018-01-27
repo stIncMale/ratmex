@@ -1,6 +1,6 @@
 package stincmale.ratmex.executor;
 
-import javax.annotation.concurrent.ThreadSafe;
+import stincmale.ratmex.doc.ThreadSafe;
 import stincmale.ratmex.meter.ConcurrentRateMeterStats;
 
 /**

@@ -1,7 +1,7 @@
 package stincmale.ratmex.meter;
 
 import java.util.concurrent.atomic.LongAdder;
-import javax.annotation.concurrent.ThreadSafe;
+import stincmale.ratmex.doc.ThreadSafe;
 
 @ThreadSafe
 final class ConcurrentRingBufferRateMeterStats implements ConcurrentRateMeterStats {

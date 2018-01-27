@@ -1,7 +1,7 @@
 package stincmale.ratmex.meter;
 
 import java.time.Duration;
-import javax.annotation.concurrent.NotThreadSafe;
+import stincmale.ratmex.doc.NotThreadSafe;
 
 /**
  * A modifiable {@link RateMeter} reading.

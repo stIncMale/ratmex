@@ -2,16 +2,16 @@ package stincmale.ratmex.performance.util;
 
 import java.util.Arrays;
 import java.util.Collection;
-import javax.annotation.concurrent.NotThreadSafe;
 import org.openjdk.jmh.runner.options.ChainedOptionsBuilder;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
+import stincmale.ratmex.doc.NotThreadSafe;
 import static org.openjdk.jmh.runner.options.TimeValue.milliseconds;
 
 @NotThreadSafe
 public final class JmhOptions {
   public static final boolean DRY_RUN = true;
   private static final boolean JAVA_SERVER = true;
-  private static final boolean JAVA_ASSERTIONS = false;//TODO this does not work? check maven-surefire settings
+  private static final boolean JAVA_ASSERTIONS = false;
   public static final Collection<Integer> numbersOfThreads = Arrays.asList(1, 2, 4, 8, 16, 32);
 
   public static final ChainedOptionsBuilder includingClass(final Class<?> klass) {
@@ -22,7 +22,6 @@ public final class JmhOptions {
     final ChainedOptionsBuilder result = new OptionsBuilder()
         .jvmArgsAppend(JAVA_SERVER ? "-server" : "-client")
         .jvmArgsAppend(JAVA_ASSERTIONS ? "-enableassertions" : "-disableassertions")
-        .jvmArgsPrepend(JAVA_ASSERTIONS ? "-enableassertions" : "-disableassertions")
         .shouldDoGC(true)
         .syncIterations(true)
         .shouldFailOnError(true)

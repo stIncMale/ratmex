@@ -1,7 +1,7 @@
 package stincmale.ratmex.meter;
 
 import java.util.concurrent.locks.StampedLock;
-import javax.annotation.concurrent.ThreadSafe;
+import stincmale.ratmex.doc.ThreadSafe;
 import static stincmale.ratmex.internal.util.Constants.EXCLUDE_ASSERTIONS_FROM_BYTECODE;
 import static stincmale.ratmex.internal.util.Preconditions.checkArgument;
 

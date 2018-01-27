@@ -1,8 +1,7 @@
 package stincmale.ratmex;
 
 import java.util.Comparator;
-import javax.annotation.Nonnull;
-import javax.annotation.concurrent.ThreadSafe;
+import stincmale.ratmex.doc.ThreadSafe;
 import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;
 import static stincmale.ratmex.internal.util.Utils.format;
 
@@ -77,7 +76,7 @@ public final class NanosComparator implements Comparator<Long> {
    * @throws IllegalArgumentException If {@code l1} - {@code l2} == {@link Long#MIN_VALUE}.
    */
   @Override
-  public final int compare(@Nonnull final Long l1, @Nonnull final Long l2) throws IllegalArgumentException {
+  public final int compare(final Long l1, final Long l2) throws IllegalArgumentException {
     checkNotNull(l1, "o1");
     checkNotNull(l2, "o2");
     return compare(l1.longValue(), l2.longValue());

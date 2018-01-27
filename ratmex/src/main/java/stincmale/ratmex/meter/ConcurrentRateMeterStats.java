@@ -1,6 +1,6 @@
 package stincmale.ratmex.meter;
 
-import javax.annotation.concurrent.ThreadSafe;
+import stincmale.ratmex.doc.ThreadSafe;
 
 /**
  * Stats gathered by a thread-safe implementation of {@link RateMeter} which implements {@link RateMeter#tick(long, long)} in a relaxed way,

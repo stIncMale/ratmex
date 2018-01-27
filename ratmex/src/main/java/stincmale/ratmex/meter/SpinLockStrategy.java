@@ -1,7 +1,7 @@
 package stincmale.ratmex.meter;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-import javax.annotation.concurrent.ThreadSafe;
+import stincmale.ratmex.doc.ThreadSafe;
 import stincmale.ratmex.internal.util.Preconditions;
 import static stincmale.ratmex.internal.util.Preconditions.checkArgument;
 

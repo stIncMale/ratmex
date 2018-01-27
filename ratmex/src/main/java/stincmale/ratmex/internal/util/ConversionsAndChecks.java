@@ -1,7 +1,7 @@
 package stincmale.ratmex.internal.util;
 
 import java.time.Duration;
-import javax.annotation.Nullable;
+import stincmale.ratmex.doc.Nullable;
 import stincmale.ratmex.NanosComparator;
 import stincmale.ratmex.meter.RateMeterReading;
 import static stincmale.ratmex.internal.util.Preconditions.checkArgument;

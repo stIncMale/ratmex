@@ -3,9 +3,9 @@ package stincmale.ratmex.meter;
 import java.time.Duration;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import javax.annotation.Nullable;
-import javax.annotation.concurrent.Immutable;
-import javax.annotation.concurrent.NotThreadSafe;
+import stincmale.ratmex.doc.Nullable;
+import stincmale.ratmex.doc.Immutable;
+import stincmale.ratmex.doc.NotThreadSafe;
 import static stincmale.ratmex.internal.util.Preconditions.checkArgument;
 import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;
 

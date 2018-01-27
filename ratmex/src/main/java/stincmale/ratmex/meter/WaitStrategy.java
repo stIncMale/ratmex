@@ -1,7 +1,7 @@
 package stincmale.ratmex.meter;
 
 import java.util.function.BooleanSupplier;
-import javax.annotation.concurrent.ThreadSafe;
+import stincmale.ratmex.doc.ThreadSafe;
 
 /**
  * An abstraction which allows implementations of different approaches to block on a condition.

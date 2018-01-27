@@ -2,7 +2,7 @@ package stincmale.ratmex.meter;
 
 import java.time.Duration;
 import java.util.Optional;
-import javax.annotation.concurrent.NotThreadSafe;
+import stincmale.ratmex.doc.NotThreadSafe;
 
 /**
  * A not thread-safe implementation of {@link AbstractRingBufferRateMeter},

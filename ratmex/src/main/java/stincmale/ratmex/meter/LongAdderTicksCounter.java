@@ -1,7 +1,7 @@
 package stincmale.ratmex.meter;
 
 import java.util.concurrent.atomic.LongAdder;
-import javax.annotation.concurrent.ThreadSafe;
+import stincmale.ratmex.doc.ThreadSafe;
 
 /**
  * This {@link TicksCounter} uses {@link LongAdder} field to store its {@linkplain #get() value}.

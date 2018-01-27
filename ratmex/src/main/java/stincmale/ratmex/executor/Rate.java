@@ -2,7 +2,7 @@ package stincmale.ratmex.executor;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
-import javax.annotation.concurrent.Immutable;
+import stincmale.ratmex.doc.Immutable;
 import stincmale.ratmex.meter.RateMeterReading;
 import static stincmale.ratmex.internal.util.ConversionsAndChecks.checkUnit;
 import static stincmale.ratmex.internal.util.Preconditions.checkArgument;
