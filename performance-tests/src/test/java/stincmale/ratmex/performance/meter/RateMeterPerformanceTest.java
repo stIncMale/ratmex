@@ -32,6 +32,7 @@ import org.openjdk.jmh.results.RunResult;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.ChainedOptionsBuilder;
+import stincmale.ratmex.doc.Nullable;
 import stincmale.ratmex.meter.ConcurrentNavigableMapRateMeter;
 import stincmale.ratmex.meter.ConcurrentRateMeterConfig;
 import stincmale.ratmex.meter.ConcurrentRateMeterStats;
@@ -58,13 +59,13 @@ public class RateMeterPerformanceTest {
   private static final String SYSTEM_PROPERTY_GROUP_OF_RUNS_DESCRIPTOR = "groupOfRunsDescriptor";
   private static final Duration samplesInterval = Duration.of(1, ChronoUnit.MILLIS);
   private static final Supplier<ChainedOptionsBuilder> jmhOptions = () -> {
-    final ChainedOptionsBuilder result = JmhOptions.get();
+    final ChainedOptionsBuilder result = JmhOptions.includingClass(RateMeterPerformanceTest.class);
     if (!DRY_RUN) {
-      result.warmupTime(milliseconds(750))
-          .warmupIterations(3)
-          .measurementTime(milliseconds(1000))
-          .measurementIterations(3)
-          .forks(3);
+      result.forks(2)
+          .warmupTime(milliseconds(200))
+          .warmupIterations(10)
+          .measurementTime(milliseconds(500))
+          .measurementIterations(5);
     }
     return result;
   };
@@ -75,11 +76,11 @@ public class RateMeterPerformanceTest {
 
   static {
     groupOfRunsDescriptors = new TreeSet<>();
-    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.NAVIGABLE_MAP_RATE_METER_DEFAULT);
-    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_NAVIGABLE_MAP_RATE_METER_DEFAULT);
-    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.RING_BUFFER_RATE_METER_DEFAULT);
-    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_RING_BUFFER_RATE_METER_DEFAULT);
-    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_RING_BUFFER_RATE_METER_RELAXED_TICKS);
+    //    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.NAVIGABLE_MAP_RATE_METER_DEFAULT);
+    //    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_NAVIGABLE_MAP_RATE_METER_DEFAULT);
+    //    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.RING_BUFFER_RATE_METER_DEFAULT);
+    //    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_RING_BUFFER_RATE_METER_DEFAULT);
+    //    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_RING_BUFFER_RATE_METER_RELAXED_TICKS);
     groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_SIMPLE_RATE_METER_WITH_DEFAULT_RING_BUFFER_RATE_METER_AND_STAMPED_LOCK_STRATEGY);
     groupOfRunsDescriptor = new AtomicReference<>(groupOfRunsDescriptors.first());
   }
@@ -217,16 +218,34 @@ public class RateMeterPerformanceTest {
 
   @AfterAll
   public static final void afterAll() {
+    System.out.println();
     testResults.forEach((groupOfRunsDescriptor, runResults) -> {
       final String testId = groupOfRunsDescriptor.name();
       new JmhPerformanceTestResult(testId, RateMeterPerformanceTest.class, runResults).save();
-      if (!Utils.isHeadless()) {
-        final PerformanceTestResult ptr = new PerformanceTestResult(testId, RateMeterPerformanceTest.class)
-            .load();
-        ptr.save(Mode.Throughput, groupOfRunsDescriptor.description, "number of threads", "throughput, ops/s", "#.# mln", null);
-        ptr.save(Mode.AverageTime, groupOfRunsDescriptor.description, "number of threads", "latency, ns", null, null);
-      }
     });
+    generateCharts(PerformanceTestResult.loadAll(RateMeterPerformanceTest.class));
+  }
+
+  public static final void generateCharts(final Collection<? extends PerformanceTestResult> loadedPtrs) {
+    if (!Utils.isHeadless()) {
+      loadedPtrs.forEach(ptr -> {
+        @Nullable
+        GroupOfRunsDescriptor descriptor;
+        try {
+          descriptor = GroupOfRunsDescriptor.valueOf(ptr.getTestId());
+        } catch (IllegalArgumentException e) {
+          descriptor = null;
+        }
+        if (descriptor != null) {
+          generateCharts(descriptor, ptr);
+        }
+      });
+    }
+  }
+
+  private static final void generateCharts(final GroupOfRunsDescriptor groupOfRunsDescriptor, final PerformanceTestResult ptr) {
+    ptr.save(Mode.Throughput, groupOfRunsDescriptor.description, "number of threads", "throughput, ops/s", "###,###,###.### mln", null);
+    ptr.save(Mode.AverageTime, groupOfRunsDescriptor.description, "number of threads", "latency, ns", null, null);
   }
 
   private final void run(final GroupOfRunsDescriptor groupOfRunsDescriptor) {
@@ -244,7 +263,7 @@ public class RateMeterPerformanceTest {
   private final Collection<RunResult> runThroughput(final GroupOfRunsDescriptor groupOfRunsDescriptor, final int numberOfThreads) {
     final Collection<RunResult> runResults;
     try {
-      runResults = new Runner(JmhOptions.includingClass(getClass())
+      runResults = new Runner(jmhOptions.get()
           .jvmArgsAppend(format("-D%s=%s", SYSTEM_PROPERTY_GROUP_OF_RUNS_DESCRIPTOR, groupOfRunsDescriptor.name()))
           .mode(Mode.Throughput)
           .timeUnit(TimeUnit.MICROSECONDS)
@@ -260,7 +279,7 @@ public class RateMeterPerformanceTest {
   private final Collection<RunResult> runLatency(final GroupOfRunsDescriptor groupOfRunsDescriptor, final int numberOfThreads) {
     final Collection<RunResult> runResults;
     try {
-      runResults = new Runner(JmhOptions.includingClass(getClass())
+      runResults = new Runner(jmhOptions.get()
           .jvmArgsAppend(format("-D%s=%s", SYSTEM_PROPERTY_GROUP_OF_RUNS_DESCRIPTOR, groupOfRunsDescriptor.name()))
           .mode(Mode.AverageTime)
           .timeUnit(TimeUnit.NANOSECONDS)

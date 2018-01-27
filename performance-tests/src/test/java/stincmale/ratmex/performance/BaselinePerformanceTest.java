@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
-import org.knowm.xchart.XYSeries.XYSeriesRenderStyle;
 import org.knowm.xchart.style.markers.SeriesMarkers;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Mode;
@@ -127,20 +126,32 @@ public class BaselinePerformanceTest {
 
   @AfterAll
   public static final void afterAll() {
-    final String testId = BaselinePerformanceTest.class.getSimpleName();
+    System.out.println();
+    final String testId = getTestId();
     new JmhPerformanceTestResult(testId, BaselinePerformanceTest.class, testResults).save();
+    generateCharts(Collections.singleton(new PerformanceTestResult(testId, BaselinePerformanceTest.class).load()));
+  }
+
+  public static final void generateCharts(final Collection<? extends PerformanceTestResult> loadedPtrs) {
     if (!Utils.isHeadless()) {
-      final PerformanceTestResult ptr = new PerformanceTestResult(testId, BaselinePerformanceTest.class)
-          .load();
-      ptr.save(Mode.Throughput, BaselinePerformanceTest.class.getSimpleName(), "number of threads", "throughput, ops/s", "#.# mln", null);
-      ptr.save(Mode.AverageTime, BaselinePerformanceTest.class.getSimpleName(), "number of threads", "latency, ns", null,
-          Collections.singletonMap("granularitySystemNanoTime", series -> {
-            series.setMarkerColor(Color.BLACK);
-            series.setLineColor(Color.BLACK);
-            series.setMarker(SeriesMarkers.SQUARE);
-            series.setXYSeriesRenderStyle(XYSeriesRenderStyle.Scatter);
-            return series;
-          }));
+      final String testId = getTestId();
+      loadedPtrs.stream()
+          .filter(ptr -> testId.equals(ptr.getTestId()))
+          .findAny()
+          .ifPresent(ptr -> {
+            ptr.save(Mode.Throughput, BaselinePerformanceTest.class.getSimpleName(), "number of threads", "throughput, ops/s", "#.# mln", null);
+            ptr.save(Mode.AverageTime, BaselinePerformanceTest.class.getSimpleName(), "number of threads", "latency, ns", null,
+                Collections.singletonMap("granularitySystemNanoTime", series -> {
+                  series.setMarkerColor(Color.BLACK);
+                  series.setLineColor(Color.BLACK);
+                  series.setMarker(SeriesMarkers.SQUARE);
+                  return series;
+                }));
+          });
     }
+  }
+
+  private static final String getTestId() {
+    return BaselinePerformanceTest.class.getSimpleName();
   }
 }

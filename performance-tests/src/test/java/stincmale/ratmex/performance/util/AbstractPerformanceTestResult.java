@@ -25,7 +25,7 @@ abstract class AbstractPerformanceTestResult {
     dataFilePath = directoryPath.resolve(testId + ".json");
   }
 
-  protected final String getTestId() {
+  public final String getTestId() {
     return testId;
   }
 

@@ -13,6 +13,7 @@ import org.openjdk.jmh.results.format.ResultFormatType;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.nio.file.StandardOpenOption.WRITE;
+import static stincmale.ratmex.performance.util.Utils.format;
 
 public final class JmhPerformanceTestResult extends AbstractPerformanceTestResult {
   private final Collection<RunResult> runResults;
@@ -32,5 +33,6 @@ public final class JmhPerformanceTestResult extends AbstractPerformanceTestResul
     } catch (final IOException e) {
       throw new RuntimeException(e);
     }
+    System.out.println(format("Saved JMH performance test result with id=%s", getTestId()));
   }
 }

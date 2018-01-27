@@ -17,7 +17,7 @@ import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;
  * <ul>
  * <li>The default values from {@link RateMeterConfig} except for {@link #getHistoryLength()}, {@link #getTicksCounterSupplier()}</li>
  * <li>{@link #getTicksCounterSupplier()} - {@link LongAdderTicksCounter}{@code ::}{@link LongAdderTicksCounter#LongAdderTicksCounter(long) new}</li>
- * <li>{@link #getHistoryLength()} - 30</li>
+ * <li>{@link #getHistoryLength()} - 32</li>
  * <li>{@link #getMaxTicksCountAttempts()} - 6</li>
  * <li>{@link #getMode()} - {@link Mode#STRICT}</li>
  * <li>{@link #isCollectStats()} - false</li>
@@ -142,7 +142,7 @@ public class ConcurrentRateMeterConfig extends RateMeterConfig {
 
     protected Builder() {
       ticksCounterSupplier = LongAdderTicksCounter::new;
-      historyLength = 30;
+      historyLength = 32;
       maxTicksCountAttempts = 6;
       mode = Mode.STRICT;
       collectStats = false;

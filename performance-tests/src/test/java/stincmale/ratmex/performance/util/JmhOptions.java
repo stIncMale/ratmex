@@ -9,10 +9,10 @@ import static org.openjdk.jmh.runner.options.TimeValue.milliseconds;
 
 @NotThreadSafe
 public final class JmhOptions {
-  public static final boolean DRY_RUN = true;
+  public static final boolean DRY_RUN = false;
   private static final boolean JAVA_SERVER = true;
   private static final boolean JAVA_ASSERTIONS = false;
-  public static final Collection<Integer> numbersOfThreads = Arrays.asList(1, 2, 4, 8, 16, 32);
+  public static final Collection<Integer> numbersOfThreads = Arrays.asList(1);
 
   public static final ChainedOptionsBuilder includingClass(final Class<?> klass) {
     return get().include(klass.getName() + ".*");
@@ -29,9 +29,9 @@ public final class JmhOptions {
         .timeout(milliseconds(5_000));
     if (DRY_RUN) {
       result.forks(1)
-          .warmupTime(milliseconds(1))
-          .warmupIterations(0)
-          .measurementTime(milliseconds(1))
+          .warmupTime(milliseconds(100))
+          .warmupIterations(1)
+          .measurementTime(milliseconds(100))
           .measurementIterations(1);
     } else {
       result.forks(3)

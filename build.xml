@@ -65,7 +65,7 @@
               <includeTags>${ratmex.maven-surefire-plugin.includeTags}
               </includeTags><!-- TODO will not work until https://github.com/junit-team/junit5/issues/809#issuecomment-352654645 -->
               <excludeTags>${ratmex.maven-surefire-plugin.excludeTags}</excludeTags>
-              <argLine>${ratmex.maven-surefire-plugin.assertions}</argLine>
+              <argLine>${ratmex.maven-surefire-plugin.assertions} -Xmx1024m</argLine>
             </properties>
           </configuration>
           <dependencies>

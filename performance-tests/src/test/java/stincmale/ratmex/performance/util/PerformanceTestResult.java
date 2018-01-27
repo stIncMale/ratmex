@@ -5,12 +5,17 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 import javax.json.Json;
 import javax.json.JsonNumber;
 import javax.json.JsonObject;
@@ -39,6 +44,34 @@ public final class PerformanceTestResult extends AbstractPerformanceTestResult {
   @Nullable
   private SortedMap<String, SortedMap<Mode, SortedMap<Integer, BenchmarkResult>>> benchmark_mode_numberOfThreads_result;
 
+  public static final Collection<PerformanceTestResult> loadAll(final Class<?> testClass) {
+    final Path directoryPath = new PerformanceTestResult("", testClass).getDirectoryPath();
+    final Collection<PerformanceTestResult> result = new ArrayList<>();
+    try (final Stream<Path> filePaths = Files.list(directoryPath)) {
+      filePaths.forEach(filePath -> {
+        @Nullable
+        final Path fName = filePath.getFileName();
+        if (fName != null) {
+          final String fileName = fName.toString();
+          final int jsonExtensionIdx = fileName.lastIndexOf(".json");
+          if (jsonExtensionIdx > 0) {
+            final String testId = fileName.substring(0, jsonExtensionIdx);
+            try {
+              final PerformanceTestResult ptr = new PerformanceTestResult(testId, testClass).load();
+              result.add(ptr);
+              System.out.println(format("Loaded performance test result with id=%s", ptr.getTestId()));
+            } catch (final RuntimeException e) {
+              System.out.println(format("Failed to load performance test result from %s", filePath));
+            }
+          }
+        }
+      });
+    } catch (final IOException e) {
+      throw new RuntimeException(e);
+    }
+    return result;
+  }
+
   public PerformanceTestResult(final String testId, final Class<?> testClass) {
     super(testId, testClass);
     benchmark_mode_numberOfThreads_result = null;
@@ -48,34 +81,36 @@ public final class PerformanceTestResult extends AbstractPerformanceTestResult {
    * @return {@code this}.
    */
   public final PerformanceTestResult load() {
-    try (final JsonReader jsonReader = Json.createReader(new InputStreamReader(
-        Files.newInputStream(getDataFilePath(), READ),
-        StandardCharsets.UTF_8))) {
-      final SortedMap<String, SortedMap<Mode, SortedMap<Integer, BenchmarkResult>>> benchmark_mode_numberOfThreads_result = new TreeMap<>();
-      jsonReader.readArray()
-          .stream()
-          .map(JsonValue::asJsonObject)
-          .map(jsonObj -> new BenchmarkResult(getTestId(), jsonObj))
-          .forEach(br -> benchmark_mode_numberOfThreads_result.compute(br.benchmark, (k1, v1) -> {
-            final SortedMap<Mode, SortedMap<Integer, BenchmarkResult>> mode_numberOfThreads_result = v1 == null ? new TreeMap<>() : v1;
-            mode_numberOfThreads_result.compute(br.mode, (k2, v2) -> {
-              final SortedMap<Integer, BenchmarkResult> numberOfThreads_result = v2 == null ? new TreeMap<>() : v2;
-              numberOfThreads_result.compute(br.numberOfThreads, (k3, v3) -> {
-                final BenchmarkResult result;
-                if (v3 == null) {
-                  result = br;
-                } else {
-                  throw new RuntimeException(format("Duplicate %s and %s", v3, br));
-                }
-                return result;
+    if (!isLoaded()) {
+      try (final JsonReader jsonReader = Json.createReader(new InputStreamReader(
+          Files.newInputStream(getDataFilePath(), READ),
+          StandardCharsets.UTF_8))) {
+        final SortedMap<String, SortedMap<Mode, SortedMap<Integer, BenchmarkResult>>> benchmark_mode_numberOfThreads_result = new TreeMap<>();
+        jsonReader.readArray()
+            .stream()
+            .map(JsonValue::asJsonObject)
+            .map(jsonObj -> new BenchmarkResult(getTestId(), jsonObj))
+            .forEach(br -> benchmark_mode_numberOfThreads_result.compute(br.benchmark, (k1, v1) -> {
+              final SortedMap<Mode, SortedMap<Integer, BenchmarkResult>> mode_numberOfThreads_result = v1 == null ? new TreeMap<>() : v1;
+              mode_numberOfThreads_result.compute(br.mode, (k2, v2) -> {
+                final SortedMap<Integer, BenchmarkResult> numberOfThreads_result = v2 == null ? new TreeMap<>() : v2;
+                numberOfThreads_result.compute(br.numberOfThreads, (k3, v3) -> {
+                  final BenchmarkResult result;
+                  if (v3 == null) {
+                    result = br;
+                  } else {
+                    throw new RuntimeException(format("Duplicate %s and %s", v3, br));
+                  }
+                  return result;
+                });
+                return numberOfThreads_result;
               });
-              return numberOfThreads_result;
-            });
-            return mode_numberOfThreads_result;
-          }));
-      this.benchmark_mode_numberOfThreads_result = benchmark_mode_numberOfThreads_result;
-    } catch (final IOException e) {
-      throw new RuntimeException(e);
+              return mode_numberOfThreads_result;
+            }));
+        this.benchmark_mode_numberOfThreads_result = benchmark_mode_numberOfThreads_result;
+      } catch (final IOException e) {
+        throw new RuntimeException(e);
+      }
     }
     return this;
   }
@@ -89,6 +124,7 @@ public final class PerformanceTestResult extends AbstractPerformanceTestResult {
       @Nullable final Map<String, Function<XYSeries, XYSeries>> benchmarkSeriesProcessors) {
     ensureLoaded();
     final XYChart chart = createChart(
+        mode,
         format("%s, %s", chartTitle, getEnvironmentDescription()),
         xAxisTitle,
         yAxisTitle,
@@ -107,9 +143,11 @@ public final class PerformanceTestResult extends AbstractPerformanceTestResult {
     } catch (final IOException e) {
       throw new RuntimeException(e);
     }
+    System.out.println(format("Saved performance test chart with id=%s, mode=%s", getTestId(), mode));
   }
 
-  private static final XYChart createChart(
+  private final XYChart createChart(
+      final Mode mode,
       final String chartTitle,
       final String xAxisTitle,
       final String yAxisTitle,
@@ -155,6 +193,7 @@ public final class PerformanceTestResult extends AbstractPerformanceTestResult {
               idx++;
             }
             final XYSeries series = chart.addSeries(benchmark, xData, yData, errorBars);
+            series.setXYSeriesRenderStyle(getSeriesRenderStyle(benchmark, targetMode));
             @Nullable
             final Function<XYSeries, XYSeries> seriesProcessor = benchmarkSeriesProcessors == null ? null : benchmarkSeriesProcessors.get(benchmark);
             if (seriesProcessor != null) {
@@ -166,10 +205,24 @@ public final class PerformanceTestResult extends AbstractPerformanceTestResult {
     });
   }
 
+  private final XYSeriesRenderStyle getSeriesRenderStyle(final String benchmark, final Mode mode) {
+    final int maxNumberOfThreads = benchmark_mode_numberOfThreads_result.getOrDefault(benchmark, Collections.emptySortedMap())
+        .getOrDefault(mode, Collections.emptySortedMap())
+        .keySet()
+        .stream()
+        .max(Integer::compare)
+        .orElse(0);
+    return maxNumberOfThreads > 1 ? XYSeriesRenderStyle.Line : XYSeriesRenderStyle.Scatter;
+  }
+
   private final void ensureLoaded() {
-    if (benchmark_mode_numberOfThreads_result == null) {
+    if (!isLoaded()) {
       throw new IllegalStateException("Data has not been loaded");
     }
+  }
+
+  private final boolean isLoaded() {
+    return benchmark_mode_numberOfThreads_result != null;
   }
 
   private static final String getEnvironmentDescription() {
