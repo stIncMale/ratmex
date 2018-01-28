@@ -12,7 +12,7 @@ public final class JmhOptions {
   public static final boolean DRY_RUN = false;
   private static final boolean JAVA_SERVER = true;
   private static final boolean JAVA_ASSERTIONS = DRY_RUN;
-  public static final Collection<Integer> numbersOfThreads = DRY_RUN ? Arrays.asList(1, 4) : Arrays.asList(16);
+  public static final Collection<Integer> numbersOfThreads = DRY_RUN ? Arrays.asList(1, 4) : Arrays.asList(1, 2, 4, 8, 16);
 
   public static final ChainedOptionsBuilder includingClass(final Class<?> klass) {
     return get().include(klass.getName() + ".*");
@@ -37,7 +37,7 @@ public final class JmhOptions {
       result.forks(2)
           .warmupTime(milliseconds(300))
           .warmupIterations(10)
-          .measurementTime(milliseconds(400))
+          .measurementTime(milliseconds(500))
           .measurementIterations(5);
     }
     return result;
