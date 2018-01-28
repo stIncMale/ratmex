@@ -12,7 +12,7 @@ import static stincmale.ratmex.internal.util.Utils.format;
 /**
  * A representation of a rate.
  * Formally represents a set of probability distributions which have probability density functions equal to 0
- * for any rate values outside [{@linkplain #getMinValue() minValue}; {@linkplain #getMaxValue() max}].
+ * for any rate values outside [{@linkplain #getMinValue() minValue}; {@linkplain #getMaxValue() maxValue}].
  */
 @Immutable
 public final class Rate {
@@ -38,17 +38,18 @@ public final class Rate {
 
   /**
    * This method is equivalent to
-   * {@link #withAbsoluteDeviation(double, double, Duration) withAbsoluteDeviation}{@code (averageValue, relativeDeviation * averageValue, unit)}.
+   * {@link #withAbsoluteDeviation(double, double, Duration) withAbsoluteDeviation}{@code (midrange, relativeDeviation * midrange, unit)}.
    *
-   * @param averageValue An unweighted averageValue rate value.
-   * @param relativeDeviation A maximal relative deviation of rate values from the {@code averageValue}. Must not be negative.
+   * @param midrange The mean of {@linkplain #getMinValue() minValue} and {@linkplain #getMaxValue() maxValue},
+   * i.e. ({@linkplain #getMinValue() minValue} + {@linkplain #getMaxValue() maxValue}) / 2.
+   * @param relativeDeviation A maximal relative deviation of rate values from the {@code midrange}. Must not be negative.
    * @param unit See {@link #Rate(double, double, Duration)}.
    */
-  public static Rate withRelativeDeviation(final double averageValue, final double relativeDeviation, final Duration unit) {
+  public static Rate withRelativeDeviation(final double midrange, final double relativeDeviation, final Duration unit) {
     checkArgument(relativeDeviation >= 0, "relativeDeviation",
         () -> format("Must not be less than 0, but actual value is %s", relativeDeviation));
     checkUnit(unit, "unit");
-    return withAbsoluteDeviation(averageValue, relativeDeviation * averageValue, unit);
+    return withAbsoluteDeviation(midrange, relativeDeviation * midrange, unit);
   }
 
   /**
@@ -56,15 +57,16 @@ public final class Rate {
    * {@code new }{@link #Rate(double, double, Duration) Rate}{@code (averageValue - absoluteDeviation, averageValue + absoluteDeviation, unit)},
    * but may return not a new object.
    *
-   * @param averageValue An unweighted averageValue rate value.
+   * @param midrange The mean of {@linkplain #getMinValue() minValue} and {@linkplain #getMaxValue() maxValue},
+   * i.e. ({@linkplain #getMinValue() minValue} + {@linkplain #getMaxValue() maxValue}) / 2.
    * @param absoluteDeviation An maximal absolute deviation of rate values from the {@code averageValue}. Must not be negative.
    * @param unit See {@link #Rate(double, double, Duration)}.
    */
-  public static Rate withAbsoluteDeviation(final double averageValue, final double absoluteDeviation, final Duration unit) {
+  public static Rate withAbsoluteDeviation(final double midrange, final double absoluteDeviation, final Duration unit) {
     checkArgument(absoluteDeviation >= 0, "absoluteDeviation",
         () -> format("Must not be negative, but actual value is %s", absoluteDeviation));
     checkUnit(unit, "unit");
-    return new Rate(averageValue - absoluteDeviation, averageValue + absoluteDeviation, unit);
+    return new Rate(midrange - absoluteDeviation, midrange + absoluteDeviation, unit);
   }
 
   /**

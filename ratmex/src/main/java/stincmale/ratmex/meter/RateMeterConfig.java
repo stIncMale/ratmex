@@ -14,8 +14,8 @@ import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;
  * <p>
  * The default values:
  * <ul>
- * <li>{@link #getTicksCounterSupplier()} - {@link LongTicksCounter}{@code ::}{@link LongTicksCounter#LongTicksCounter(long) new}</li>
- * <li>{@link #getTimeSensitivity()} - {@link Optional}{@code .}{@linkplain Optional#empty() empty()}</li>
+ * <li>{@link #getTicksCounterSupplier()} - {@link LongTicksCounter LongTicksCounter::new}</li>
+ * <li>{@link #getTimeSensitivity()} - {@linkplain Optional#empty() Optional.empty()}</li>
  * <li>{@link #getHistoryLength()} - 2</li>
  * </ul>
  */

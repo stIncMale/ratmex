@@ -15,14 +15,15 @@ import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;
  * <p>
  * The default values:
  * <ul>
- * <li>The default values from {@link RateMeterConfig} except for {@link #getHistoryLength()}, {@link #getTicksCounterSupplier()}</li>
- * <li>{@link #getTicksCounterSupplier()} - {@link LongAdderTicksCounter}{@code ::}{@link LongAdderTicksCounter#LongAdderTicksCounter(long) new}</li>
+ * <li>The default values from {@link RateMeterConfig} except for {@link #getTicksCounterSupplier()}, {@link #getHistoryLength()}</li>
+ * <li>{@link #getTicksCounterSupplier()} - {@link LongAdderTicksCounter LongAdderTicksCounter::new}</li>
  * <li>{@link #getHistoryLength()} - 64</li>
  * <li>{@link #getMaxTicksCountAttempts()} - 16</li>
  * <li>{@link #getMode()} - {@link Mode#STRICT}</li>
  * <li>{@link #isCollectStats()} - false</li>
- * <li>{@link #getWaitStrategySupplier()} - {@link ParkWaitStrategy}{@code ::}{@link ParkWaitStrategy#defaultInstance() defaultInstance}</li>
- * <li>{@link #getLockStrategySupplier()} - {@link StampedLockStrategy}{@code ::}{@link StampedLockStrategy#StampedLockStrategy new}</li>
+ * <li>{@link #getWaitStrategySupplier()} - {@link YieldWaitStrategy#instance() YieldWaitStrategy::instance}</li>
+ * <li>{@link #getLockStrategySupplier()} -
+ * {@link SpinLockStrategy new SpinLockStrategy(}{@link YieldWaitStrategy YieldWaitStrategy.instance())}</li>
  * </ul>
  */
 @Immutable
@@ -146,8 +147,8 @@ public class ConcurrentRateMeterConfig extends RateMeterConfig {
       maxTicksCountAttempts = 16;
       mode = Mode.STRICT;
       collectStats = false;
-      waitStrategySupplier = ParkWaitStrategy::defaultInstance;
-      lockStrategySupplier = StampedLockStrategy::new;
+      waitStrategySupplier = YieldWaitStrategy::instance;
+      lockStrategySupplier = () -> new SpinLockStrategy(YieldWaitStrategy.instance());
     }
 
     /**

@@ -3,7 +3,6 @@ package stincmale.ratmex.meter;
 import java.util.concurrent.atomic.AtomicBoolean;
 import stincmale.ratmex.doc.ThreadSafe;
 import stincmale.ratmex.internal.util.Preconditions;
-import static stincmale.ratmex.internal.util.Preconditions.checkArgument;
 
 /**
  * This implementation of {@link LockStrategy} does not distinguish shared and exclusive locking.
@@ -79,3 +78,4 @@ public final class SpinLockStrategy implements LockStrategy {
     atomicBoolean.set(false);
   }
 }
+//TODO consider implementing two-phase LockStrategy with AtomicMarkableReference
