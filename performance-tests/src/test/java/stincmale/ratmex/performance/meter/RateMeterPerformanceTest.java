@@ -60,36 +60,35 @@ import static stincmale.ratmex.performance.util.Utils.format;
 public class RateMeterPerformanceTest {
   private static final long ACCEPTABLE_INCORRECTLY_REGISTERED_TICKS_EVENTS_COUNT_PER_TRIAL = 0;
   private static final String SYSTEM_PROPERTY_GROUP_OF_RUNS_DESCRIPTOR = "groupOfRunsDescriptor";
-  private static final Duration samplesInterval = Duration.of(1, ChronoUnit.MILLIS);
+  private static final Duration samplesInterval = Duration.of(10, ChronoUnit.MILLIS);
   private static final Supplier<ChainedOptionsBuilder> jmhOptions = () -> {
     final ChainedOptionsBuilder result = JmhOptions.includingClass(RateMeterPerformanceTest.class);
     if (!DRY_RUN) {
       result.forks(2)
-          .warmupTime(milliseconds(200))
+          .warmupTime(milliseconds(300))
           .warmupIterations(10)
-          .measurementTime(milliseconds(500))
+          .measurementTime(milliseconds(600))
           .measurementIterations(5);
     }
     return result;
   };
   private static final SortedSet<GroupOfRunsDescriptor> groupOfRunsDescriptors;
-  /*We supply groupOfRunsDescriptor to JMH via the static field groupOfRunsDescriptor,
-    and hence we must be sure that this field refers to the same GroupOfRunsDescriptor during the test.*/
+  //we supply groupOfRunsDescriptor to JMH via the static field groupOfRunsDescriptor
   private static final AtomicReference<GroupOfRunsDescriptor> groupOfRunsDescriptor;
 
   static {
     groupOfRunsDescriptors = new TreeSet<>();
-    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.NAVIGABLE_MAP_RATE_METER_DEFAULT);
-    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_NAVIGABLE_MAP_RATE_METER_DEFAULT);
+    //    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.NAVIGABLE_MAP_RATE_METER_DEFAULT);
+    //    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_NAVIGABLE_MAP_RATE_METER_DEFAULT);
     groupOfRunsDescriptors.add(GroupOfRunsDescriptor.RING_BUFFER_RATE_METER_DEFAULT);
-    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_RING_BUFFER_RATE_METER_DEFAULT);
-    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_RING_BUFFER_RATE_METER_RELAXED_TICKS);
-    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_SIMPLE_RATE_METER_WITH_DEFAULT_RING_BUFFER_RATE_METER_AND_STAMPED_LOCK_STRATEGY);
-    groupOfRunsDescriptors.add(
-        GroupOfRunsDescriptor.CONCURRENT_SIMPLE_RATE_METER_WITH_DEFAULT_RING_BUFFER_RATE_METER_AND_SPIN_LOCK_STRATEGY_WITH_PARK_WAIT_STRATEGY);
-    groupOfRunsDescriptors.add(
-        GroupOfRunsDescriptor.CONCURRENT_SIMPLE_RATE_METER_WITH_DEFAULT_RING_BUFFER_RATE_METER_AND_SPIN_LOCK_STRATEGY_WITH_YIELD_WAIT_STRATEGY);
-    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.SYNCHRONIZED_RATE_METER_WITH_DEFAULT_RING_BUFFER_RATE_METER);
+    //    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_RING_BUFFER_RATE_METER_DEFAULT);
+    //    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_RING_BUFFER_RATE_METER_RELAXED_TICKS);
+    //    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_SIMPLE_RATE_METER_WITH_DEFAULT_RING_BUFFER_RATE_METER_AND_STAMPED_LOCK_STRATEGY);
+    //    groupOfRunsDescriptors.add(
+    //        GroupOfRunsDescriptor.CONCURRENT_SIMPLE_RATE_METER_WITH_DEFAULT_RING_BUFFER_RATE_METER_AND_SPIN_LOCK_STRATEGY_WITH_PARK_WAIT_STRATEGY);
+    //    groupOfRunsDescriptors.add(
+    //        GroupOfRunsDescriptor.CONCURRENT_SIMPLE_RATE_METER_WITH_DEFAULT_RING_BUFFER_RATE_METER_AND_SPIN_LOCK_STRATEGY_WITH_YIELD_WAIT_STRATEGY);
+    //    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.SYNCHRONIZED_RATE_METER_WITH_DEFAULT_RING_BUFFER_RATE_METER);
     groupOfRunsDescriptor = new AtomicReference<>(groupOfRunsDescriptors.first());
   }
 
@@ -119,6 +118,7 @@ public class RateMeterPerformanceTest {
             ConcurrentRingBufferRateMeter.defaultConfig()
                 .toBuilder()
                 .setMode(ConcurrentRateMeterConfig.Mode.RELAXED_TICKS)
+                .setCollectStats(true)
                 .build())),
     CONCURRENT_SIMPLE_RATE_METER_WITH_DEFAULT_RING_BUFFER_RATE_METER_AND_STAMPED_LOCK_STRATEGY(
         format("%s with %s, stamped LS, samples interval: %sms",
@@ -181,14 +181,26 @@ public class RateMeterPerformanceTest {
   }
 
   @Benchmark
+  public void alternateTicksCountTick(final BenchmarkState benchmarkState, final ThreadState threadState) {
+    alternateTicksCountTick(benchmarkState.rateMeter, threadState.reading, threadState.counter);
+    threadState.counter++;
+  }
+
+  @Benchmark
+  public void ticksCountWithLessThanOnePercentTick(final BenchmarkState benchmarkState, final ThreadState threadState) {
+    ticksCountWithLessThanOnePercentTick(benchmarkState.rateMeter, threadState.reading, threadState.counter);
+    threadState.counter++;
+  }
+
+  @Benchmark
   public void alternateRateTick(final BenchmarkState benchmarkState, final ThreadState threadState) {
-    alternateRateTick(benchmarkState.rateMeter, threadState.counter);
+    alternateRateTick(benchmarkState.rateMeter, threadState.reading, threadState.counter);
     threadState.counter++;
   }
 
   @Benchmark
   public void rateWithLessThanOnePercentTick(final BenchmarkState benchmarkState, final ThreadState threadState) {
-    rateWithLessThanOnePercentTick(benchmarkState.rateMeter, threadState.counter);
+    rateWithLessThanOnePercentTick(benchmarkState.rateMeter, threadState.reading, threadState.counter);
     threadState.counter++;
   }
 
@@ -220,7 +232,7 @@ public class RateMeterPerformanceTest {
       rateMeter = groupOfRunsDescriptor.rateMeterCreator.apply(nanoTime());
     }
 
-    @TearDown(Level.Trial)
+    @TearDown(Level.Iteration)
     public final void tearDown() {
       rateMeter.stats()
           .ifPresent(statistics -> {
@@ -326,31 +338,56 @@ public class RateMeterPerformanceTest {
     rm.tick(1, nanoTime());
   }
 
-  private static final long rate(final RateMeter<?> rm) {
-    return rm.rate();
-    //    bh.consume(rateMeter.rate(new RateMeterReading()));
-    //    bh.consume(rateMeter.rate(samplesInterval));
-    //    bh.consume(rateMeter.rate(rateMeter.rightSamplesWindowBoundary()));
+  private static final long ticksCount(final RateMeter<?> rm, final RateMeterReading reading) {
+    return rm.ticksCount(new RateMeterReading())
+        .getValueLong();
   }
 
-  private static final long rateWithLessThanOnePercentTick(final RateMeter<?> rm, final long counter) {
-    final long result;
+  private static final double ticksCountWithLessThanOnePercentTick(final RateMeter<?> rm, final RateMeterReading reading, final long counter) {
+    final double result;
     if ((counter & 127) == 0) {//same as (counter % 128 == 0), i.e. test if counter is a multiple of 128
       rm.tick(1, nanoTime());
       result = 0;
     } else {
-      result = rate(rm);
+      result = ticksCount(rm, reading);
     }
     return result;
   }
 
-  private static final long alternateRateTick(final RateMeter<?> rm, final long counter) {
-    final long result;
+  private static final double alternateTicksCountTick(final RateMeter<?> rm, final RateMeterReading reading, final long counter) {
+    final double result;
     if ((counter & 1) == 0) {//same as (counter % 2 == 0), i.e. test if counter is even
       rm.tick(1, nanoTime());
       result = 0;
     } else {
-      result = rate(rm);
+      result = ticksCount(rm, reading);
+    }
+    return result;
+  }
+
+  private static final double rate(final RateMeter<?> rm, final RateMeterReading reading) {
+    return rm.rate(rm.rightSamplesWindowBoundary(), reading)
+        .getValueDouble();
+  }
+
+  private static final double rateWithLessThanOnePercentTick(final RateMeter<?> rm, final RateMeterReading reading, final long counter) {
+    final double result;
+    if ((counter & 127) == 0) {//same as (counter % 128 == 0), i.e. test if counter is a multiple of 128
+      rm.tick(1, nanoTime());
+      result = 0;
+    } else {
+      result = rate(rm, reading);
+    }
+    return result;
+  }
+
+  private static final double alternateRateTick(final RateMeter<?> rm, final RateMeterReading reading, final long counter) {
+    final double result;
+    if ((counter & 1) == 0) {//same as (counter % 2 == 0), i.e. test if counter is even
+      rm.tick(1, nanoTime());
+      result = 0;
+    } else {
+      result = rate(rm, reading);
     }
     return result;
   }

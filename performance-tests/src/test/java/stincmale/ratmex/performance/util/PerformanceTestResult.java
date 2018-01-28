@@ -207,13 +207,12 @@ public final class PerformanceTestResult extends AbstractPerformanceTestResult {
   }
 
   private final XYSeriesRenderStyle getSeriesRenderStyle(final String benchmark, final Mode mode) {
-    final int maxNumberOfThreads = benchmark_mode_numberOfThreads_result.getOrDefault(benchmark, Collections.emptySortedMap())
-        .getOrDefault(mode, Collections.emptySortedMap())
-        .keySet()
-        .stream()
-        .max(Integer::compare)
-        .orElse(0);
-    return maxNumberOfThreads > 1 ? XYSeriesRenderStyle.Line : XYSeriesRenderStyle.Scatter;
+    final int maxNumberOfSeriesWithDifferentNumberOfThreads =
+        benchmark_mode_numberOfThreads_result.getOrDefault(benchmark, Collections.emptySortedMap())
+            .getOrDefault(mode, Collections.emptySortedMap())
+            .keySet()
+            .size();
+    return maxNumberOfSeriesWithDifferentNumberOfThreads > 1 ? XYSeriesRenderStyle.Line : XYSeriesRenderStyle.Scatter;
   }
 
   private final void ensureLoaded() {

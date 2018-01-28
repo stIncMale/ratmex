@@ -17,6 +17,7 @@ import static stincmale.ratmex.internal.util.Utils.format;
  * @param <C> A type of the {@linkplain #getConfig() configuration}.
  */
 public abstract class AbstractRateMeter<S, C extends RateMeterConfig> implements RateMeter<S>, Configurable<C> {
+  private static final int DEFAULT_SAMPLES_INTERVAL_OVER_TIME_SENSITIVITY_RATIO = 20;
   private final TicksCounter ticksTotal;
   private final long startNanos;
   private final Duration samplesInterval;
@@ -47,9 +48,11 @@ public abstract class AbstractRateMeter<S, C extends RateMeterConfig> implements
             samplesIntervalNanos));
     timeSensitivity = config.getTimeSensitivity()
         .orElseGet(() -> {
-          Preconditions.checkArgument(samplesIntervalNanos % 20 == 0,
-              "config", "samplesIntervalNanos must be a multiple of 20 because timeSensitivity is not specified");
-          return Duration.ofNanos(samplesIntervalNanos / 20);
+          Preconditions.checkArgument(samplesIntervalNanos % DEFAULT_SAMPLES_INTERVAL_OVER_TIME_SENSITIVITY_RATIO == 0, "config",
+              () -> format(
+                  "samplesIntervalNanos must be a multiple of %s because timeSensitivity is not specified",
+                  DEFAULT_SAMPLES_INTERVAL_OVER_TIME_SENSITIVITY_RATIO));
+          return Duration.ofNanos(samplesIntervalNanos / DEFAULT_SAMPLES_INTERVAL_OVER_TIME_SENSITIVITY_RATIO);
         });
     timeSensitivityNanos = timeSensitivity.toNanos();
     maxTNanos = maxTNanos(startNanos, samplesIntervalNanos, config.getHistoryLength() + 1);
