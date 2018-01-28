@@ -20,22 +20,30 @@ public final class SynchronizedRateMeter<S> implements RateMeter<S> {
 
   @Override
   public final long getStartNanos() {
-    return rm.getStartNanos();
+    synchronized (mutex) {
+      return rm.getStartNanos();
+    }
   }
 
   @Override
   public final Duration getSamplesInterval() {
-    return rm.getSamplesInterval();
+    synchronized (mutex) {
+      return rm.getSamplesInterval();
+    }
   }
 
   @Override
   public final Duration getTimeSensitivity() {
-    return rm.getTimeSensitivity();
+    synchronized (mutex) {
+      return rm.getTimeSensitivity();
+    }
   }
 
   @Override
   public final long rightSamplesWindowBoundary() {
-    return rm.rightSamplesWindowBoundary();
+    synchronized (mutex) {
+      return rm.rightSamplesWindowBoundary();
+    }
   }
 
   @Override

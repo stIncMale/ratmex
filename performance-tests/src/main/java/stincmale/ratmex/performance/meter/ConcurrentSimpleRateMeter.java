@@ -22,22 +22,42 @@ public final class ConcurrentSimpleRateMeter<S> implements RateMeter<S> {
 
   @Override
   public final long getStartNanos() {
-    return rm.getStartNanos();
+    final long lockStamp = lockStrategy.sharedLock();
+    try {
+      return rm.getStartNanos();
+    } finally {
+      lockStrategy.unlockShared(lockStamp);
+    }
   }
 
   @Override
   public final Duration getSamplesInterval() {
-    return rm.getSamplesInterval();
+    final long lockStamp = lockStrategy.sharedLock();
+    try {
+      return rm.getSamplesInterval();
+    } finally {
+      lockStrategy.unlockShared(lockStamp);
+    }
   }
 
   @Override
   public final Duration getTimeSensitivity() {
-    return rm.getTimeSensitivity();
+    final long lockStamp = lockStrategy.sharedLock();
+    try {
+      return rm.getTimeSensitivity();
+    } finally {
+      lockStrategy.unlockShared(lockStamp);
+    }
   }
 
   @Override
   public final long rightSamplesWindowBoundary() {
-    return rm.rightSamplesWindowBoundary();
+    final long lockStamp = lockStrategy.sharedLock();
+    try {
+      return rm.rightSamplesWindowBoundary();
+    } finally {
+      lockStrategy.unlockShared(lockStamp);
+    }
   }
 
   @Override

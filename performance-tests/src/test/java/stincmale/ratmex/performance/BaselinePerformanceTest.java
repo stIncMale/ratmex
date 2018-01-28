@@ -3,17 +3,20 @@ package stincmale.ratmex.performance;
 import java.awt.Color;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
+import java.util.function.Function;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
+import org.knowm.xchart.XYSeries;
 import org.knowm.xchart.style.markers.SeriesMarkers;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Mode;
@@ -28,7 +31,6 @@ import stincmale.ratmex.performance.util.PerformanceTestResult;
 import stincmale.ratmex.performance.util.PerformanceTestTag;
 import stincmale.ratmex.performance.util.Utils;
 
-@Disabled
 @Tag(PerformanceTestTag.VALUE)
 @TestInstance(Lifecycle.PER_METHOD)
 public class BaselinePerformanceTest {
@@ -49,7 +51,7 @@ public class BaselinePerformanceTest {
   }
 
   @Benchmark
-  public long granularitySystemNanoTime(final ThreadState state) {
+  public long systemNanoTimeGranularity(final ThreadState state) {
     long nanoTime;
     do {
       nanoTime = System.nanoTime();
@@ -89,7 +91,7 @@ public class BaselinePerformanceTest {
     final Collection<RunResult> runResults;
     try {
       runResults = new Runner(JmhOptions.get()
-          .include(getClass().getName() + ".(?!granularity).*")
+          .include(getClass().getName() + ".(?!systemNanoTimeGranularity).*")
           .mode(Mode.Throughput)
           .timeUnit(TimeUnit.MICROSECONDS)
           .threads(numberOfThreads)
@@ -107,7 +109,7 @@ public class BaselinePerformanceTest {
       runResults = new Runner(JmhOptions.get()
           .include(numberOfThreads == 1
               ? getClass().getName() + ".*"
-              : getClass().getName() + ".(?!granularity).*")
+              : getClass().getName() + ".(?!systemNanoTimeGranularity).*")
           .mode(Mode.AverageTime)
           .timeUnit(TimeUnit.NANOSECONDS)
           .threads(numberOfThreads)
@@ -137,18 +139,36 @@ public class BaselinePerformanceTest {
   public static final void generateCharts(final Collection<? extends PerformanceTestResult> loadedPtrs) {
     if (!Utils.isHeadless()) {
       final String testId = getTestId();
+      final Map<String, Function<XYSeries, XYSeries>> benchmarkSeriesProcessors = new TreeMap<>();
+      {
+        benchmarkSeriesProcessors.put("atomicLongGetAndAdd", series -> (XYSeries)series.setMarker(SeriesMarkers.SQUARE));
+        benchmarkSeriesProcessors.put("atomicLongArrayGetAndAdd", series -> (XYSeries)series.setMarker(SeriesMarkers.SQUARE));
+        benchmarkSeriesProcessors.put("systemNanoTime", series -> (XYSeries)series.setMarker(SeriesMarkers.CIRCLE));
+        benchmarkSeriesProcessors.put("systemNanoTimeGranularity", series -> {
+          series.setMarkerColor(Color.BLACK);
+          series.setLineColor(Color.BLACK);
+          series.setMarker(SeriesMarkers.DIAMOND);
+          return series;
+        });
+      }
       loadedPtrs.stream()
           .filter(ptr -> testId.equals(ptr.getTestId()))
           .findAny()
           .ifPresent(ptr -> {
-            ptr.save(Mode.Throughput, BaselinePerformanceTest.class.getSimpleName(), "number of threads", "throughput, ops/s", "#.# mln", null);
-            ptr.save(Mode.AverageTime, BaselinePerformanceTest.class.getSimpleName(), "number of threads", "latency, ns", null,
-                Collections.singletonMap("granularitySystemNanoTime", series -> {
-                  series.setMarkerColor(Color.BLACK);
-                  series.setLineColor(Color.BLACK);
-                  series.setMarker(SeriesMarkers.SQUARE);
-                  return series;
-                }));
+            ptr.save(
+                Mode.Throughput,
+                BaselinePerformanceTest.class.getSimpleName(),
+                "number of threads",
+                "throughput, ops/s",
+                "#.# mln",
+                benchmarkSeriesProcessors);
+            ptr.save(
+                Mode.AverageTime,
+                BaselinePerformanceTest.class.getSimpleName(),
+                "number of threads",
+                "latency, ns",
+                null,
+                benchmarkSeriesProcessors);
           });
     }
   }

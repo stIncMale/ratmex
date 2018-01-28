@@ -1,6 +1,5 @@
 package stincmale.ratmex.performance.util;
 
-import java.awt.Font;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -10,6 +9,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.SortedMap;
@@ -162,11 +162,16 @@ public final class PerformanceTestResult extends AbstractPerformanceTestResult {
         .yAxisTitle(yAxisTitle)
         .build();
     final XYStyler styler = chart.getStyler();
+    styler.setLocale(Locale.ROOT);
     styler.setChartTitleVisible(true);
     styler.setLegendPosition(LegendPosition.OutsideE);
     styler.setDefaultSeriesRenderStyle(XYSeriesRenderStyle.Line);
     styler.setAntiAlias(true);
     styler.setMarkerSize(8);
+    styler.setXAxisMin(1d);
+    styler.setXAxisMax(JmhOptions.numbersOfThreads.last()
+        .doubleValue());
+    styler.setYAxisMin(0d);
     if (yAxisDecimalPattern != null) {
       styler.setYAxisDecimalPattern(yAxisDecimalPattern);
     }
