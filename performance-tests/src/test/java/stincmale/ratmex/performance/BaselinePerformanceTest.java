@@ -1,17 +1,16 @@
 package stincmale.ratmex.performance;
 
 import java.awt.Color;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.function.Function;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -32,17 +31,19 @@ import stincmale.ratmex.performance.util.PerformanceTestTag;
 import stincmale.ratmex.performance.util.Utils;
 
 @Tag(PerformanceTestTag.VALUE)
-@TestInstance(Lifecycle.PER_METHOD)
+@TestInstance(Lifecycle.PER_CLASS)
 public class BaselinePerformanceTest {
   public BaselinePerformanceTest() {
   }
 
   @Test
   public void run() {
+    final Collection<RunResult> runResults = new ArrayList<>();
     for (int numberOfThreads : JmhOptions.numbersOfThreads) {
-      testResults.addAll(runThroughput(numberOfThreads));
-      testResults.addAll(runLatency(numberOfThreads));
+      runResults.addAll(runThroughput(numberOfThreads));
+      runResults.addAll(runLatency(numberOfThreads));
     }
+    new JmhPerformanceTestResult(getTestId(), BaselinePerformanceTest.class, runResults).save();
   }
 
   @Benchmark
@@ -121,19 +122,10 @@ public class BaselinePerformanceTest {
     return runResults;
   }
 
-  private static Collection<RunResult> testResults;
-
-  @BeforeAll
-  public static final void beforeAll() {
-    testResults = new CopyOnWriteArrayList<>();
-  }
-
   @AfterAll
   public static final void afterAll() {
     System.out.println();
-    final String testId = getTestId();
-    new JmhPerformanceTestResult(testId, BaselinePerformanceTest.class, testResults).save();
-    generateCharts(Collections.singleton(new PerformanceTestResult(testId, BaselinePerformanceTest.class).load()));
+    generateCharts(Collections.singleton(new PerformanceTestResult(getTestId(), BaselinePerformanceTest.class).load()));
   }
 
   public static final void generateCharts(final Collection<? extends PerformanceTestResult> loadedPtrs) {

@@ -19,7 +19,7 @@ import stincmale.ratmex.meter.RateMeterReading;
  * Use Java Mission Control or a similar tool to monitor JVM heap.
  */
 @Disabled
-@TestInstance(Lifecycle.PER_METHOD)
+@TestInstance(Lifecycle.PER_CLASS)
 public class RateMeterGarbageTest {
   private static final int NUMBER_OF_THREADS = 32;
   private static final Duration runDuration = Duration.ofMinutes(5);

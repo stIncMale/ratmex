@@ -1,24 +1,18 @@
 package stincmale.ratmex.performance.meter;
 
-import java.awt.Color;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -56,13 +50,12 @@ import static stincmale.ratmex.performance.util.JmhOptions.jvmArgsAppend;
 import static stincmale.ratmex.performance.util.Utils.format;
 
 @Tag(PerformanceTestTag.VALUE)
-@TestInstance(Lifecycle.PER_METHOD)
+@TestInstance(Lifecycle.PER_CLASS)
 public class RateMeterPerformanceTest {
   private static final long ACCEPTABLE_INCORRECTLY_REGISTERED_TICKS_EVENTS_COUNT_PER_TRIAL = 0;
   private static final String SYSTEM_PROPERTY_GROUP_OF_RUNS_DESCRIPTOR = "groupOfRunsDescriptor";
   private static final Duration samplesInterval = Duration.of(10, ChronoUnit.MILLIS);
   private static final LinkedHashSet<GroupOfRunsDescriptor> groupOfRunsDescriptors;
-  private static final AtomicReference<GroupOfRunsDescriptor> groupOfRunsDescriptor;
 
   static {
     groupOfRunsDescriptors = new LinkedHashSet<>();
@@ -73,9 +66,6 @@ public class RateMeterPerformanceTest {
     groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_RING_BUFFER_RATE_METER_RELAXED_TICKS);
     groupOfRunsDescriptors.add(
         GroupOfRunsDescriptor.CONCURRENT_SIMPLE_RATE_METER_WITH_DEFAULT_RING_BUFFER_RATE_METER_AND_SPIN_LOCK_STRATEGY_WITH_YIELD_WAIT_STRATEGY);
-    groupOfRunsDescriptor = new AtomicReference<>(groupOfRunsDescriptors.stream()
-        .findFirst()
-        .get());
   }
 
   private enum GroupOfRunsDescriptor {
@@ -132,18 +122,8 @@ public class RateMeterPerformanceTest {
 
   @Test
   public final void run() {
-    GroupOfRunsDescriptor guard = groupOfRunsDescriptors.stream()
-        .findFirst()
-        .get();
     for (final GroupOfRunsDescriptor groupOfRunsDescriptor : groupOfRunsDescriptors) {
-      if (RateMeterPerformanceTest.groupOfRunsDescriptor.compareAndSet(guard, groupOfRunsDescriptor)) {
-        run(groupOfRunsDescriptor);
-        guard = groupOfRunsDescriptor;
-      } else {
-        /*We supply groupOfRunsDescriptor to JMH via the static field groupOfRunsDescriptor,
-          and hence we must be sure that this field refers to the same GroupOfRunsDescriptor during the test.*/
-        throw new RuntimeException("Concurrent execution of the test");
-      }
+      new JmhPerformanceTestResult(groupOfRunsDescriptor.name(), RateMeterPerformanceTest.class, run(groupOfRunsDescriptor)).save();
     }
   }
 
@@ -219,20 +199,9 @@ public class RateMeterPerformanceTest {
     }
   }
 
-  private static ConcurrentMap<GroupOfRunsDescriptor, Collection<RunResult>> testResults;
-
-  @BeforeAll
-  public static final void beforeAll() {
-    testResults = new ConcurrentHashMap<>();
-  }
-
   @AfterAll
-  public static final void afterAll() {
+  public final void afterAll() {
     System.out.println();
-    testResults.forEach((groupOfRunsDescriptor, runResults) -> {
-      final String testId = groupOfRunsDescriptor.name();
-      new JmhPerformanceTestResult(testId, RateMeterPerformanceTest.class, runResults).save();
-    });
     generateCharts(PerformanceTestResult.loadAll(RateMeterPerformanceTest.class));
   }
 
@@ -278,16 +247,13 @@ public class RateMeterPerformanceTest {
         benchmarkSeriesProcessors);
   }
 
-  private final void run(final GroupOfRunsDescriptor groupOfRunsDescriptor) {
+  private final Collection<RunResult> run(final GroupOfRunsDescriptor groupOfRunsDescriptor) {
+    final Collection<RunResult> runResults = new ArrayList<>();
     for (int numberOfThreads : groupOfRunsDescriptor.numbersOfThreads) {
-      final Collection<RunResult> runResults = runThroughput(groupOfRunsDescriptor, numberOfThreads);
+      runResults.addAll(runThroughput(groupOfRunsDescriptor, numberOfThreads));
       runResults.addAll(runLatency(groupOfRunsDescriptor, numberOfThreads));
-      testResults.merge(groupOfRunsDescriptor, runResults, (oldValue, value) -> {
-        final ArrayList<RunResult> result = new ArrayList<>(oldValue);
-        result.addAll(value);
-        return result;
-      });
     }
+    return runResults;
   }
 
   private final Collection<RunResult> runThroughput(final GroupOfRunsDescriptor groupOfRunsDescriptor, final int numberOfThreads) {

@@ -28,7 +28,7 @@ import stincmale.ratmex.performance.util.PerformanceTestTag;
  */
 @Disabled
 @Tag(PerformanceTestTag.VALUE)
-@TestInstance(Lifecycle.PER_METHOD)
+@TestInstance(Lifecycle.PER_CLASS)
 public class RemainderPerformanceTest {
   private static final long DENOMINATOR_POW2 = BigInteger.valueOf(2)
       .pow(10)

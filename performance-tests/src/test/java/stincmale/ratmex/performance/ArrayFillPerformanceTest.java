@@ -24,7 +24,7 @@ import stincmale.ratmex.performance.util.PerformanceTestTag;
  */
 @Disabled
 @Tag(PerformanceTestTag.VALUE)
-@TestInstance(Lifecycle.PER_METHOD)
+@TestInstance(Lifecycle.PER_CLASS)
 public class ArrayFillPerformanceTest {
   private static final int ARRAY_SIZE = 20_000;
   private static final long[] arrFilledWithZeros = new long[ARRAY_SIZE];
