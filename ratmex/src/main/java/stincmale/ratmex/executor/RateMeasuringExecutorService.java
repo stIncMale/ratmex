@@ -9,8 +9,7 @@ import java.util.concurrent.TimeUnit;
 import stincmale.ratmex.doc.ThreadSafe;
 
 /**
- * A <b>Rat</b>e-<b>Me</b>asuring e<b>X</b>ecutor service (hence <b>RatMeX</b>)
- * which not only executes tasks with a fixed {@link Rate rate},
+ * A rate-measuring executor service which not only executes tasks with a fixed {@link Rate rate},
  * but also measures the actual rate completion of the tasks
  * and allows one to {@linkplain RateListener monitor the rate and react} if the executor has failed to conform to the target rate.
  * <p>
