@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.function.Function;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -30,6 +31,7 @@ import stincmale.ratmex.performance.util.PerformanceTestResult;
 import stincmale.ratmex.performance.util.PerformanceTestTag;
 import stincmale.ratmex.performance.util.Utils;
 
+@Disabled
 @Tag(PerformanceTestTag.VALUE)
 @TestInstance(Lifecycle.PER_CLASS)
 public class BaselinePerformanceTest {
