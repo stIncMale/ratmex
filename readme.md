@@ -1,8 +1,13 @@
 ![RatMeX logo](https://stincmale.github.io/ratmex/logo-small.png)
 # RatMeX
-This is still a work in progress.
+**RatMeX** is a Java library that supplies a rate meter and a A **Rat**e-**M**easuring **eX**ecutor based on it. This library is designed to be:
+* high-performance
+* garbage collector friendly
+* free of external dependencies
 
 Documentation is available [here](https://github.com/stIncMale/ratmex/wiki).
+
+**This library is still a work in progress.**
 
 ***
 
