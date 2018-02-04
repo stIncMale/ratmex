@@ -1,5 +1,6 @@
 package stincmale.ratmex.performance.util;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -13,6 +14,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.function.Function;
@@ -45,9 +47,11 @@ import static stincmale.ratmex.performance.util.Utils.format;
 public final class PerformanceTestResult extends AbstractPerformanceTestResult {
   @Nullable
   private SortedMap<String, SortedMap<Mode, SortedMap<Integer, BenchmarkResult>>> benchmark_mode_numberOfThreads_result;
+  @Nullable
+  private String environmentDescription;
 
-  public static final Collection<PerformanceTestResult> loadAll(final Class<?> testClass) {
-    final Path directoryPath = new PerformanceTestResult("", testClass).getDirectoryPath();
+  public static final Collection<PerformanceTestResult> load(final Predicate<String> testIdPredicate) {
+    final Path directoryPath = new PerformanceTestResult("").getDirectoryPath();
     final Collection<PerformanceTestResult> result = new ArrayList<>();
     try (final Stream<Path> filePaths = Files.list(directoryPath)) {
       filePaths.forEach(filePath -> {
@@ -58,12 +62,14 @@ public final class PerformanceTestResult extends AbstractPerformanceTestResult {
           final int jsonExtensionIdx = fileName.lastIndexOf(".json");
           if (jsonExtensionIdx > 0) {
             final String testId = fileName.substring(0, jsonExtensionIdx);
-            try {
-              final PerformanceTestResult ptr = new PerformanceTestResult(testId, testClass).load();
-              result.add(ptr);
-              System.out.println(format("Loaded performance test result with id=%s", ptr.getTestId()));
-            } catch (final RuntimeException e) {
-              System.out.println(format("Failed to load performance test result from %s", filePath));
+            if (testIdPredicate.test(testId)) {
+              try {
+                final PerformanceTestResult ptr = new PerformanceTestResult(testId).load();
+                result.add(ptr);
+                System.out.println(format("Loaded performance test result with id=%s", ptr.getTestId()));
+              } catch (final RuntimeException e) {
+                System.out.println(format("Failed to load performance test result from %s", filePath));
+              }
             }
           }
         }
@@ -74,8 +80,26 @@ public final class PerformanceTestResult extends AbstractPerformanceTestResult {
     return result;
   }
 
-  public PerformanceTestResult(final String testId, final Class<?> testClass) {
-    super(testId, testClass);
+  public static final Optional<AggregatePerformanceTestResult> createAggregate(
+      final String aggregateTestId, final Collection<PerformanceTestResult> ptrs) {
+    final SortedMap<String, SortedMap<String, SortedMap<Mode, SortedMap<Integer, BenchmarkResult>>>>
+        testId_benchmark_mode_numberOfThreads_result = new TreeMap<>();
+    ptrs.forEach(ptr -> {
+      ptr.ensureLoaded();
+      testId_benchmark_mode_numberOfThreads_result.put(ptr.getTestId(), ptr.benchmark_mode_numberOfThreads_result);
+    });
+    @Nullable
+    final String environmentDescription = ptrs.stream()
+        .findAny()
+        .map(ptr -> ptr.environmentDescription)
+        .orElse(null);
+    return (ptrs.isEmpty() || environmentDescription == null)
+        ? Optional.empty()
+        : Optional.of(new AggregatePerformanceTestResult(aggregateTestId, testId_benchmark_mode_numberOfThreads_result, environmentDescription));
+  }
+
+  public PerformanceTestResult(final String testId) {
+    super(testId);
     benchmark_mode_numberOfThreads_result = null;
   }
 
@@ -113,6 +137,13 @@ public final class PerformanceTestResult extends AbstractPerformanceTestResult {
       } catch (final IOException e) {
         throw new RuntimeException(e);
       }
+      try (final BufferedReader reader = new BufferedReader(new InputStreamReader(
+          Files.newInputStream(getEnvironmentDescriptionFilePath(), READ),
+          StandardCharsets.UTF_8))) {
+        environmentDescription = reader.readLine();
+      } catch (final IOException e) {
+        throw new RuntimeException(e);
+      }
     }
     return this;
   }
@@ -127,7 +158,7 @@ public final class PerformanceTestResult extends AbstractPerformanceTestResult {
     ensureLoaded();
     final XYChart chart = createChart(
         mode,
-        format("%s, %s", chartTitle, getEnvironmentDescription()),
+        format("%s, %s", chartTitle, environmentDescription),
         xAxisTitle,
         yAxisTitle,
         yAxisDecimalPattern);
@@ -156,8 +187,8 @@ public final class PerformanceTestResult extends AbstractPerformanceTestResult {
       @Nullable final String yAxisDecimalPattern) {
     final XYChart chart = new XYChartBuilder()
         .theme(ChartTheme.Matlab)
-        .width(1600)
-        .height(900)
+        .width(1920)
+        .height(1080)
         .title(chartTitle)
         .xAxisTitle(xAxisTitle)
         .yAxisTitle(yAxisTitle)
@@ -237,18 +268,10 @@ public final class PerformanceTestResult extends AbstractPerformanceTestResult {
   }
 
   private final boolean isLoaded() {
-    return benchmark_mode_numberOfThreads_result != null;
+    return benchmark_mode_numberOfThreads_result != null && environmentDescription != null;
   }
 
-  private static final String getEnvironmentDescription() {
-    final int availableProcessors = Runtime.getRuntime()
-        .availableProcessors();
-    final String jvm = format("JVM: %s %s", System.getProperty("java.vm.vendor"), System.getProperty("java.vm.version"));
-    final String os = format("OS: %s %s %s", System.getProperty("os.name"), System.getProperty("os.version"), System.getProperty("os.arch"));
-    return format("%s, %s, processors: %s", jvm, os, availableProcessors);
-  }
-
-  public static final class BenchmarkResult {
+  static final class BenchmarkResult {
     public final String testId;
     public final String benchmark;
     public final Mode mode;

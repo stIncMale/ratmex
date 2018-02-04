@@ -18,8 +18,8 @@ import static stincmale.ratmex.performance.util.Utils.format;
 public final class JmhPerformanceTestResult extends AbstractPerformanceTestResult {
   private final Collection<RunResult> runResults;
 
-  public JmhPerformanceTestResult(final String testId, final Class<?> testClass, final Collection<? extends RunResult> runResults) {
-    super(testId, testClass);
+  public JmhPerformanceTestResult(final String testId, final Collection<? extends RunResult> runResults) {
+    super(testId);
     this.runResults = Collections.unmodifiableCollection(runResults);
   }
 
@@ -30,6 +30,14 @@ public final class JmhPerformanceTestResult extends AbstractPerformanceTestResul
         StandardCharsets.UTF_8.name())) {
       final ResultFormat resultFormat = ResultFormatFactory.getInstance(ResultFormatType.JSON, printStream);
       resultFormat.writeOut(runResults);
+    } catch (final IOException e) {
+      throw new RuntimeException(e);
+    }
+    try (final PrintStream printStream = new PrintStream(
+        Files.newOutputStream(getEnvironmentDescriptionFilePath(), CREATE, WRITE, TRUNCATE_EXISTING),
+        false,
+        StandardCharsets.UTF_8.name())) {
+      printStream.println(getEnvironmentDescription());
     } catch (final IOException e) {
       throw new RuntimeException(e);
     }

@@ -11,18 +11,27 @@ import static java.nio.file.attribute.PosixFilePermission.OWNER_EXECUTE;
 import static java.nio.file.attribute.PosixFilePermission.OWNER_READ;
 import static java.nio.file.attribute.PosixFilePermission.OWNER_WRITE;
 import static java.nio.file.attribute.PosixFilePermissions.asFileAttribute;
+import static stincmale.ratmex.performance.util.Utils.format;
 
 abstract class AbstractPerformanceTestResult {
   private final String testId;
-  private final Class<?> testClass;
   private final Path directoryPath;
   private final Path dataFilePath;
+  private final Path environmentDescriptionFilePath;
 
-  protected AbstractPerformanceTestResult(final String testId, final Class<?> testClass) {
+  protected static final String getEnvironmentDescription() {
+    final int availableProcessors = Runtime.getRuntime()
+        .availableProcessors();
+    final String jvm = format("JVM: %s %s", System.getProperty("java.vm.vendor"), System.getProperty("java.vm.version"));
+    final String os = format("OS: %s %s %s", System.getProperty("os.name"), System.getProperty("os.version"), System.getProperty("os.arch"));
+    return format("%s, %s, processors: %s", jvm, os, availableProcessors);
+  }
+
+  protected AbstractPerformanceTestResult(final String testId) {
     this.testId = testId;
-    this.testClass = testClass;
-    directoryPath = getDirectoryPath(testClass);
+    directoryPath = getDirectoryPath(getClass());
     dataFilePath = directoryPath.resolve(testId + ".json");
+    environmentDescriptionFilePath = directoryPath.resolve(format("%s-environmentDescription", testId) + ".txt");
   }
 
   public final String getTestId() {
@@ -37,11 +46,14 @@ abstract class AbstractPerformanceTestResult {
     return dataFilePath;
   }
 
+  protected final Path getEnvironmentDescriptionFilePath() {
+    return environmentDescriptionFilePath;
+  }
+
   @Override
   public String toString() {
     return getClass().getSimpleName() +
         "{testId=" + testId +
-        ", testClass=" + testClass +
         ", directoryPath=" + directoryPath +
         ", dataFilePath=" + dataFilePath +
         '}';

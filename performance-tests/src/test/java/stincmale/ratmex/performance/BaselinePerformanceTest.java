@@ -49,7 +49,7 @@ public class BaselinePerformanceTest {
         runResults.addAll(runLatency(numberOfThreads));
       }
     }
-    new JmhPerformanceTestResult(getTestId(), BaselinePerformanceTest.class, runResults).save();
+    new JmhPerformanceTestResult(getTestId(), runResults).save();
   }
 
   @Benchmark
@@ -131,10 +131,11 @@ public class BaselinePerformanceTest {
   @AfterAll
   public static final void afterAll() {
     System.out.println();
-    generateCharts(Collections.singleton(new PerformanceTestResult(getTestId(), BaselinePerformanceTest.class).load()));
+    generateCharts();
   }
 
-  public static final void generateCharts(final Collection<? extends PerformanceTestResult> loadedPtrs) {
+  public static final void generateCharts() {
+    final Collection<? extends PerformanceTestResult> loadedPtrs = Collections.singleton(new PerformanceTestResult(getTestId()).load());
     if (!Utils.isHeadless()) {
       final String testId = getTestId();
       final Map<String, Function<XYSeries, XYSeries>> benchmarkSeriesProcessors = new TreeMap<>();

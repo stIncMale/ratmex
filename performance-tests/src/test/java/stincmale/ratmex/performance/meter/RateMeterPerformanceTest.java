@@ -59,33 +59,33 @@ public class RateMeterPerformanceTest {
 
   static {
     groupOfRunsDescriptors = new LinkedHashSet<>();
-    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.NAVIGABLE_MAP_RATE_METER_DEFAULT);
-    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_NAVIGABLE_MAP_RATE_METER_DEFAULT);
-    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.RING_BUFFER_RATE_METER_DEFAULT);
-    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_RING_BUFFER_RATE_METER_DEFAULT);
-    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.CONCURRENT_RING_BUFFER_RATE_METER_RELAXED_TICKS);
+    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.A_CONCURRENT_NAVIGABLE_MAP_RATE_METER_DEFAULT);
+    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.B_CONCURRENT_RING_BUFFER_RATE_METER_DEFAULT);
+    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.C_CONCURRENT_RING_BUFFER_RATE_METER_RELAXED_TICKS);
     groupOfRunsDescriptors.add(
-        GroupOfRunsDescriptor.CONCURRENT_SIMPLE_RATE_METER_WITH_DEFAULT_RING_BUFFER_RATE_METER_AND_SPIN_LOCK_STRATEGY_WITH_YIELD_WAIT_STRATEGY);
+        GroupOfRunsDescriptor.D_CONCURRENT_SIMPLE_RATE_METER_WITH_DEFAULT_RING_BUFFER_RATE_METER_AND_SPIN_LOCK_STRATEGY_WITH_YIELD_WAIT_STRATEGY);
+    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.E_NAVIGABLE_MAP_RATE_METER_DEFAULT);
+    groupOfRunsDescriptors.add(GroupOfRunsDescriptor.F_RING_BUFFER_RATE_METER_DEFAULT);
   }
 
   private enum GroupOfRunsDescriptor {
-    NAVIGABLE_MAP_RATE_METER_DEFAULT(
+    E_NAVIGABLE_MAP_RATE_METER_DEFAULT(
         format("%s, samples interval: %sms", NavigableMapRateMeter.class.getSimpleName(), samplesInterval.toMillis()),
         Collections.singleton(1),
         startNanos -> new NavigableMapRateMeter(startNanos, samplesInterval)),
-    CONCURRENT_NAVIGABLE_MAP_RATE_METER_DEFAULT(
+    A_CONCURRENT_NAVIGABLE_MAP_RATE_METER_DEFAULT(
         format("%s, samples interval: %sms", ConcurrentNavigableMapRateMeter.class.getSimpleName(), samplesInterval.toMillis()),
         JmhOptions.numbersOfThreads,
         startNanos -> new ConcurrentNavigableMapRateMeter(startNanos, samplesInterval)),
-    RING_BUFFER_RATE_METER_DEFAULT(
+    F_RING_BUFFER_RATE_METER_DEFAULT(
         format("%s, samples interval: %sms", RingBufferRateMeter.class.getSimpleName(), samplesInterval.toMillis()),
         Collections.singleton(1),
         startNanos -> new RingBufferRateMeter(startNanos, samplesInterval)),
-    CONCURRENT_RING_BUFFER_RATE_METER_DEFAULT(
+    B_CONCURRENT_RING_BUFFER_RATE_METER_DEFAULT(
         format("%s, samples interval: %sms", ConcurrentRingBufferRateMeter.class.getSimpleName(), samplesInterval.toMillis()),
         JmhOptions.numbersOfThreads,
         startNanos -> new ConcurrentRingBufferRateMeter(startNanos, samplesInterval)),
-    CONCURRENT_RING_BUFFER_RATE_METER_RELAXED_TICKS(
+    C_CONCURRENT_RING_BUFFER_RATE_METER_RELAXED_TICKS(
         format("%s, relaxed ticks, samples interval: %sms", ConcurrentRingBufferRateMeter.class.getSimpleName(), samplesInterval.toMillis()),
         JmhOptions.numbersOfThreads,
         startNanos -> new ConcurrentRingBufferRateMeter(
@@ -96,12 +96,12 @@ public class RateMeterPerformanceTest {
                 .setMode(ConcurrentRateMeterConfig.Mode.RELAXED_TICKS)
                 .setCollectStats(true)
                 .build())),
-    CONCURRENT_SIMPLE_RATE_METER_WITH_DEFAULT_RING_BUFFER_RATE_METER_AND_SPIN_LOCK_STRATEGY_WITH_YIELD_WAIT_STRATEGY(
+    D_CONCURRENT_SIMPLE_RATE_METER_WITH_DEFAULT_RING_BUFFER_RATE_METER_AND_SPIN_LOCK_STRATEGY_WITH_YIELD_WAIT_STRATEGY(
         format("%s with %s, spin LS & yield WS, samples interval: %sms",
             ConcurrentSimpleRateMeter.class.getSimpleName(), RingBufferRateMeter.class.getSimpleName(), samplesInterval.toMillis()),
         JmhOptions.numbersOfThreads,
         startNanos -> new ConcurrentSimpleRateMeter<>(
-            RING_BUFFER_RATE_METER_DEFAULT.rateMeterCreator.apply(startNanos), new SpinLockStrategy(YieldWaitStrategy.instance())));
+            F_RING_BUFFER_RATE_METER_DEFAULT.rateMeterCreator.apply(startNanos), new SpinLockStrategy(YieldWaitStrategy.instance())));
 
     private final String description;
     private final Set<Integer> numbersOfThreads;
@@ -123,7 +123,7 @@ public class RateMeterPerformanceTest {
   @Test
   public final void run() {
     for (final GroupOfRunsDescriptor groupOfRunsDescriptor : groupOfRunsDescriptors) {
-      new JmhPerformanceTestResult(groupOfRunsDescriptor.name(), RateMeterPerformanceTest.class, run(groupOfRunsDescriptor)).save();
+      new JmhPerformanceTestResult(groupOfRunsDescriptor.name(), run(groupOfRunsDescriptor)).save();
     }
   }
 
@@ -190,7 +190,6 @@ public class RateMeterPerformanceTest {
           .ifPresent(statistics -> {
             if (statistics instanceof ConcurrentRateMeterStats) {
               final ConcurrentRateMeterStats stats = (ConcurrentRateMeterStats)statistics;
-              //JUnit5 Assertions.assertEquals(double, double, double) requires positive delta, hence we have to use Double.MIN_VALUE
               final double acceptableIncorrectlyRegisteredTicksEventsCount =
                   ACCEPTABLE_INCORRECTLY_REGISTERED_TICKS_EVENTS_COUNT_PER_TRIAL + Double.MIN_VALUE;
               assertEquals(0, stats.incorrectlyRegisteredTicksEventsCount(), acceptableIncorrectlyRegisteredTicksEventsCount);
@@ -202,10 +201,11 @@ public class RateMeterPerformanceTest {
   @AfterAll
   public final void afterAll() {
     System.out.println();
-    generateCharts(PerformanceTestResult.loadAll(RateMeterPerformanceTest.class));
+    generateCharts();
   }
 
-  public static final void generateCharts(final Collection<? extends PerformanceTestResult> loadedPtrs) {
+  public static final void generateCharts() {
+    final Collection<PerformanceTestResult> loadedPtrs = PerformanceTestResult.load(testId -> testId.contains("RATE_METER"));
     if (!Utils.isHeadless()) {
       loadedPtrs.forEach(ptr -> {
         @Nullable
@@ -219,6 +219,24 @@ public class RateMeterPerformanceTest {
           generateCharts(descriptor, ptr);
         }
       });
+      PerformanceTestResult.createAggregate("AGGREGATE_RATE_METER", loadedPtrs)
+          .ifPresent(aggregateTestResult -> {
+            final String chartName = format("Comparison of rate meters");
+            for (final int numberOfAvailableProcessors : JmhOptions.numbersOfThreads) {
+              aggregateTestResult.save(
+                  Mode.Throughput,
+                  numberOfAvailableProcessors,
+                  chartName,
+                  "throughput, ops/s",
+                  "###,###,###.### mln");
+              aggregateTestResult.save(
+                  Mode.AverageTime,
+                  numberOfAvailableProcessors,
+                  chartName,
+                  "latency, ns",
+                  null);
+            }
+          });
     }
   }
 
