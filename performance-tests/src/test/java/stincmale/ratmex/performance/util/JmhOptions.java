@@ -16,7 +16,7 @@ public final class JmhOptions {
   private static final boolean JAVA_SERVER = true;
   private static final boolean JAVA_ASSERTIONS = DRY_RUN;
   public static final SortedSet<Integer> numbersOfThreads = DRY_RUN
-      ? new TreeSet<>(Arrays.asList(1, 4))
+      ? new TreeSet<>(Arrays.asList(1, 4, 16))
       : new TreeSet<>(Arrays.asList(1, 2, 4, 16));
 
   public static final OptionsBuilder includingClass(final Class<?> klass) {
@@ -42,9 +42,9 @@ public final class JmhOptions {
           .measurementTime(milliseconds(50))
           .measurementIterations(1);
     } else {
-      result.forks(5)
+      result.forks(4)
           .warmupTime(milliseconds(200))
-          .warmupIterations(20)
+          .warmupIterations(10)
           .measurementTime(milliseconds(200))
           .measurementIterations(20);
     }

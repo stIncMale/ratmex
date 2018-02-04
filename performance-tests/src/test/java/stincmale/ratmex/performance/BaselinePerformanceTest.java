@@ -38,10 +38,14 @@ public class BaselinePerformanceTest {
 
   @Test
   public void run() {
+    final int numberOfAvailableProcessors = Runtime.getRuntime()
+        .availableProcessors();
     final Collection<RunResult> runResults = new ArrayList<>();
     for (int numberOfThreads : JmhOptions.numbersOfThreads) {
       runResults.addAll(runThroughput(numberOfThreads));
-      runResults.addAll(runLatency(numberOfThreads));
+      if (numberOfThreads <= numberOfAvailableProcessors) {
+        runResults.addAll(runLatency(numberOfThreads));
+      }
     }
     new JmhPerformanceTestResult(getTestId(), BaselinePerformanceTest.class, runResults).save();
   }

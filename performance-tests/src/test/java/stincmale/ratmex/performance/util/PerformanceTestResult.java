@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.function.Function;
@@ -169,8 +170,7 @@ public final class PerformanceTestResult extends AbstractPerformanceTestResult {
     styler.setAntiAlias(true);
     styler.setMarkerSize(8);
     styler.setXAxisMin(1d);
-    styler.setXAxisMax(JmhOptions.numbersOfThreads.last()
-        .doubleValue());
+    styler.setXAxisMax(getXAxisMax(mode));
     styler.setYAxisMin(0d);
     if (yAxisDecimalPattern != null) {
       styler.setYAxisDecimalPattern(yAxisDecimalPattern);
@@ -209,6 +209,16 @@ public final class PerformanceTestResult extends AbstractPerformanceTestResult {
         });
       }
     });
+  }
+
+  private final double getXAxisMax(final Mode mode) {
+    return benchmark_mode_numberOfThreads_result.values()
+        .stream()
+        .map(mode_numberOfThreads_result -> mode_numberOfThreads_result.get(mode))
+        .filter(Objects::nonNull)
+        .mapToInt(SortedMap::lastKey)
+        .max()
+        .orElse(1);
   }
 
   private final XYSeriesRenderStyle getSeriesRenderStyle(final String benchmark, final Mode mode) {
