@@ -1,6 +1,8 @@
 ![RatMeX logo](https://stincmale.github.io/ratmex/logo-small.png)
 # RatMeX
-This is still a work in progress, but the source files were moved from a sandbox to project's location.
+This is still a work in progress.
+
+Documentation is available [here](https://github.com/stIncMale/ratmex/wiki).
 
 All content is licensed under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0), except where another license is explicitly specified.
 The logo is taken from the [Clipart Library](http://clipart-library.com/clipart/3099.htm) and is free to use/belongs to public domain.
