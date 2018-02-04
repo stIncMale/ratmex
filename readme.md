@@ -1,8 +1,8 @@
 ![RatMeX logo](https://stincmale.github.io/ratmex/logo-small.png)
 # RatMeX
 **RatMeX** is a Java library that supplies a rate meter and a **Rat**e-**M**easuring **eX**ecutor based on it. This library is designed to be:
-* high-performance
-* garbage collector friendly
+* high-performance (is able to register 23+ millions of events per second with less than 180ns latency per registration)
+* garbage collector friendly (there is an implementation that does not produce garbage)
 * free of external dependencies
 
 Documentation is available [here](https://github.com/stIncMale/ratmex/wiki).
