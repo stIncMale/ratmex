@@ -12,11 +12,16 @@ import stincmale.ratmex.NanosComparator;
  */
 @ThreadSafe
 public final class ConcurrentNavigableMapRateMeter extends AbstractNavigableMapRateMeter<ConcurrentRateMeterConfig> {
-  private static final ConcurrentRateMeterConfig defaultConfig = ConcurrentRateMeterConfig.newBuilder()
+  private static final ConcurrentRateMeterConfig defaultConfig = (ConcurrentRateMeterConfig)ConcurrentRateMeterConfig.newBuilder()
+      .setHistoryLength(4)
       .build();
 
   /**
-   * @return A default configuration, which is the default {@link ConcurrentRateMeterConfig}.
+   * @return A default configuration. The default values:
+   * <ul>
+   * <li>The default values from {@link ConcurrentRateMeterConfig} except for {@link ConcurrentRateMeterConfig#getHistoryLength()}</li>
+   * <li>{@link ConcurrentRateMeterConfig#getHistoryLength()} - 4</li>
+   * </ul>.
    */
   public static final ConcurrentRateMeterConfig defaultConfig() {
     return defaultConfig;
