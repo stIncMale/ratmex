@@ -227,7 +227,7 @@ public abstract class AbstractNavigableMapRateMeter<C extends ConcurrentRateMete
         }
         try {
           final long timeSensitivityNanos = getTimeSensitivityNanos();
-          if (timeSensitivityNanos == 1) {//TODO remove this if ?
+          if (timeSensitivityNanos == 1) {
             final TicksCounter newSample = getConfig().getTicksCounterSupplier()
                 .apply(count);
             existingSample = samplesHistory.putIfAbsent(tNanos, newSample);
