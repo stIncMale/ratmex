@@ -434,7 +434,7 @@ public abstract class AbstractRingBufferRateMeter<S, C extends ConcurrentRateMet
         final long count = count(samplesHistoryIdx(countFromShiftSteps), numberOfCellsToCount);
         if (sequential) {
           value = count;
-        } else {//check whether safe samples history has been moved too far while we were counting
+        } else {//check whether the safe samples history has been moved too far while we were counting
           final long newShiftSteps
               = atomicSamplesWindowShiftSteps.get();//atomicSamplesWindowShiftSteps, not completedSamplesWindowShiftSteps, it's important
           final long minShiftSteps = newShiftSteps - historyLength + 1;
@@ -443,7 +443,7 @@ public abstract class AbstractRingBufferRateMeter<S, C extends ConcurrentRateMet
             final long measuredTNanos = rightSamplesWindowBoundary(completedSamplesWindowShiftSteps);
             value = ConversionsAndChecks.rateAverage(//this is the same as rateAverage()
                 measuredTNanos, samplesIntervalNanos, getStartNanos(), ticksTotalCount());
-          } else {
+          } else {//the samples window may has been moved while we were counting, but count is still correct
             value = count;
           }
         }
@@ -505,7 +505,7 @@ public abstract class AbstractRingBufferRateMeter<S, C extends ConcurrentRateMet
         if (sequential) {
           reading.setValue(count);
           readingDone = true;
-        } else {//check whether safe samples history has been moved too far while we were counting
+        } else {//check whether the safe samples history has been moved too far while we were counting
           final long newShiftSteps
               = atomicSamplesWindowShiftSteps.get();//atomicSamplesWindowShiftSteps, not completedSamplesWindowShiftSteps, it's important
           final long minShiftSteps = newShiftSteps - historyLength + 1;
@@ -518,7 +518,7 @@ public abstract class AbstractRingBufferRateMeter<S, C extends ConcurrentRateMet
                 .setAccurate(false)
                 .setValue(value);
             readingDone = true;
-          } else {
+          } else {//the samples window may has been moved while we were counting, but count is still correct
             reading.setValue(count);
             readingDone = true;
           }

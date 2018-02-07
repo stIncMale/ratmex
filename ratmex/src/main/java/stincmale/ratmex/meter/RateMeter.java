@@ -126,7 +126,7 @@ public interface RateMeter<S> {
    *
    * @see System#nanoTime()
    */
-  long getStartNanos();
+  long getStartNanos();//TODO add description for this method and for stats​()
 
   /**
    * A size of the samples window.
@@ -188,7 +188,7 @@ public interface RateMeter<S> {
    *
    * @return Total number of ticks.
    */
-  long ticksTotalCount();
+  long ticksTotalCount();//TODO rename to ticksCountTotal
 
   /**
    * Registers a sample of {@code count} ticks at {@code tNanos} instant.
