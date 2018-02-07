@@ -282,10 +282,10 @@ public final class BatchingRateMeasuringExecutorTest {
       final NumberFormat format = NumberFormat.getIntegerInstance();
       format.setGroupingUsed(true);
       submitterRateMeter.rateAverage(Duration.ofSeconds(1));
-      println("submitterRateMeter.ticksTotalCount=" + format.format(submitterRateMeter.ticksTotalCount()) +
+      println("submitterRateMeter.ticksCountTotal=" + format.format(submitterRateMeter.ticksCountTotal()) +
           ", submitterRateMeter.rateAverage=" + format.format(submitterRateMeter.rateAverage(Duration.ofSeconds(1))) +
           ", submitterRateMeter.rate=" + format.format(submitterRateMeter.rate(Duration.ofSeconds(1))), 2);
-      println("completionRateMeter.ticksTotalCount=" + format.format(completionRateMeter.ticksTotalCount()) +
+      println("completionRateMeter.ticksCountTotal=" + format.format(completionRateMeter.ticksCountTotal()) +
           ", completionRateMeter.rateAverage=" + format.format((completionRateMeter.rateAverage(Duration.ofSeconds(1)))) +
           ", completionRateMeter.rate=" + format.format(completionRateMeter.rate(Duration.ofSeconds(1))), 2);
       println("globalCompleteCounter=" + format.format(globalCompleteCounter) +

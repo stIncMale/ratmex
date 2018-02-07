@@ -102,7 +102,7 @@ abstract class AbstractRateMeterConcurrencyTest<B extends Builder, C extends Rat
           }
         });
     Assertions.assertEquals(tickGenerator.rightmostTNanos(), rm.rightSamplesWindowBoundary(), Utils.format("Iteration#%s, %s", iterationIdx, tp));
-    Assertions.assertEquals(tickGenerator.totalCount(), rm.ticksTotalCount(), Utils.format("Iteration#%s, %s", iterationIdx, tp));
+    Assertions.assertEquals(tickGenerator.totalCount(), rm.ticksCountTotal(), Utils.format("Iteration#%s, %s", iterationIdx, tp));
     final RateMeterReading reading = new RateMeterReading();
     Assertions.assertTrue(rm.ticksCount(reading)
         .isAccurate(), Utils.format("Iteration#%s, %s", iterationIdx, tp));

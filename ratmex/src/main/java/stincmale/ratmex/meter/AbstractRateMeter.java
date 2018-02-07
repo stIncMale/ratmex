@@ -77,7 +77,7 @@ public abstract class AbstractRateMeter<S, C extends RateMeterConfig> implements
   }
 
   @Override
-  public final long ticksTotalCount() {
+  public final long ticksCountTotal() {
     return ticksTotal.get();
   }
 
@@ -100,7 +100,7 @@ public abstract class AbstractRateMeter<S, C extends RateMeterConfig> implements
 
   /**
    * @return A counter that must be used to register and calculate total ticks count.
-   * {@link #ticksTotalCount()} returns {@link #getTicksTotalCounter()}{@code .}{@link TicksCounter#get() get()}.
+   * {@link #ticksCountTotal()} returns {@link #getTicksTotalCounter()}{@code .}{@link TicksCounter#get() get()}.
    */
   protected final TicksCounter getTicksTotalCounter() {
     return ticksTotal;

@@ -90,20 +90,20 @@ abstract class AbstractRateMeterUnitTest<B extends Builder, C extends RateMeterC
   }
 
   @Test
-  public final void ticksTotalCount1() {
-    assertEquals(0, newRateMeter(0, ofNanos(10)).ticksTotalCount());
+  public final void ticksCountTotal1() {
+    assertEquals(0, newRateMeter(0, ofNanos(10)).ticksCountTotal());
   }
 
   @Test
-  public final void ticksTotalCount2() {
+  public final void ticksCountTotal2() {
     final RateMeter<?> rm = newRateMeter(Long.MAX_VALUE, ofNanos(50));
     rm.tick(1, Long.MIN_VALUE);
-    assertEquals(1, rm.ticksTotalCount());
-    assertEquals(rm.ticksCount(), rm.ticksTotalCount());
+    assertEquals(1, rm.ticksCountTotal());
+    assertEquals(rm.ticksCount(), rm.ticksCountTotal());
     assertReading(rm.ticksCount(), Long.MIN_VALUE, true, rm.ticksCount(new RateMeterReading()));
     rm.tick(4, -210);
     rm.tick(2, -202);
-    assertEquals(1 + 4 + 2, rm.ticksTotalCount());
+    assertEquals(1 + 4 + 2, rm.ticksCountTotal());
   }
 
   @Test

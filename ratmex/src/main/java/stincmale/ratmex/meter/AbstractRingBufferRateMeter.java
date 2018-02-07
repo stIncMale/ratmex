@@ -391,7 +391,7 @@ public abstract class AbstractRingBufferRateMeter<S, C extends ConcurrentRateMet
     } else {//tNanos is ahead of the samples window
       measuredTNanos = tNanos;
     }
-    return ConversionsAndChecks.rateAverage(measuredTNanos, getSamplesIntervalNanos(), getStartNanos(), ticksTotalCount());
+    return ConversionsAndChecks.rateAverage(measuredTNanos, getSamplesIntervalNanos(), getStartNanos(), ticksCountTotal());
   }
 
   /*The implementation of this method is an exact copy of rate(long, RateMeterReading) except for lines related to RateMeterReading.
@@ -419,7 +419,7 @@ public abstract class AbstractRingBufferRateMeter<S, C extends ConcurrentRateMet
     if (targetShiftSteps < minSafeShiftSteps) {//tNanos is behind the safe samples history, so return average over all samples
       final long measuredTNanos = rightSamplesWindowBoundary(completedShiftSteps);
       value = ConversionsAndChecks.rateAverage(//this is the same as rateAverage()
-          measuredTNanos, samplesIntervalNanos, getStartNanos(), ticksTotalCount());
+          measuredTNanos, samplesIntervalNanos, getStartNanos(), ticksCountTotal());
     } else {//tNanos is within or ahead of the safe samples history
       final long countFromShiftSteps = targetShiftSteps - cellsInSamplesWindow + 1;
       if (completedShiftSteps < countFromShiftSteps) {
@@ -442,7 +442,7 @@ public abstract class AbstractRingBufferRateMeter<S, C extends ConcurrentRateMet
             //the safe samples history has been moved too far, so return average over all samples
             final long measuredTNanos = rightSamplesWindowBoundary(completedSamplesWindowShiftSteps);
             value = ConversionsAndChecks.rateAverage(//this is the same as rateAverage()
-                measuredTNanos, samplesIntervalNanos, getStartNanos(), ticksTotalCount());
+                measuredTNanos, samplesIntervalNanos, getStartNanos(), ticksCountTotal());
           } else {//the samples window may has been moved while we were counting, but count is still correct
             value = count;
           }
@@ -484,7 +484,7 @@ public abstract class AbstractRingBufferRateMeter<S, C extends ConcurrentRateMet
     if (targetShiftSteps < minSafeShiftSteps) {//tNanos is behind the safe samples history, so return average over all samples
       final long measuredTNanos = rightSamplesWindowBoundary(completedShiftSteps);
       final double value = ConversionsAndChecks.rateAverage(//this is the same as rateAverage()
-          measuredTNanos, samplesIntervalNanos, getStartNanos(), ticksTotalCount());
+          measuredTNanos, samplesIntervalNanos, getStartNanos(), ticksCountTotal());
       reading.setTNanos(measuredTNanos)
           .setAccurate(false)
           .setValue(value);
@@ -513,7 +513,7 @@ public abstract class AbstractRingBufferRateMeter<S, C extends ConcurrentRateMet
             //the safe samples history has been moved too far, so return average over all samples
             final long measuredTNanos = rightSamplesWindowBoundary(completedSamplesWindowShiftSteps);
             final double value = ConversionsAndChecks.rateAverage(//this is the same as rateAverage()
-                measuredTNanos, samplesIntervalNanos, getStartNanos(), ticksTotalCount());
+                measuredTNanos, samplesIntervalNanos, getStartNanos(), ticksCountTotal());
             reading.setTNanos(measuredTNanos)
                 .setAccurate(false)
                 .setValue(value);

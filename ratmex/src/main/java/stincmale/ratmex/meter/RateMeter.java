@@ -122,11 +122,13 @@ import static stincmale.ratmex.internal.util.ConversionsAndChecks.maxTNanos;
 //TODO create a RatMeX class with static default builder methods to simplify usage of the library
 public interface RateMeter<S> {
   /**
-   * @return A starting point that is used to calculate elapsed nanoseconds.
+   * Returns the starting point that is used to calculate elapsed nanoseconds.
+   *
+   * @return The starting point that is used to calculate elapsed nanoseconds.
    *
    * @see System#nanoTime()
    */
-  long getStartNanos();//TODO add description for this method and for stats​()
+  long getStartNanos();
 
   /**
    * A size of the samples window.
@@ -188,7 +190,7 @@ public interface RateMeter<S> {
    *
    * @return Total number of ticks.
    */
-  long ticksTotalCount();//TODO rename to ticksCountTotal
+  long ticksCountTotal();
 
   /**
    * Registers a sample of {@code count} ticks at {@code tNanos} instant.
@@ -366,6 +368,8 @@ public interface RateMeter<S> {
   }
 
   /**
+   * Returns statistics gathered by this {@link RateMeter}.
+   *
    * @return Stats which may be not {@linkplain Optional#isPresent() present}
    * if the {@link RateMeter} does not collect stats.
    */

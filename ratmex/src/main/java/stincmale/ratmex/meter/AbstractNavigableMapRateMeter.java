@@ -268,7 +268,7 @@ public abstract class AbstractNavigableMapRateMeter<C extends ConcurrentRateMete
     checkArgument(tNanos, "tNanos");
     long rightNanos = rightSamplesWindowBoundary();
     final long effectiveRightNanos = NanosComparator.max(tNanos, rightNanos);
-    return ConversionsAndChecks.rateAverage(effectiveRightNanos, getSamplesIntervalNanos(), getStartNanos(), ticksTotalCount());
+    return ConversionsAndChecks.rateAverage(effectiveRightNanos, getSamplesIntervalNanos(), getStartNanos(), ticksCountTotal());
   }
 
   /*The implementation of this method is an exact copy of rate(long, RateMeterReading) except for lines related to RateMeterReading.
@@ -286,7 +286,7 @@ public abstract class AbstractNavigableMapRateMeter<C extends ConcurrentRateMete
     if (NanosComparator.compare(effectiveLeftNanos, leftmostHistoryNanos) < 0) {
       //tNanos is behind the safe samples window, so return average over all samples
       value = ConversionsAndChecks.rateAverage(//this is the same as rateAverage()
-          rightmostHistoryNanos, samplesIntervalNanos, getStartNanos(), ticksTotalCount());
+          rightmostHistoryNanos, samplesIntervalNanos, getStartNanos(), ticksCountTotal());
       readingDone = true;
     } else {//tNanos is within or ahead of the safe samples window
       if (NanosComparator.compare(rightmostHistoryNanos, effectiveLeftNanos) <= 0) {
@@ -307,7 +307,7 @@ public abstract class AbstractNavigableMapRateMeter<C extends ConcurrentRateMete
             readingDone = true;
           } else {//the safe samples history has been moved too far, so return average over all samples
             value = ConversionsAndChecks.rateAverage(//this is the same as rateAverage()
-                newRightmostHistoryNanos, samplesIntervalNanos, getStartNanos(), ticksTotalCount());
+                newRightmostHistoryNanos, samplesIntervalNanos, getStartNanos(), ticksCountTotal());
             readingDone = true;
           }
         }
@@ -338,7 +338,7 @@ public abstract class AbstractNavigableMapRateMeter<C extends ConcurrentRateMete
     if (NanosComparator.compare(effectiveLeftNanos, leftmostHistoryNanos) < 0) {
       //tNanos is behind the safe samples window, so return average over all samples
       final double value = ConversionsAndChecks.rateAverage(//this is the same as rateAverage()
-          rightmostHistoryNanos, samplesIntervalNanos, getStartNanos(), ticksTotalCount());
+          rightmostHistoryNanos, samplesIntervalNanos, getStartNanos(), ticksCountTotal());
       reading.setTNanos(rightmostHistoryNanos)
           .setAccurate(false)
           .setValue(value);
@@ -362,7 +362,7 @@ public abstract class AbstractNavigableMapRateMeter<C extends ConcurrentRateMete
             readingDone = true;
           } else {//the safe samples history has been moved too far, so return average over all samples
             final double value = ConversionsAndChecks.rateAverage(//this is the same as rateAverage()
-                newRightmostHistoryNanos, samplesIntervalNanos, getStartNanos(), ticksTotalCount());
+                newRightmostHistoryNanos, samplesIntervalNanos, getStartNanos(), ticksCountTotal());
             reading.setTNanos(newRightmostHistoryNanos)
                 .setAccurate(false)
                 .setValue(value);
