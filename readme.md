@@ -1,8 +1,10 @@
 ![RatMeX logo](https://stincmale.github.io/ratmex/logo-small.png)
 # RatMeX
 ![Java requirement](https://img.shields.io/badge/Java-8+-blue.svg)
-[![Docs link](https://img.shields.io/badge/docs-current-blue.svg)](https://github.com/stIncMale/ratmex/wiki)
+[![Docs link](https://img.shields.io/badge/documentation-current-blue.svg)](https://github.com/stIncMale/ratmex/wiki)
 [![API docs](https://img.shields.io/badge/javadocs-current-blue.svg)](https://stincmale.github.io/ratmex/apidocs/current/index.html?overview-summary.html)
+
+**This is still a work in progress.**
 
 A Java library that supplies a rate meter and a **Rat**e-**M**easuring **eX**ecutor based on it. This library is designed to be:
 * [high-performance](https://github.com/stIncMale/ratmex/wiki/Performance)
@@ -18,9 +20,7 @@ does not produce garbage
 
 * free of external dependencies
 
-**This is still a work in progress.**
-
-***
+---
 
 Copyright 2018 [Valiantsin Kavalenka](https://sites.google.com/site/aboutmale/)
 
