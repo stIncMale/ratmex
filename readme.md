@@ -7,13 +7,13 @@
 A Java library that supplies a rate meter and a **Rat**e-**M**easuring **eX**ecutor based on it. This library is designed to be:
 * [high-performance](https://github.com/stIncMale/ratmex/wiki/Performance)
 
->[`ConcurrentRingBufferRateMeter`](https://stincmale.github.io/ratmex/apidocs/current/stincmale/ratmex/meter/ConcurrentRingBufferRateMeter.html)
+  [`ConcurrentRingBufferRateMeter`](https://stincmale.github.io/ratmex/apidocs/current/stincmale/ratmex/meter/ConcurrentRingBufferRateMeter.html)
 is able to register **23+ millions of concurrent ticks per second** with less than **180ns latency per registration** including time spend calling
 [`System.nanoTime()`](https://docs.oracle.com/javase/9/docs/api/java/lang/System.html#nanoTime--)
 
 * garbage collector friendly
 
->[`ConcurrentRingBufferRateMeter`](https://stincmale.github.io/ratmex/apidocs/current/stincmale/ratmex/meter/ConcurrentRingBufferRateMeter.html)
+  [`ConcurrentRingBufferRateMeter`](https://stincmale.github.io/ratmex/apidocs/current/stincmale/ratmex/meter/ConcurrentRingBufferRateMeter.html)
 does not produce garbage
 
 * free of external dependencies
