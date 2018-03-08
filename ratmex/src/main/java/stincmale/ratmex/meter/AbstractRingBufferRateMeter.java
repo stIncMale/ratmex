@@ -154,10 +154,10 @@ public abstract class AbstractRingBufferRateMeter<S, C extends ConcurrentRateMet
     return result;
   }
 
-  /*The implementation of this method is an exact copy of ticksCount(RateMeterReading) except for lines related to RateMeterReading.
+  /*The implementation of this method is an exact copy of rate(RateMeterReading) except for lines related to RateMeterReading.
     This is bad, but I don't see any other way to implement both methods in a garbage-free way.*/
   @Override
-  public final long ticksCount() {
+  public final long rate() {
     final long value;
     if (sequential) {
       final long shiftSteps = samplesWindowShiftSteps;
@@ -217,7 +217,7 @@ public abstract class AbstractRingBufferRateMeter<S, C extends ConcurrentRateMet
    * The reading is always {@linkplain RateMeterReading#isAccurate() accurate}.
    */
   @Override
-  public final RateMeterReading ticksCount(final RateMeterReading reading) {
+  public final RateMeterReading rate(final RateMeterReading reading) {
     checkNotNull(reading, "reading");
     reading.setStartNanos(getStartNanos())
         .setUnit(getSamplesInterval())

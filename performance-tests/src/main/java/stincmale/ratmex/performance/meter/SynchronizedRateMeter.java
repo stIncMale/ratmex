@@ -47,23 +47,9 @@ public final class SynchronizedRateMeter<S> implements RateMeter<S> {
   }
 
   @Override
-  public final long ticksCount() {
+  public final long ticksCountTotal() {
     synchronized (mutex) {
-      return rm.ticksCount();
-    }
-  }
-
-  @Override
-  public final long ticksTotalCount() {
-    synchronized (mutex) {
-      return rm.ticksTotalCount();
-    }
-  }
-
-  @Override
-  public final RateMeterReading ticksCount(final RateMeterReading reading) {
-    synchronized (mutex) {
-      return rm.ticksCount(reading);
+      return rm.ticksCountTotal();
     }
   }
 

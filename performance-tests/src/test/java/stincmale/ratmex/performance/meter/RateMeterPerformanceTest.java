@@ -133,26 +133,26 @@ public class RateMeterPerformanceTest {
   }
 
   @Benchmark
-  public void alternateTicksCountTick(final BenchmarkState benchmarkState, final ThreadState threadState) {
-    alternateTicksCountTick(benchmarkState.rateMeter, threadState.reading, threadState.counter);
-    threadState.counter++;
-  }
-
-  @Benchmark
-  public void ticksCountWithLessThanOnePercentTick(final BenchmarkState benchmarkState, final ThreadState threadState) {
-    ticksCountWithLessThanOnePercentTick(benchmarkState.rateMeter, threadState.reading, threadState.counter);
-    threadState.counter++;
-  }
-
-  @Benchmark
   public void alternateRateTick(final BenchmarkState benchmarkState, final ThreadState threadState) {
     alternateRateTick(benchmarkState.rateMeter, threadState.reading, threadState.counter);
     threadState.counter++;
   }
 
   @Benchmark
-  public void rateWithLessThanOnePercentTick(final BenchmarkState benchmarkState, final ThreadState threadState) {
-    rateWithLessThanOnePercentTick(benchmarkState.rateMeter, threadState.reading, threadState.counter);
+  public void rateLessThanOnePercentTick(final BenchmarkState benchmarkState, final ThreadState threadState) {
+    rateLessThanOnePercentTick(benchmarkState.rateMeter, threadState.reading, threadState.counter);
+    threadState.counter++;
+  }
+
+  @Benchmark
+  public void alternateRateExplicitTTick(final BenchmarkState benchmarkState, final ThreadState threadState) {
+    alternateRateExplicitTTick(benchmarkState.rateMeter, threadState.reading, threadState.counter);
+    threadState.counter++;
+  }
+
+  @Benchmark
+  public void rateExplicitTLessThanOnePercentTick(final BenchmarkState benchmarkState, final ThreadState threadState) {
+    rateExplicitTLessThanOnePercentTick(benchmarkState.rateMeter, threadState.reading, threadState.counter);
     threadState.counter++;
   }
 
@@ -244,10 +244,10 @@ public class RateMeterPerformanceTest {
     final Map<String, Function<XYSeries, XYSeries>> benchmarkSeriesProcessors = new TreeMap<>();
     {
       benchmarkSeriesProcessors.put("tick", series -> (XYSeries)series.setMarker(SeriesMarkers.CIRCLE));
-      benchmarkSeriesProcessors.put("alternateTicksCountTick", series -> (XYSeries)series.setMarker(SeriesMarkers.SQUARE));
       benchmarkSeriesProcessors.put("alternateRateTick", series -> (XYSeries)series.setMarker(SeriesMarkers.SQUARE));
-      benchmarkSeriesProcessors.put("ticksCountWithLessThanOnePercentTick", series -> (XYSeries)series.setMarker(SeriesMarkers.DIAMOND));
-      benchmarkSeriesProcessors.put("rateWithLessThanOnePercentTick", series -> (XYSeries)series.setMarker(SeriesMarkers.DIAMOND));
+      benchmarkSeriesProcessors.put("alternateRateExplicitTTick", series -> (XYSeries)series.setMarker(SeriesMarkers.SQUARE));
+      benchmarkSeriesProcessors.put("rateLessThanOnePercentTick", series -> (XYSeries)series.setMarker(SeriesMarkers.DIAMOND));
+      benchmarkSeriesProcessors.put("rateExplicitTLessThanOnePercentTick", series -> (XYSeries)series.setMarker(SeriesMarkers.DIAMOND));
     }
     ptr.save(
         Mode.Throughput,
@@ -320,39 +320,12 @@ public class RateMeterPerformanceTest {
     rm.tick(1, nanoTime());
   }
 
-  private static final long ticksCount(final RateMeter<?> rm, final RateMeterReading reading) {
-    return rm.ticksCount(new RateMeterReading())
+  private static final long rate(final RateMeter<?> rm, final RateMeterReading reading) {
+    return rm.rate(new RateMeterReading())
         .getValueLong();
   }
 
-  private static final double ticksCountWithLessThanOnePercentTick(final RateMeter<?> rm, final RateMeterReading reading, final long counter) {
-    final double result;
-    if ((counter & 127) == 0) {//same as (counter % 128 == 0), i.e. test if counter is a multiple of 128
-      rm.tick(1, nanoTime());
-      result = 0;
-    } else {
-      result = ticksCount(rm, reading);
-    }
-    return result;
-  }
-
-  private static final double alternateTicksCountTick(final RateMeter<?> rm, final RateMeterReading reading, final long counter) {
-    final double result;
-    if ((counter & 1) == 0) {//same as (counter % 2 == 0), i.e. test if counter is even
-      rm.tick(1, nanoTime());
-      result = 0;
-    } else {
-      result = ticksCount(rm, reading);
-    }
-    return result;
-  }
-
-  private static final double rate(final RateMeter<?> rm, final RateMeterReading reading) {
-    return rm.rate(rm.rightSamplesWindowBoundary(), reading)
-        .getValueDouble();
-  }
-
-  private static final double rateWithLessThanOnePercentTick(final RateMeter<?> rm, final RateMeterReading reading, final long counter) {
+  private static final double rateLessThanOnePercentTick(final RateMeter<?> rm, final RateMeterReading reading, final long counter) {
     final double result;
     if ((counter & 127) == 0) {//same as (counter % 128 == 0), i.e. test if counter is a multiple of 128
       rm.tick(1, nanoTime());
@@ -370,6 +343,33 @@ public class RateMeterPerformanceTest {
       result = 0;
     } else {
       result = rate(rm, reading);
+    }
+    return result;
+  }
+
+  private static final double rateExplicitT(final RateMeter<?> rm, final RateMeterReading reading) {
+    return rm.rate(rm.rightSamplesWindowBoundary(), reading)
+        .getValueDouble();
+  }
+
+  private static final double rateExplicitTLessThanOnePercentTick(final RateMeter<?> rm, final RateMeterReading reading, final long counter) {
+    final double result;
+    if ((counter & 127) == 0) {//same as (counter % 128 == 0), i.e. test if counter is a multiple of 128
+      rm.tick(1, nanoTime());
+      result = 0;
+    } else {
+      result = rateExplicitT(rm, reading);
+    }
+    return result;
+  }
+
+  private static final double alternateRateExplicitTTick(final RateMeter<?> rm, final RateMeterReading reading, final long counter) {
+    final double result;
+    if ((counter & 1) == 0) {//same as (counter % 2 == 0), i.e. test if counter is even
+      rm.tick(1, nanoTime());
+      result = 0;
+    } else {
+      result = rateExplicitT(rm, reading);
     }
     return result;
   }

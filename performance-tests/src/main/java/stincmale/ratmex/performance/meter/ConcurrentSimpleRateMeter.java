@@ -61,30 +61,10 @@ public final class ConcurrentSimpleRateMeter<S> implements RateMeter<S> {
   }
 
   @Override
-  public final long ticksCount() {
+  public final long ticksCountTotal() {
     final long lockStamp = lockStrategy.sharedLock();
     try {
-      return rm.ticksCount();
-    } finally {
-      lockStrategy.unlockShared(lockStamp);
-    }
-  }
-
-  @Override
-  public final long ticksTotalCount() {
-    final long lockStamp = lockStrategy.sharedLock();
-    try {
-      return rm.ticksTotalCount();
-    } finally {
-      lockStrategy.unlockShared(lockStamp);
-    }
-  }
-
-  @Override
-  public final RateMeterReading ticksCount(final RateMeterReading reading) {
-    final long lockStamp = lockStrategy.sharedLock();
-    try {
-      return rm.ticksCount(reading);
+      return rm.ticksCountTotal();
     } finally {
       lockStrategy.unlockShared(lockStamp);
     }

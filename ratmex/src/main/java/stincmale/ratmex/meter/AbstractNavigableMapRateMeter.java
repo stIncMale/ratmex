@@ -27,7 +27,7 @@ import static stincmale.ratmex.internal.util.Utils.format;
  * <li>Unlike {@link AbstractRingBufferRateMeter}, this implementation tolerates a large ratio of
  * {@link #getSamplesInterval()} to {@link #getTimeSensitivity()}.
  * The reason for this is that it only creates objects representing samples when necessary,
- * hence potentially reduces the number of samples that must be added up to count the {@linkplain #ticksCount() current ticks}.</li>
+ * hence potentially reduces the number of samples that must be added up to count the {@linkplain #rate() current ticks}.</li>
  * </ul>
  * <p>
  * <i>Disadvantages</i><br>
@@ -94,10 +94,10 @@ public abstract class AbstractNavigableMapRateMeter<C extends ConcurrentRateMete
     return samplesHistory.lastKey();
   }
 
-  /*The implementation of this method is an exact copy of ticksCount(RateMeterReading) except for lines related to RateMeterReading.
+  /*The implementation of this method is an exact copy of rate(RateMeterReading) except for lines related to RateMeterReading.
     This is bad, but I don't see any other way to implement both methods in a garbage-free way.*/
   @Override
-  public final long ticksCount() {
+  public final long rate() {
     final long value;
     final long samplesIntervalNanos = getSamplesIntervalNanos();
     long rightmostHistoryNanos = rightSamplesWindowBoundary();
@@ -152,7 +152,7 @@ public abstract class AbstractNavigableMapRateMeter<C extends ConcurrentRateMete
    * The reading is always {@linkplain RateMeterReading#isAccurate() accurate}.
    */
   @Override
-  public final RateMeterReading ticksCount(final RateMeterReading reading) {
+  public final RateMeterReading rate(final RateMeterReading reading) {
     checkNotNull(reading, "reading");
     reading.setStartNanos(getStartNanos())
         .setUnit(getSamplesInterval())

@@ -78,4 +78,3 @@ public final class SpinLockStrategy implements LockStrategy {
     atomicBoolean.set(false);
   }
 }
-//TODO consider implementing two-phase LockStrategy with AtomicMarkableReference

@@ -63,33 +63,6 @@ abstract class AbstractRateMeterUnitTest<B extends Builder, C extends RateMeterC
   }
 
   @Test
-  public final void ticksCount1() {
-    assertEquals(0, newRateMeter(0, ofNanos(1)).ticksCount());
-    assertReading(0, 0, true, newRateMeter(0, ofNanos(1)).ticksCount(new RateMeterReading()));
-  }
-
-  @Test
-  public final void ticksCount2() {
-    final RateMeterReading r = new RateMeterReading();
-    final RateMeter<?> rm = newRateMeter(-5, ofNanos(50));
-    rm.tick(1, 7);
-    rm.tick(4, 10);
-    rm.tick(2, 20);
-    rm.tick(3, 30);
-    assertEquals(1 + 4 + 2 + 3, rm.ticksCount());
-    assertReading(rm.ticksCount(), 30, true, rm.ticksCount(r));
-    rm.tick(0, 8);
-    assertEquals(1 + 4 + 2 + 3, rm.ticksCount());
-    assertReading(rm.ticksCount(), 30, true, rm.ticksCount(r));
-    rm.tick(-2, 50);
-    rm.tick(1, 30);
-    rm.tick(-1, 60);
-    rm.tick(5, 10);
-    assertEquals(2 + 3 - 2 + 1 - 1, rm.ticksCount());
-    assertReading(rm.ticksCount(), 60, true, rm.ticksCount(r));
-  }
-
-  @Test
   public final void ticksCountTotal1() {
     assertEquals(0, newRateMeter(0, ofNanos(10)).ticksCountTotal());
   }
@@ -99,8 +72,8 @@ abstract class AbstractRateMeterUnitTest<B extends Builder, C extends RateMeterC
     final RateMeter<?> rm = newRateMeter(Long.MAX_VALUE, ofNanos(50));
     rm.tick(1, Long.MIN_VALUE);
     assertEquals(1, rm.ticksCountTotal());
-    assertEquals(rm.ticksCount(), rm.ticksCountTotal());
-    assertReading(rm.ticksCount(), Long.MIN_VALUE, true, rm.ticksCount(new RateMeterReading()));
+    assertEquals(rm.rate(), rm.ticksCountTotal());
+    assertReading(rm.rate(), Long.MIN_VALUE, true, rm.rate(new RateMeterReading()));
     rm.tick(4, -210);
     rm.tick(2, -202);
     assertEquals(1 + 4 + 2, rm.ticksCountTotal());
@@ -196,18 +169,45 @@ abstract class AbstractRateMeterUnitTest<B extends Builder, C extends RateMeterC
 
   @Test
   public final void rate1() {
+    assertEquals(0, newRateMeter(0, ofNanos(1)).rate());
+    assertReading(0, 0, true, newRateMeter(0, ofNanos(1)).rate(new RateMeterReading()));
+  }
+
+  @Test
+  public final void rate2() {
+    final RateMeterReading r = new RateMeterReading();
+    final RateMeter<?> rm = newRateMeter(-5, ofNanos(50));
+    rm.tick(1, 7);
+    rm.tick(4, 10);
+    rm.tick(2, 20);
+    rm.tick(3, 30);
+    assertEquals(1 + 4 + 2 + 3, rm.rate());
+    assertReading(rm.rate(), 30, true, rm.rate(r));
+    rm.tick(0, 8);
+    assertEquals(1 + 4 + 2 + 3, rm.rate());
+    assertReading(rm.rate(), 30, true, rm.rate(r));
+    rm.tick(-2, 50);
+    rm.tick(1, 30);
+    rm.tick(-1, 60);
+    rm.tick(5, 10);
+    assertEquals(2 + 3 - 2 + 1 - 1, rm.rate());
+    assertReading(rm.rate(), 60, true, rm.rate(r));
+  }
+
+  @Test
+  public final void rate3() {
     assertDoubleEquals(0, newRateMeter(0, ofNanos(10)).rate());
     assertReading(0, 0, true, newRateMeter(0, ofNanos(10)).rate(new RateMeterReading()));
   }
 
   @Test
-  public final void rate2() {
+  public final void rate4() {
     assertDoubleEquals(0, newRateMeter(0, ofNanos(10)).rate(0));
     assertReading(0, 0, true, newRateMeter(0, ofNanos(10)).rate(0, new RateMeterReading()));
   }
 
   @Test
-  public final void rate3() {
+  public final void rate5() {
     final RateMeterReading r = new RateMeterReading();
     final RateMeter<?> rm = newRateMeter(-1, ofNanos(30));
     rm.tick(1, 0);
@@ -232,9 +232,9 @@ abstract class AbstractRateMeterUnitTest<B extends Builder, C extends RateMeterC
     assertReading(rm.rate(), 60, true, rm.rate(r));
     assertDoubleEquals((-2d - 1) / (30d / 10), rm.rate(ofNanos(10)));
     assertReading(rm.rate(ofNanos(10)), 60, true, false, rm.rate(ofNanos(10), r));
-    assertDoubleEquals(rm.ticksCount(), rm.rate());
-    assertReading(rm.ticksCount(), 60, true, rm.rate(r));
-    assertReading(rm.rate(), 60, true, rm.ticksCount(new RateMeterReading()));
+    assertDoubleEquals(rm.rate(), rm.rate());
+    assertReading(rm.rate(), 60, true, rm.rate(r));
+    assertReading(rm.rate(), 60, true, rm.rate(new RateMeterReading()));
     assertDoubleEquals(rm.rate(rm.rightSamplesWindowBoundary()), rm.rate());
     assertDoubleEquals(rm.rate(rm.rightSamplesWindowBoundary(), ofNanos(10)), rm.rate(ofNanos(10)));
     assertReading(rm.rate(ofNanos(10)), 60, true, false, rm.rate(ofNanos(10), r));
@@ -242,7 +242,7 @@ abstract class AbstractRateMeterUnitTest<B extends Builder, C extends RateMeterC
   }
 
   @Test
-  public final void rate4() {
+  public final void rate6() {
     final RateMeterReading r = new RateMeterReading();
     final RateMeter<?> rm = newRateMeter(-2, ofNanos(3));
     rm.tick(3, 0);
@@ -271,7 +271,7 @@ abstract class AbstractRateMeterUnitTest<B extends Builder, C extends RateMeterC
   }
 
   @Test
-  public final void rate5() {
+  public final void rate7() {
     final RateMeterReading r = new RateMeterReading();
     final RateMeter<?> rm = newRateMeter(-2, ofNanos(30));
     rm.tick(1, -1);

@@ -104,21 +104,21 @@ abstract class AbstractRateMeterConcurrencyTest<B extends Builder, C extends Rat
     Assertions.assertEquals(tickGenerator.rightmostTNanos(), rm.rightSamplesWindowBoundary(), Utils.format("Iteration#%s, %s", iterationIdx, tp));
     Assertions.assertEquals(tickGenerator.totalCount(), rm.ticksCountTotal(), Utils.format("Iteration#%s, %s", iterationIdx, tp));
     final RateMeterReading reading = new RateMeterReading();
-    Assertions.assertTrue(rm.ticksCount(reading)
+    Assertions.assertTrue(rm.rate(reading)
         .isAccurate(), Utils.format("Iteration#%s, %s", iterationIdx, tp));
     Assertions.assertEquals(
         tickGenerator.countRightmost(tp.samplesInterval.toNanos()),
-        rm.ticksCount(reading)
+        rm.rate(reading)
             .getValueLong(),
         Utils.format("Iteration#%s, %s", iterationIdx, tp));
     Assertions.assertEquals(
         tickGenerator.countRightmost(tp.samplesInterval.toNanos()),
-        rm.ticksCount(),
+        rm.rate(),
         Utils.format("Iteration#%s, %s", iterationIdx, tp));
-    Assertions.assertEquals(rm.ticksCount(reading)
+    Assertions.assertEquals(rm.rate(reading)
         .getTNanos(), rm.rightSamplesWindowBoundary(), Utils.format("Iteration#%s, %s", iterationIdx, tp));
-    Assertions.assertEquals(rm.ticksCount(reading)
-        .getValueLong(), rm.ticksCount(), Utils.format("Iteration#%s, %s", iterationIdx, tp));
+    Assertions.assertEquals(rm.rate(reading)
+        .getValueLong(), rm.rate(), Utils.format("Iteration#%s, %s", iterationIdx, tp));
   }
 
   private static final class TestParams {
@@ -212,9 +212,9 @@ abstract class AbstractRateMeterConcurrencyTest<B extends Builder, C extends Rat
             final int randomInt = ThreadLocalRandom.current()
                 .nextInt(6);
             if (randomInt == 0) {
-              rm.ticksCount();
+              rm.rate();
             } else if (randomInt == 1) {
-              rm.ticksCount(new RateMeterReading());
+              rm.rate(new RateMeterReading());
             } else if (randomInt == 2) {
               rm.rate();
             } else if (randomInt == 3) {

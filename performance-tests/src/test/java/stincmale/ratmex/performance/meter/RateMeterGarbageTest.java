@@ -68,7 +68,6 @@ public class RateMeterGarbageTest {
       final long tNanos = System.nanoTime();
       if ((i & 3) == 0) {
         rm.rateAverage(tNanos);
-        rm.ticksCount(reading.get());
         rm.rate(reading.get());
         rm.rate(tNanos, reading.get());
       } else {
