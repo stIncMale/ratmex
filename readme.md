@@ -1,9 +1,11 @@
 <img align="left" src="https://stincmale.github.io/ratmex/logo-small.png" alt="RatMeX logo">
 
 # RatMeX
-![Java requirement](https://img.shields.io/badge/Java-8+-blue.svg)
-[![Docs link](https://img.shields.io/badge/documentation-current-blue.svg)](https://github.com/stIncMale/ratmex/wiki)
-[![API docs](https://img.shields.io/badge/javadocs-current-blue.svg)](https://stincmale.github.io/ratmex/apidocs/current/index.html?overview-summary.html)
+<p align="right">
+<img align="left" src="https://img.shields.io/badge/Java-8+-blue.svg" alt="Java requirement">
+<a href="https://github.com/stIncMale/ratmex/wiki"><img align="left" src="https://img.shields.io/badge/documentation-current-blue.svg" alt="Docs link"></a>
+<a href="https://stincmale.github.io/ratmex/apidocs/current/index.html?overview-summary.html"><img align="left" src="https://img.shields.io/badge/javadocs-current-blue.svg" alt="API docs"></a>
+</p>
 
 **This is still a work in progress.**
 
