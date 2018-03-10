@@ -1,4 +1,5 @@
-![RatMeX logo](https://stincmale.github.io/ratmex/logo-small.png)
+<img align="left" src="https://stincmale.github.io/ratmex/logo-small.png" alt="RatMeX logo">
+
 # RatMeX
 ![Java requirement](https://img.shields.io/badge/Java-8+-blue.svg)
 [![Docs link](https://img.shields.io/badge/documentation-current-blue.svg)](https://github.com/stIncMale/ratmex/wiki)
