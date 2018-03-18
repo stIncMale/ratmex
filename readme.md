@@ -23,7 +23,7 @@ does not produce garbage
 * free of external dependencies
 
 ## Rationale
-JDK provides us with [ScheduledExecutorService.scheduleAtFixedRate](https://docs.oracle.com/javase/9/docs/api/java/util/concurrent/ScheduledExecutorService.html#scheduleAtFixedRate-java.lang.Runnable-long-long-java.util.concurrent.TimeUnit-),
+JDK provides us with [`ScheduledExecutorService.scheduleAtFixedRate`](https://docs.oracle.com/javase/9/docs/api/java/util/concurrent/ScheduledExecutorService.html#scheduleAtFixedRate-java.lang.Runnable-long-long-java.util.concurrent.TimeUnit-),
 which says the following regarding the task being scheduled:
 _If any execution of this task takes longer than its period, then subsequent executions may start late, but will not concurrently execute_.
 This tells us that `ScheduledExecutorService`:
