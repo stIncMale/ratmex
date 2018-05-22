@@ -2,7 +2,7 @@
 
 # RatMeX
 <p align="right">
-<img src="https://img.shields.io/badge/Java-8+-blue.svg" alt="Java requirement">
+<a href="http://www.oracle.com/technetwork/java/javase/overview/index.html"><img src="https://img.shields.io/badge/Java-8+-blue.svg" alt="Java requirement"></a>
 <a href="https://github.com/stIncMale/ratmex/wiki"><img src="https://img.shields.io/badge/documentation-current-blue.svg" alt="Docs link"></a>
 <a href="https://stincmale.github.io/ratmex/apidocs/current/index.html?overview-summary.html"><img src="https://img.shields.io/badge/javadocs-current-blue.svg" alt="API docs"></a>
 </p>
@@ -34,7 +34,7 @@ RatMeX allows overcoming both of the above shortcomings.
 
 ---
 
-Copyright 2018 [Valiantsin Kavalenka](https://sites.google.com/site/aboutmale/)
+Copyright 2017-2018 [Valiantsin Kavalenka](https://sites.google.com/site/aboutmale/)
 
 Licensed under the Apache License, Version 2.0 (the "License") (except where another license is explicitly specified);
 you may not use this project except in compliance with the License.
