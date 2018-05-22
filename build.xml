@@ -62,24 +62,11 @@
             <parallel>${ratmex.maven-surefire-plugin.parallel}</parallel>
             <threadCount>5</threadCount>
             <properties>
-              <includeTags>${ratmex.maven-surefire-plugin.includeTags}
-              </includeTags><!-- TODO will not work until https://github.com/junit-team/junit5/issues/809#issuecomment-352654645 -->
+              <includeTags>${ratmex.maven-surefire-plugin.includeTags}</includeTags>
               <excludeTags>${ratmex.maven-surefire-plugin.excludeTags}</excludeTags>
               <argLine>${ratmex.maven-surefire-plugin.assertions} -Xmx1024m</argLine>
             </properties>
           </configuration>
-          <dependencies>
-            <dependency>
-              <groupId>org.junit.platform</groupId>
-              <artifactId>junit-platform-surefire-provider</artifactId>
-              <version>1.1.0-M1</version>
-            </dependency>
-            <dependency>
-              <groupId>org.junit.jupiter</groupId>
-              <artifactId>junit-jupiter-engine</artifactId>
-              <version>${junit-jupiter.version}</version>
-            </dependency>
-          </dependencies>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -143,7 +130,6 @@
             <links>
               <link>https://docs.oracle.com/javase/9/docs/api</link>
               <link>https://javaee.github.io/javaee-spec/javadocs</link>
-              <!-- TODO get rid of JSR305, use own annotations-->
             </links>
             <validateLinks>true</validateLinks>
             <includeDependencySources>false</includeDependencySources>

@@ -8,11 +8,12 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 import stincmale.ratmex.doc.NotThreadSafe;
+import static java.lang.Boolean.parseBoolean;
 import static org.openjdk.jmh.runner.options.TimeValue.milliseconds;
 
 @NotThreadSafe
 public final class JmhOptions {
-  public static final boolean DRY_RUN = true;
+  private static final boolean DRY_RUN = parseBoolean(System.getProperty("stincmale.ratmex.performance.dryRun", "true"));
   private static final boolean JAVA_SERVER = true;
   private static final boolean JAVA_ASSERTIONS = DRY_RUN;
   public static final SortedSet<Integer> numbersOfThreads = DRY_RUN
