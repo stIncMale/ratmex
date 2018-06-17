@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package stincmale.ratmex.util;
+package stincmale.ratmex;
 
-public final class ConcurrencyTestTag {
-  public static final String VALUE = "concurrency";
-
-  private ConcurrencyTestTag() {
+/**
+ * Consolidates methods useful for quickly accessing functionality provided by RatMeX library.
+ */
+public final class Ratmex {
+  private Ratmex() {
     throw new UnsupportedOperationException("The class isn't designed to be instantiated");
   }
 }

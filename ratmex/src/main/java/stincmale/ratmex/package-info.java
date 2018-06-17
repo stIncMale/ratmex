@@ -23,6 +23,6 @@
  * to have the defined special meanings, these special meanings are extended to lowercase usage of the key words throughout RatMeX documentation.
  * <p>
  * The words "order", "before", "after", "previous", "subsequent" used without a context which implies a clear order
- * must be interpreted with regard to <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-17.html#jls-17.4.5">happens-before order</a>.
+ * must be interpreted with regard to <a href="https://docs.oracle.com/javase/specs/jls/se10/html/jls-17.html#jls-17.4.5">happens-before order</a>.
  */
 package stincmale.ratmex;
