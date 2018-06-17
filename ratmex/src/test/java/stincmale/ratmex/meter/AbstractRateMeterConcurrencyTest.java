@@ -33,16 +33,16 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import stincmale.ratmex.common.NanosComparator;
-import stincmale.ratmex.internal.util.Utils;
 import stincmale.ratmex.meter.RateMeterConfig.Builder;
 import static java.time.Duration.ofNanos;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static stincmale.ratmex.internal.util.Utils.format;
 
 @TestInstance(Lifecycle.PER_METHOD)
 abstract class AbstractRateMeterConcurrencyTest<B extends Builder, C extends RateMeterConfig> extends AbstractRateMeterTest<B, C> {
@@ -117,24 +117,24 @@ abstract class AbstractRateMeterConcurrencyTest<B extends Builder, C extends Rat
             throw new RuntimeException(e);
           }
         });
-    Assertions.assertEquals(tickGenerator.rightmostTNanos(), rm.rightSamplesWindowBoundary(), Utils.format("Iteration#%s, %s", iterationIdx, tp));
-    Assertions.assertEquals(tickGenerator.totalCount(), rm.ticksCountTotal(), Utils.format("Iteration#%s, %s", iterationIdx, tp));
+    assertEquals(tickGenerator.rightmostTNanos(), rm.rightSamplesWindowBoundary(), format("Iteration#%s, %s", iterationIdx, tp));
+    assertEquals(tickGenerator.totalCount(), rm.ticksCountTotal(), format("Iteration#%s, %s", iterationIdx, tp));
     final RateMeterReading reading = new RateMeterReading();
-    Assertions.assertTrue(rm.rate(reading)
-        .isAccurate(), Utils.format("Iteration#%s, %s", iterationIdx, tp));
-    Assertions.assertEquals(
+    assertTrue(rm.rate(reading)
+        .isAccurate(), format("Iteration#%s, %s", iterationIdx, tp));
+    assertEquals(
         tickGenerator.countRightmost(tp.samplesInterval.toNanos()),
         rm.rate(reading)
             .getValueLong(),
-        Utils.format("Iteration#%s, %s", iterationIdx, tp));
-    Assertions.assertEquals(
+        format("Iteration#%s, %s", iterationIdx, tp));
+    assertEquals(
         tickGenerator.countRightmost(tp.samplesInterval.toNanos()),
         rm.rate(),
-        Utils.format("Iteration#%s, %s", iterationIdx, tp));
-    Assertions.assertEquals(rm.rate(reading)
-        .getTNanos(), rm.rightSamplesWindowBoundary(), Utils.format("Iteration#%s, %s", iterationIdx, tp));
-    Assertions.assertEquals(rm.rate(reading)
-        .getValueLong(), rm.rate(), Utils.format("Iteration#%s, %s", iterationIdx, tp));
+        format("Iteration#%s, %s", iterationIdx, tp));
+    assertEquals(rm.rate(reading)
+        .getTNanos(), rm.rightSamplesWindowBoundary(), format("Iteration#%s, %s", iterationIdx, tp));
+    assertEquals(rm.rate(reading)
+        .getValueLong(), rm.rate(), format("Iteration#%s, %s", iterationIdx, tp));
   }
 
   private static final class TestParams {

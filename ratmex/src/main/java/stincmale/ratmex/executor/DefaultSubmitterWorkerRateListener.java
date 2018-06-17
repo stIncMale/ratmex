@@ -17,9 +17,9 @@
 package stincmale.ratmex.executor;
 
 import stincmale.ratmex.doc.NotThreadSafe;
-import stincmale.ratmex.internal.util.Utils;
 import stincmale.ratmex.meter.ConcurrentRateMeterStats;
 import stincmale.ratmex.meter.RateMeter;
+import static stincmale.ratmex.internal.util.Utils.format;
 
 /**
  * A default implementation of {@link RateListener}
@@ -75,7 +75,7 @@ public class DefaultSubmitterWorkerRateListener<E extends SubmitterWorkerRateMea
       .map(ConcurrentRateMeterStats::incorrectlyRegisteredTickEventsCount)
       .ifPresent(incorrectlyRegisteredTickEventsCount -> {
         if (incorrectlyRegisteredTickEventsCount > 0) {
-          throw new CorrectnessException(Utils.format("Worker rate meter failed to accurately register ticks. " +
+          throw new CorrectnessException(format("Worker rate meter failed to accurately register ticks. " +
             "incorrectlyRegisteredTickEventsCount={}, completionRate={}", incorrectlyRegisteredTickEventsCount, e.getCompletionRate()
                 .getValueDouble()));
         }

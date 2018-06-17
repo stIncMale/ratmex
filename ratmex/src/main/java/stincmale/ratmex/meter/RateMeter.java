@@ -134,9 +134,6 @@ import static stincmale.ratmex.internal.util.ConversionsAndChecks.maxTNanos;
  *
  * @param <S> A type that represents {@linkplain #stats() statistics}.
  */
-//TODO create resettable RateMeter which aggregates and recreated RateMeter's
-//TODO create a RatMeX class with static default builder methods to simplify usage of the library
-//TODO replace all/some local static calls with static imports
 public interface RateMeter<S> {
   /**
    * Returns the starting point that is used to calculate elapsed nanoseconds.

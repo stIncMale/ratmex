@@ -18,7 +18,8 @@ package stincmale.ratmex.meter;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import stincmale.ratmex.doc.ThreadSafe;
-import stincmale.ratmex.internal.util.Preconditions;
+import static stincmale.ratmex.internal.util.Preconditions.checkArgument;
+import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;
 
 /**
  * This implementation of {@link LockStrategy} does not distinguish shared and exclusive locking.
@@ -33,7 +34,7 @@ public final class SpinLockStrategy implements LockStrategy {
    * @param waitStrategy A {@link WaitStrategy} used for blocking. Must not be null.
    */
   public SpinLockStrategy(final WaitStrategy waitStrategy) {
-    Preconditions.checkNotNull(waitStrategy, "waitStrategy");
+    checkNotNull(waitStrategy, "waitStrategy");
     atomicBoolean = new AtomicBoolean();
     this.waitStrategy = waitStrategy;
   }
@@ -59,7 +60,7 @@ public final class SpinLockStrategy implements LockStrategy {
    */
   @Override
   public final void unlockShared(final long stamp) {
-    Preconditions.checkArgument(stamp != 0, "stamp", "Must not be 0");
+    checkArgument(stamp != 0, "stamp", "Must not be 0");
     unlock(stamp);
   }
 
@@ -90,7 +91,7 @@ public final class SpinLockStrategy implements LockStrategy {
 
   @Override
   public final void unlock(final long stamp) {
-    Preconditions.checkArgument(stamp != 0, "stamp", "Must not be 0");
+    checkArgument(stamp != 0, "stamp", "Must not be 0");
     atomicBoolean.set(false);
   }
 }

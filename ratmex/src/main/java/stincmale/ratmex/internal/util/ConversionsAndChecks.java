@@ -20,6 +20,9 @@ import java.time.Duration;
 import stincmale.ratmex.doc.Nullable;
 import stincmale.ratmex.common.NanosComparator;
 import stincmale.ratmex.meter.RateMeterReading;
+import static stincmale.ratmex.internal.util.Preconditions.checkArgument;
+import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;
+import static stincmale.ratmex.internal.util.Utils.format;
 
 public final class ConversionsAndChecks {
   /**
@@ -46,20 +49,20 @@ public final class ConversionsAndChecks {
     }
     if (!ok) {
       throw new IllegalArgumentException(
-          Utils.format("The argument %s=%s is illegal. Must be in [%s; %s] (comparison according to System.nanoTime())",
+          format("The argument %s=%s is illegal. Must be in [%s; %s] (comparison according to System.nanoTime())",
               safeParamName, tNanos, safeStartNanos, safeMaxTNanos), cause);
     }
   }
 
   public static final void checkUnit(final Duration unit, final String safeParamName) throws IllegalArgumentException {
-    Preconditions.checkNotNull(unit, safeParamName);
-    Preconditions.checkArgument(!unit.isZero(), safeParamName, "Must not be zero");
-    Preconditions.checkArgument(!unit.isNegative(), safeParamName, "Must not be negative");
+    checkNotNull(unit, safeParamName);
+    checkArgument(!unit.isZero(), safeParamName, "Must not be zero");
+    checkArgument(!unit.isNegative(), safeParamName, "Must not be negative");
   }
 
   public static final void checkDuration(final Duration duration, final String safeParamName) throws IllegalArgumentException {
-    Preconditions.checkNotNull(duration, safeParamName);
-    Preconditions.checkArgument(!duration.isNegative(), safeParamName, "Must not be negative");
+    checkNotNull(duration, safeParamName);
+    checkArgument(!duration.isNegative(), safeParamName, "Must not be negative");
   }
 
   public static final long maxTNanos(final long startNanos, final long safeSamplesIntervalNanos, final long safeHistoryLength) {

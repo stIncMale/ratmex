@@ -21,8 +21,9 @@ import java.util.Optional;
 import stincmale.ratmex.doc.Nullable;
 import stincmale.ratmex.doc.Immutable;
 import stincmale.ratmex.doc.NotThreadSafe;
-import stincmale.ratmex.internal.util.ConversionsAndChecks;
-import stincmale.ratmex.internal.util.Preconditions;
+import static stincmale.ratmex.internal.util.ConversionsAndChecks.checkDuration;
+import static stincmale.ratmex.internal.util.Preconditions.checkArgument;
+import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;
 
 /**
  * A configuration of a {@linkplain RateMeasuringExecutorService#scheduleAtFixedRate(Runnable, Rate, ScheduledTaskConfig) scheduled task}.
@@ -54,10 +55,10 @@ public class ScheduledTaskConfig<E extends RateMeasuredEvent> {
       final Duration initialDelay,
       @Nullable final Duration duration,
       @Nullable final RateListener<? super E> rateListener) {
-    ConversionsAndChecks.checkDuration(initialDelay, "initialDelay");
+    checkDuration(initialDelay, "initialDelay");
     if (duration != null) {
-      Preconditions.checkArgument(!duration.isZero(), "duration", "Must not be zero");
-      Preconditions.checkArgument(!duration.isNegative(), "duration", "Must not be negative");
+      checkArgument(!duration.isZero(), "duration", "Must not be zero");
+      checkArgument(!duration.isNegative(), "duration", "Must not be negative");
     }
     this.initialDelay = initialDelay;
     this.duration = duration;
@@ -126,7 +127,7 @@ public class ScheduledTaskConfig<E extends RateMeasuredEvent> {
      * @param config Must not be null.
      */
     public final Builder<E> set(final ScheduledTaskConfig<E> config) {
-      Preconditions.checkNotNull(config, "config");
+      checkNotNull(config, "config");
       initialDelay = config.getInitialDelay();
       duration = config.getDuration()
           .orElse(null);
@@ -141,7 +142,7 @@ public class ScheduledTaskConfig<E extends RateMeasuredEvent> {
      * @see ScheduledTaskConfig#getInitialDelay()
      */
     public final Builder<E> setInitialDelay(final Duration initialDelay) {
-      ConversionsAndChecks.checkDuration(initialDelay, "initialDelay");
+      checkDuration(initialDelay, "initialDelay");
       this.initialDelay = initialDelay;
       return this;
     }
@@ -151,8 +152,8 @@ public class ScheduledTaskConfig<E extends RateMeasuredEvent> {
      */
     public final Builder<E> setDuration(@Nullable final Duration duration) {
       if (duration != null) {
-        Preconditions.checkArgument(!duration.isZero(), "duration", "Must not be zero");
-        Preconditions.checkArgument(!duration.isNegative(), "duration", "Must not be negative");
+        checkArgument(!duration.isZero(), "duration", "Must not be zero");
+        checkArgument(!duration.isNegative(), "duration", "Must not be negative");
       }
       this.duration = duration;
       return this;

@@ -18,7 +18,7 @@ package stincmale.ratmex.meter;
 
 import java.util.function.BooleanSupplier;
 import stincmale.ratmex.doc.ThreadSafe;
-import stincmale.ratmex.internal.util.Preconditions;
+import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;
 
 /**
  * This implementation of {@link WaitStrategy} just spins calling {@link Thread#yield()}
@@ -39,7 +39,7 @@ public final class YieldWaitStrategy implements WaitStrategy {
 
   @Override
   public final void await(final BooleanSupplier condition) {
-    Preconditions.checkNotNull(condition, "condition");
+    checkNotNull(condition, "condition");
     while (!condition.getAsBoolean()) {
       //      Thread.onSpinWait(); TODO multi-release JAR ?
       Thread.yield();

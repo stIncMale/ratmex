@@ -28,7 +28,7 @@ This tells us that `ScheduledExecutorService`:
 * is allowed to execute tasks with a lower rate than the target, and there is no easy way to check what the actual rate is or to enforce the target rate
 * executes a scheduled task serially, which means we cannot easily benefit from multithreading, and the rate is heavily limited by the time the task takes to complete
 
-RatMeX allows overcoming both of the above shortcomings.
+RatMeX overcomes both of the above shortcomings.
 
 ---
 

@@ -19,6 +19,8 @@ package stincmale.ratmex;
 /**
  * Consolidates methods useful for quickly accessing functionality provided by RatMeX library.
  */
+//TODO create resettable RateMeter which aggregates and recreated RateMeter's ?
+//TODO add useful methods to Ratmex
 public final class Ratmex {
   private Ratmex() {
     throw new UnsupportedOperationException("The class isn't designed to be instantiated");
