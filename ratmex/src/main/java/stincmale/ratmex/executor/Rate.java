@@ -147,7 +147,7 @@ public final class Rate {
   /**
    * @param reading Must not be null.
    *
-   * @return {@link #compareTo(RateMeterReading) compareTo}{@code (}
+   * @return {@link #compareTo(double, Duration) compareTo}{@code (}
    * {@link RateMeterReading#getValueDouble() reading.getValueDouble()}{@code ,}{@link RateMeterReading#getUnit() reading.getUnit()}{@code )}.
    */
   public final int compareTo(final RateMeterReading reading) {

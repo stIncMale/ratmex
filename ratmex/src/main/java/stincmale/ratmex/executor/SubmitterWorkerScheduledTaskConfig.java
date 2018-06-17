@@ -43,7 +43,7 @@ public class SubmitterWorkerScheduledTaskConfig<E extends RateMeasuredEvent, SRS
     this.workerRateMeterSupplier = workerRateMeterSupplier;
   }
 
-  public static final <E extends RateMeasuredEvent, SRS, WRS> Builder<E, SRS, WRS> newSubmitterWorkerScheduleConfigBuilder() {
+  public static <E extends RateMeasuredEvent, SRS, WRS> Builder<E, SRS, WRS> newSubmitterWorkerScheduleConfigBuilder() {
     return new Builder<>();
   }
 

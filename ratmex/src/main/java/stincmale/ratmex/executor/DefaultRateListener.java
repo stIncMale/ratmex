@@ -1,14 +1,14 @@
 package stincmale.ratmex.executor;
 
-import stincmale.ratmex.doc.ThreadSafe;
+import stincmale.ratmex.doc.NotThreadSafe;
 
 /**
  * A default implementation of {@link RateListener}
- * which {@linkplain #onMeasurement(RateMeasuredEvent) throws} {@link RateFailedException} if notices that the target rate is not respected.
+ * which {@linkplain #onMeasurement(RateMeasuredEvent) throws} {@link RateException} if notices that the target rate is not respected.
  *
  * @param <E> A type of a {@link RateMeasuredEvent} which this listener can react to.
  */
-@ThreadSafe
+@NotThreadSafe
 public class DefaultRateListener<E extends RateMeasuredEvent> implements RateListener<E> {
   private static final DefaultRateListener<RateMeasuredEvent> instance = new DefaultRateListener<>();
 
@@ -16,23 +16,23 @@ public class DefaultRateListener<E extends RateMeasuredEvent> implements RateLis
   }
 
   /**
-   * @param <E> A type of a {@link RateMeasuredEvent} which the returned listener can react to.
+   * @param <E> See {@link DefaultRateListener}.
    *
    * @return A default {@link RateListener}.
    */
   @SuppressWarnings("unchecked")
-  public static final <E extends RateMeasuredEvent> DefaultRateListener<E> defaultRateListenerInstance() {
+  public static <E extends RateMeasuredEvent> DefaultRateListener<E> defaultRateListenerInstance() {
     return (DefaultRateListener<E>)instance;
   }
 
   /**
-   * @throws RateFailedException If the {@linkplain RateMeasuredEvent#getTargetRate() target rate} is not respected.
+   * @throws RateException If the {@linkplain RateMeasuredEvent#getTargetRate() target rate} is not respected.
    */
   @Override
-  public boolean onMeasurement(final E e) throws RateFailedException {
+  public boolean onMeasurement(final E e) throws RateException {
     if (e.getTargetRate()
         .compareTo(e.getCompletionRate()) != 0) {
-      throw new RateFailedException(
+      throw new RateException(
           "The completion rate violated the target rate. ",
           e.getTargetRate(),
           e.getCompletionRate()

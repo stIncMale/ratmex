@@ -41,11 +41,11 @@ public interface RateMeasuringExecutorService<C extends ScheduledTaskConfig<E>, 
    * <li>An execution of the task throws a {@link RuntimeException}.
    * In this case calling {@link Future#get() get()} on the returned future will throw {@link ExecutionException}.</li>
    * <li>The scheduled task {@linkplain ScheduledTaskConfig#getDuration() times out}.</li>
-   * <li>The {@linkplain ScheduledTaskConfig#getRateListener() rate listener}'s method {@link RateListener#onMeasurement(RateMeasuredEvent)} returns false.</li>
+   * <li>The {@linkplain ScheduledTaskConfig#getRateListener() rate listener}'s method
+   * {@link RateListener#onMeasurement(RateMeasuredEvent)} returns false,
+   * also resulting in task {@linkplain Future#cancel(boolean) cancellation}.</li>
    * </ul>
-   * Subsequent executions are suppressed.  Subsequent calls to
-   * {@link Future#isDone isDone()} on the returned future will
-   * return {@code true}.
+   * Subsequent executions are suppressed. Subsequent calls to {@link Future#isDone isDone()} on the returned future will return {@code true}.
    *
    * @param task A task to schedule for repetitive execution. Must not be {@code null}.
    * @param targetRate A target rate of completion of the task executions. Must not be {@code null}.
@@ -59,6 +59,7 @@ public interface RateMeasuringExecutorService<C extends ScheduledTaskConfig<E>, 
 
   /**
    * This method is equivalent to calling {@link #shutdownNow()}.
+   * Subclasses may extend this behaviour, but must always call {@link #shutdownNow()}.
    */
   @Override
   default void close() {

@@ -2,12 +2,15 @@ package stincmale.ratmex.executor;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledFuture;
+import stincmale.ratmex.doc.NotThreadSafe;
+import stincmale.ratmex.meter.ConcurrentRateMeterConfig.Mode;
 
 /**
  * A listener allowing monitoring the rate and reacting if there are deviations from the {@linkplain RateMeasuredEvent#getTargetRate() target rate}.
  *
  * @param <E> A type of a {@link RateMeasuredEvent} which this listener can react to.
  */
+@NotThreadSafe
 public interface RateListener<E extends RateMeasuredEvent> {
   /**
    * This method is called by {@link RateMeasuringExecutorService} each time it decides it makes sense to notify about the
@@ -29,9 +32,11 @@ public interface RateListener<E extends RateMeasuredEvent> {
    * @return true if the {@linkplain RateMeasuringExecutorService#scheduleAtFixedRate(Runnable, Rate, ScheduledTaskConfig) scheduled execution}
    * for which the event was generated must continue; otherwise it will be {@linkplain ScheduledFuture#cancel(boolean) cancelled}.
    *
-   * @throws RateFailedException May be thrown if the {@linkplain RateMeasuredEvent#getTargetRate() target rate} is not respected.
+   * @throws RateException Optional, may be thrown if the {@linkplain RateMeasuredEvent#getTargetRate() target rate} is not respected.
    * Note that implementation of this method may choose to ignore the deviation and return true
    * instead thus continuing the scheduled repetitive execution.
+   * @throws CorrectnessException Optional, may be thrown if any incorrectness related to relaxed behaviour
+   * (e.g. see {@link Mode#RELAXED_TICKS}) is detected.
    */
-  boolean onMeasurement(E e) throws RateFailedException;
+  boolean onMeasurement(E e) throws RateException, CorrectnessException;
 }

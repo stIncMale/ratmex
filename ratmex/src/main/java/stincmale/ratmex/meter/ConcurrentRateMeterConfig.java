@@ -77,7 +77,7 @@ public class ConcurrentRateMeterConfig extends RateMeterConfig {
   }
 
   /**
-   * Specifies the desired maximum number of attempts to calculate the number of ticks (see {@link RateMeter#ticksCount()} for example).
+   * Specifies the desired maximum number of attempts to calculate the number of ticks (see {@link RateMeter#rate()} for example).
    * Note that this is just a hint, so an implementation may choose to do more attempts, but the number of attempts must be finite.
    * <p>
    * <b>The reasoning behind this hint</b><br>
@@ -92,7 +92,7 @@ public class ConcurrentRateMeterConfig extends RateMeterConfig {
   /**
    * Specifies a {@linkplain Mode mode} of a {@link RateMeter}.
    *
-   * @see ConcurrentRateMeterStats#incorrectlyRegisteredTicksEventsCount()
+   * @see ConcurrentRateMeterStats#incorrectlyRegisteredTickEventsCount()
    */
   public final Mode getMode() {
     return mode;
@@ -241,7 +241,7 @@ public class ConcurrentRateMeterConfig extends RateMeterConfig {
      * Such a relaxation may allow an implementation to display drastically better performance.
      * <p>
      * Implementations should provide information about such incorrect registrations on the best effort basis
-     * (e.g. via {@linkplain ConcurrentRateMeterStats#incorrectlyRegisteredTicksEventsCount()}).
+     * (e.g. via {@linkplain ConcurrentRateMeterStats#incorrectlyRegisteredTickEventsCount()}).
      */
     RELAXED_TICKS,
     /**

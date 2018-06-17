@@ -1,14 +1,14 @@
 package stincmale.ratmex.executor;
 
 import stincmale.ratmex.doc.Nullable;
-import stincmale.ratmex.internal.util.Preconditions;
-import stincmale.ratmex.internal.util.Utils;
+import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;
+import static stincmale.ratmex.internal.util.Utils.format;
 
 /**
  * See {@link RateListener#onMeasurement(RateMeasuredEvent)}.
  */
-public final class RateFailedException extends RuntimeException {
-  static final long serialVersionUID = 8127363940038363975L;
+public class RateException extends RuntimeException {
+  private static final long serialVersionUID = 8211810094629034496L;
 
   private final Rate targetRate;
   private final double actualRateValue;
@@ -16,13 +16,13 @@ public final class RateFailedException extends RuntimeException {
   /**
    * @param clarification A text that clarifies this exception. The {@linkplain RuntimeException#getMessage() message} is constructed as
    * {@code (clarification == null ? "" : clarification) + "targetRate=%s, actualRateValue=%s"},
-   * where {@code %s} are substituted with the arguments of this constructor.
+   * where {@code %s} placeholders are substituted with the arguments of this constructor.
    * @param targetRate See {@link #getTargetRate()}. Must not be {@code null}.
    * @param actualRateValue See {@link #getActualRateValue()}.
    */
-  public RateFailedException(@Nullable final String clarification, final Rate targetRate, final double actualRateValue) {
+  public RateException(@Nullable final String clarification, final Rate targetRate, final double actualRateValue) {
     super((clarification == null ? "" : clarification) +
-        Utils.format("targetRate=%s, actualRateValue=%s", Preconditions.checkNotNull(targetRate, "targetRate"), actualRateValue));
+        format("targetRate=%s, actualRateValue=%s", checkNotNull(targetRate, "targetRate"), actualRateValue));
     this.targetRate = targetRate;
     this.actualRateValue = actualRateValue;
   }

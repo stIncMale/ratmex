@@ -145,8 +145,8 @@ public class RateMeterPerformanceTest {
   }
 
   @Benchmark
-  public void alternateRateExplicitTTick(final BenchmarkState benchmarkState, final ThreadState threadState) {
-    alternateRateExplicitTTick(benchmarkState.rateMeter, threadState.reading, threadState.counter);
+  public void alternateRateExplicitTick(final BenchmarkState benchmarkState, final ThreadState threadState) {
+    alternateRateExplicitTick(benchmarkState.rateMeter, threadState.reading, threadState.counter);
     threadState.counter++;
   }
 
@@ -192,7 +192,7 @@ public class RateMeterPerformanceTest {
               final ConcurrentRateMeterStats stats = (ConcurrentRateMeterStats)statistics;
               final double acceptableIncorrectlyRegisteredTicksEventsCount =
                   ACCEPTABLE_INCORRECTLY_REGISTERED_TICKS_EVENTS_COUNT_PER_TRIAL + Double.MIN_VALUE;
-              assertEquals(0, stats.incorrectlyRegisteredTicksEventsCount(), acceptableIncorrectlyRegisteredTicksEventsCount);
+              assertEquals(0, stats.incorrectlyRegisteredTickEventsCount(), acceptableIncorrectlyRegisteredTicksEventsCount);
             }
           });
     }
@@ -245,7 +245,7 @@ public class RateMeterPerformanceTest {
     {
       benchmarkSeriesProcessors.put("tick", series -> (XYSeries)series.setMarker(SeriesMarkers.CIRCLE));
       benchmarkSeriesProcessors.put("alternateRateTick", series -> (XYSeries)series.setMarker(SeriesMarkers.SQUARE));
-      benchmarkSeriesProcessors.put("alternateRateExplicitTTick", series -> (XYSeries)series.setMarker(SeriesMarkers.SQUARE));
+      benchmarkSeriesProcessors.put("alternateRateExplicitTick", series -> (XYSeries)series.setMarker(SeriesMarkers.SQUARE));
       benchmarkSeriesProcessors.put("rateLessThanOnePercentTick", series -> (XYSeries)series.setMarker(SeriesMarkers.DIAMOND));
       benchmarkSeriesProcessors.put("rateExplicitTLessThanOnePercentTick", series -> (XYSeries)series.setMarker(SeriesMarkers.DIAMOND));
     }
@@ -363,7 +363,7 @@ public class RateMeterPerformanceTest {
     return result;
   }
 
-  private static final double alternateRateExplicitTTick(final RateMeter<?> rm, final RateMeterReading reading, final long counter) {
+  private static final double alternateRateExplicitTick(final RateMeter<?> rm, final RateMeterReading reading, final long counter) {
     final double result;
     if ((counter & 1) == 0) {//same as (counter % 2 == 0), i.e. test if counter is even
       rm.tick(1, nanoTime());

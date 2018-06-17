@@ -48,7 +48,7 @@ public class ScheduledTaskConfig<E extends RateMeasuredEvent> {
     this.rateListener = rateListener;
   }
 
-  public static final <E extends RateMeasuredEvent> Builder<E> newScheduleConfigBuilder() {
+  public static <E extends RateMeasuredEvent> Builder<E> newScheduleConfigBuilder() {
     return new Builder<>();
   }
 

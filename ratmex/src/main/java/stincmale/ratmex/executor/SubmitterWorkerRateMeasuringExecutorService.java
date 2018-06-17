@@ -1,5 +1,6 @@
 package stincmale.ratmex.executor;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -20,12 +21,14 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import stincmale.ratmex.doc.Nullable;
 import stincmale.ratmex.doc.ThreadSafe;
+import stincmale.ratmex.meter.ConcurrentRateMeterConfig;
 import stincmale.ratmex.meter.ConcurrentRateMeterConfig.Mode;
 import stincmale.ratmex.meter.ConcurrentRateMeterStats;
 import stincmale.ratmex.meter.ConcurrentRingBufferRateMeter;
 import stincmale.ratmex.meter.RateMeter;
 import stincmale.ratmex.meter.RingBufferRateMeter;
 import static stincmale.ratmex.executor.DefaultRateListener.defaultRateListenerInstance;
+import static stincmale.ratmex.executor.SubmitterWorkerScheduledTaskConfig.newSubmitterWorkerScheduleConfigBuilder;
 import static stincmale.ratmex.internal.util.Constants.EXCLUDE_ASSERTIONS_FROM_BYTECODE;
 import static stincmale.ratmex.internal.util.Preconditions.checkArgument;
 import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;
@@ -59,7 +62,7 @@ import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;
 @ThreadSafe
 public class SubmitterWorkerRateMeasuringExecutorService
     <C extends SubmitterWorkerScheduledTaskConfig<E, SRS, WRS>, E extends SubmitterWorkerRateMeasuredEvent<SRS, WRS>, SRS, WRS>
-    implements RateMeasuringExecutorService<C, E> {//TODO implement Configurable
+    implements RateMeasuringExecutorService<C, E> {
   private final ScheduledExecutorService submitter;
   @Nullable
   private final ExecutorService worker;
@@ -68,14 +71,34 @@ public class SubmitterWorkerRateMeasuringExecutorService
   private final boolean shutdownSubmitterAndWorker;
 
   /**
-   * TODO especially specify that relaxed mode is used and that defaultRateListenerInstance checks for correctness
+   * Returns a default {@link SubmitterWorkerScheduledTaskConfig} with
+   * <ul>
+   *  <li>
+   *    {@linkplain RingBufferRateMeter#RingBufferRateMeter(long, Duration) Default} {@link RingBufferRateMeter}
+   *    as {@linkplain SubmitterWorkerScheduledTaskConfig#getSubmitterRateMeterSupplier() submitter rate meter}
+   *  </li>
+   *  <li>
+   *    {@link ConcurrentRingBufferRateMeter} with modified {@linkplain ConcurrentRingBufferRateMeter#defaultConfig() default}
+   *    {@link ConcurrentRateMeterConfig}
+   *    <ul>
+   *      <li>{@link ConcurrentRateMeterConfig#getMode()} - {@link Mode#RELAXED_TICKS}
+   *      </li>
+   *      <li>{@link ConcurrentRateMeterConfig#isCollectStats()} - true</li>
+   *    </ul>
+   *    as {@linkplain SubmitterWorkerScheduledTaskConfig#getWorkerRateMeterSupplier() worker rate meter}.
+   *  </li>
+   * </ul>
+   * <p>
+   * Note that despite using {@link Mode#RELAXED_TICKS} {@link DefaultSubmitterWorkerRateListener#defaultSubmitterWorkerRateListenerInstance()}
+   * {@linkplain DefaultSubmitterWorkerRateListener#onMeasurement(SubmitterWorkerRateMeasuredEvent) detects}
+   * any incorrectly registered ticks by using {@link ConcurrentRateMeterStats} thus guaranteeing correctness of all measurements.
    */
-  public static final SubmitterWorkerScheduledTaskConfig<
+  public static SubmitterWorkerScheduledTaskConfig<
       SubmitterWorkerRateMeasuredEvent<Void, ConcurrentRateMeterStats>,
       Void,
       ConcurrentRateMeterStats> defaultSubmitterWorkerScheduledTaskConfig() {
     final SubmitterWorkerScheduledTaskConfig.Builder<SubmitterWorkerRateMeasuredEvent<Void, ConcurrentRateMeterStats>, Void, ConcurrentRateMeterStats>
-        result = SubmitterWorkerScheduledTaskConfig.newSubmitterWorkerScheduleConfigBuilder();
+        result = newSubmitterWorkerScheduleConfigBuilder();
     result.setSubmitterRateMeterSupplier((startNanos, targetRate) -> new RingBufferRateMeter(startNanos, targetRate.getUnit()))
         .setWorkerRateMeterSupplier((startNanos, targetRate) -> new ConcurrentRingBufferRateMeter(
             startNanos,
@@ -420,7 +443,8 @@ public class SubmitterWorkerRateMeasuringExecutorService
   }
 
   /**
-   * This method must only be called for {@code executor} that was constructed by {@link SubmitterWorkerRateMeasuringExecutorService}.
+   * This method must only be called for {@code executor} that was constructed by {@link SubmitterWorkerRateMeasuringExecutorService},
+   * i.e. was not received from somewhere.
    */
   private static final void prestartAllThreads(final ExecutorService executor, final int threadsCount) {
     assert EXCLUDE_ASSERTIONS_FROM_BYTECODE || executor instanceof ThreadPoolExecutor;

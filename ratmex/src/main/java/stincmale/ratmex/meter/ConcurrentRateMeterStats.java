@@ -14,5 +14,5 @@ public interface ConcurrentRateMeterStats {
    *
    * @see ConcurrentRateMeterConfig.Mode#RELAXED_TICKS
    */
-  long incorrectlyRegisteredTicksEventsCount();
+  long incorrectlyRegisteredTickEventsCount();
 }

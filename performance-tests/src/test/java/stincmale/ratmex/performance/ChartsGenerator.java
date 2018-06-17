@@ -19,6 +19,6 @@ public final class ChartsGenerator {
   @Test
   public final void run() {
     RateMeterPerformanceTest.generateCharts();
-    //    BaselinePerformanceTest.generateCharts();
+    BaselinePerformanceTest.generateCharts();
   }
 }

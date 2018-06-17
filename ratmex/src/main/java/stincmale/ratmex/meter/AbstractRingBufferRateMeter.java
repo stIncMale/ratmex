@@ -33,7 +33,7 @@ import static stincmale.ratmex.internal.util.Utils.format;
  * (the greater the {@linkplain ConcurrentRateMeterConfig#getHistoryLength() samples history length} the less probable an incorrect registration).
  * <p>
  * The number of situations in which {@link AbstractRingBufferRateMeter} might have incorrectly registered ticks can be accessed via
- * {@link ConcurrentRateMeterStats#incorrectlyRegisteredTicksEventsCount()}.
+ * {@link ConcurrentRateMeterStats#incorrectlyRegisteredTickEventsCount()}.
  * If this method returns 0, then it is guaranteed that all ticks which registrations happened before the invocation of the method
  * were registered correctly.</li>
  * </ul>

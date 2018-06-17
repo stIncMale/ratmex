@@ -5,25 +5,25 @@ import stincmale.ratmex.doc.ThreadSafe;
 
 @ThreadSafe
 final class ConcurrentRingBufferRateMeterStats implements ConcurrentRateMeterStats {
-  private final LongAdder incorrectlyRegisteredTicksEventsCounter;
+  private final LongAdder incorrectlyRegisteredTickEventsCounter;
 
   ConcurrentRingBufferRateMeterStats() {
-    incorrectlyRegisteredTicksEventsCounter = new LongAdder();
+    incorrectlyRegisteredTickEventsCounter = new LongAdder();
   }
 
   @Override
-  public final long incorrectlyRegisteredTicksEventsCount() {
-    return incorrectlyRegisteredTicksEventsCounter.sum();
+  public final long incorrectlyRegisteredTickEventsCount() {
+    return incorrectlyRegisteredTickEventsCounter.sum();
   }
 
   public final void registerIncorrectlyRegisteredTicksEvent() {
-    incorrectlyRegisteredTicksEventsCounter.increment();
+    incorrectlyRegisteredTickEventsCounter.increment();
   }
 
   @Override
   public final String toString() {
     return getClass().getSimpleName() +
-        "{incorrectlyRegisteredTicksEventsCounter=" + incorrectlyRegisteredTicksEventsCounter +
+        "{incorrectlyRegisteredTickEventsCounter=" + incorrectlyRegisteredTickEventsCounter +
         '}';
   }
 }
