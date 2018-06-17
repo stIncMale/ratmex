@@ -1,7 +1,7 @@
 package stincmale.ratmex.meter;
 
 import java.time.Duration;
-import stincmale.ratmex.Configurable;
+import stincmale.ratmex.common.Configurable;
 import stincmale.ratmex.internal.util.Preconditions;
 import static stincmale.ratmex.internal.util.ConversionsAndChecks.checkTNanos;
 import static stincmale.ratmex.internal.util.ConversionsAndChecks.checkUnit;

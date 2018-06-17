@@ -7,7 +7,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import stincmale.ratmex.doc.Nullable;
-import stincmale.ratmex.NanosComparator;
+import stincmale.ratmex.common.NanosComparator;
 import stincmale.ratmex.internal.util.ConversionsAndChecks;
 import stincmale.ratmex.internal.util.Preconditions;
 import static stincmale.ratmex.internal.util.Constants.EXCLUDE_ASSERTIONS_FROM_BYTECODE;

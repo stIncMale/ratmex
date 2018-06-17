@@ -4,7 +4,7 @@ import java.time.Duration;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import stincmale.ratmex.doc.ThreadSafe;
-import stincmale.ratmex.NanosComparator;
+import stincmale.ratmex.common.NanosComparator;
 
 /**
  * A thread-safe implementation of {@link AbstractNavigableMapRateMeter},

@@ -2,7 +2,7 @@ package stincmale.ratmex.internal.util;
 
 import java.time.Duration;
 import stincmale.ratmex.doc.Nullable;
-import stincmale.ratmex.NanosComparator;
+import stincmale.ratmex.common.NanosComparator;
 import stincmale.ratmex.meter.RateMeterReading;
 
 public final class ConversionsAndChecks {

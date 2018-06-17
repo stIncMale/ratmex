@@ -22,7 +22,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
-import stincmale.ratmex.NanosComparator;
+import stincmale.ratmex.common.NanosComparator;
 import stincmale.ratmex.internal.util.Utils;
 import stincmale.ratmex.meter.RateMeterConfig.Builder;
 import static java.time.Duration.ofNanos;
