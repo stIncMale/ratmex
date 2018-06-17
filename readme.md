@@ -16,12 +16,12 @@ This library is designed to be:
 
  property | description
 --- | ---
-[high-performance](https://github.com/stIncMale/ratmex/wiki/Performance) | [`ConcurrentRingBufferRateMeter`](https://stincmale.github.io/ratmex/apidocs/current/stincmale/ratmex/meter/ConcurrentRingBufferRateMeter.html) is able to register 23_000_000 concurrent ticks per second with less than 180ns latency per registration including time spend calling [`System.nanoTime()`](https://docs.oracle.com/javase/10/docs/api/java/lang/System.html#nanoTime--).
+[high-performance](https://github.com/stIncMale/ratmex/wiki/Performance) | [`ConcurrentRingBufferRateMeter`](https://stincmale.github.io/ratmex/apidocs/current/stincmale/ratmex/meter/ConcurrentRingBufferRateMeter.html) is able to register 23_000_000 concurrent ticks per second with less than 180ns latency per registration including time spend calling [`System.nanoTime()`](https://docs.oracle.com/javase/10/docs/api/java/lang/System.html#nanoTime()).
 garbage collector friendly | [`RateMeter`](https://stincmale.github.io/ratmex/apidocs/current/stincmale/ratmex/meter/RateMeter.html) API is GC-fliendly. [`ConcurrentRingBufferRateMeter`](https://stincmale.github.io/ratmex/apidocs/current/stincmale/ratmex/meter/ConcurrentRingBufferRateMeter.html) does not produce garbage when is used with [`SpinLockStrategy`](https://stincmale.github.io/ratmex/apidocs/current/stincmale/ratmex/meter/SpinLockStrategy.html). [`SubmitterWorkerRateMeasuringExecutorService`](https://stincmale.github.io/ratmex/apidocs/current/stincmale/ratmex/executor/SubmitterWorkerRateMeasuringExecutorService.html) reasonably minimizes creating of garbage.
 free of external dependencies | There are no transitive dependencies.
 
 ## Rationale
-JDK provides us with [`ScheduledExecutorService.scheduleAtFixedRate`](https://docs.oracle.com/javase/10/docs/api/java/util/concurrent/ScheduledExecutorService.html#scheduleAtFixedRate-java.lang.Runnable-long-long-java.util.concurrent.TimeUnit-),
+JDK provides us with [`ScheduledExecutorService.scheduleAtFixedRate`](https://docs.oracle.com/javase/10/docs/api/java/util/concurrent/ScheduledExecutorService.html#scheduleAtFixedRate(java.lang.Runnable,long,long,java.util.concurrent.TimeUnit)),
 which says the following regarding the task being scheduled:
 _If any execution of this task takes longer than its period, then subsequent executions may start late, but will not concurrently execute_.
 This tells us that `ScheduledExecutorService`:
