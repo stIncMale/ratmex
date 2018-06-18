@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package stincmale.ratmex.executor;
+package stincmale.ratmex.executor.listener;
 
 import stincmale.ratmex.doc.NotThreadSafe;
+import stincmale.ratmex.executor.Rate;
 import stincmale.ratmex.meter.ConcurrentRateMeterStats;
 import stincmale.ratmex.meter.RateMeter;
 import static stincmale.ratmex.internal.util.Utils.format;

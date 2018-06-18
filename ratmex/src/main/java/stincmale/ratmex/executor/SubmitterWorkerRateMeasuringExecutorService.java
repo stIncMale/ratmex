@@ -37,13 +37,17 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import stincmale.ratmex.doc.Nullable;
 import stincmale.ratmex.doc.ThreadSafe;
+import stincmale.ratmex.executor.listener.DefaultSubmitterWorkerRateListener;
+import stincmale.ratmex.executor.listener.RateListener;
+import stincmale.ratmex.executor.listener.RateMeasuredEvent;
+import stincmale.ratmex.executor.listener.SubmitterWorkerRateMeasuredEvent;
 import stincmale.ratmex.meter.ConcurrentRateMeterConfig;
 import stincmale.ratmex.meter.ConcurrentRateMeterConfig.Mode;
 import stincmale.ratmex.meter.ConcurrentRateMeterStats;
 import stincmale.ratmex.meter.ConcurrentRingBufferRateMeter;
 import stincmale.ratmex.meter.RateMeter;
 import stincmale.ratmex.meter.RingBufferRateMeter;
-import static stincmale.ratmex.executor.DefaultRateListener.defaultRateListenerInstance;
+import static stincmale.ratmex.executor.listener.DefaultRateListener.defaultRateListenerInstance;
 import static stincmale.ratmex.executor.SubmitterWorkerScheduledTaskConfig.newSubmitterWorkerScheduleConfigBuilder;
 import static stincmale.ratmex.internal.util.Constants.EXCLUDE_ASSERTIONS_FROM_BYTECODE;
 import static stincmale.ratmex.internal.util.Preconditions.checkArgument;
@@ -112,7 +116,7 @@ public class SubmitterWorkerRateMeasuringExecutorService
   public static SubmitterWorkerScheduledTaskConfig<
       SubmitterWorkerRateMeasuredEvent<Void, ConcurrentRateMeterStats>,
       Void,
-      ConcurrentRateMeterStats> defaultSubmitterWorkerScheduledTaskConfig() {
+      ConcurrentRateMeterStats> defaultSubmitterWorkerScheduledTaskConfig() {//TODO return static field
     final SubmitterWorkerScheduledTaskConfig.Builder<SubmitterWorkerRateMeasuredEvent<Void, ConcurrentRateMeterStats>, Void, ConcurrentRateMeterStats>
         result = newSubmitterWorkerScheduleConfigBuilder();
     result.setSubmitterRateMeterSupplier((startNanos, targetRate) -> new RingBufferRateMeter(startNanos, targetRate.getUnit()))
@@ -141,7 +145,6 @@ public class SubmitterWorkerRateMeasuringExecutorService
    * Use -1 if the number of worker threads is unknown or is varying, but in this case batching of tasks will be disabled.
    * If {@code workerThreadsCount} >= 0, then the number of worker threads must never be changed once they all were started.
    * If this constraint is violated, then the {@link RateMeasuringExecutorService} may fail to conform to the target rate because of batching.
-   * {@linkplain #scheduleAtFixedRate(Runnable, Rate, C) scheduling} any task.
    * @param shutdownSubmitterAndWorker A flag that specifies whether the externally provided submitter and the worker must be
    * shut down when this {@link ExecutorService} is shutting down.
    */

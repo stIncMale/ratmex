@@ -23,6 +23,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import stincmale.ratmex.doc.ThreadSafe;
+import stincmale.ratmex.executor.listener.RateListener;
+import stincmale.ratmex.executor.listener.RateMeasuredEvent;
 
 /**
  * A rate-measuring executor service which not only executes tasks with a fixed {@link Rate rate},

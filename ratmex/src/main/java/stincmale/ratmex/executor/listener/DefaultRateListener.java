@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package stincmale.ratmex.executor;
+package stincmale.ratmex.executor.listener;
 
 import stincmale.ratmex.doc.NotThreadSafe;
 
