@@ -80,9 +80,30 @@ import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;
  * @param <WRS> A type that represents {@linkplain RateMeter#stats() statistics} of worker {@link RateMeter}.
  */
 @ThreadSafe
-public class SubmitterWorkerRateMeasuringExecutorService
+public final class SubmitterWorkerRateMeasuringExecutorService
     <C extends SubmitterWorkerScheduledTaskConfig<E, SRS, WRS>, E extends SubmitterWorkerRateMeasuredEvent<SRS, WRS>, SRS, WRS>
     implements RateMeasuringExecutorService<C, E> {
+  private static final SubmitterWorkerScheduledTaskConfig<
+    SubmitterWorkerRateMeasuredEvent<Void, ConcurrentRateMeterStats>,
+    Void,
+    ConcurrentRateMeterStats> defaultScheduledTaskConfig;
+
+  static {
+    final SubmitterWorkerScheduledTaskConfig.Builder<SubmitterWorkerRateMeasuredEvent<Void, ConcurrentRateMeterStats>, Void, ConcurrentRateMeterStats>
+      cfgBuilder = newSubmitterWorkerScheduleConfigBuilder();
+    cfgBuilder.setSubmitterRateMeterSupplier((startNanos, targetRate) -> new RingBufferRateMeter(startNanos, targetRate.getUnit()))
+      .setWorkerRateMeterSupplier((startNanos, targetRate) -> new ConcurrentRingBufferRateMeter(
+        startNanos,
+        targetRate.getUnit(),
+        ConcurrentRingBufferRateMeter.defaultConfig()
+          .toBuilder()
+          .setMode(Mode.RELAXED_TICKS)
+          .setCollectStats(true)
+          .build()))
+      .setRateListener(defaultRateListenerInstance());
+    defaultScheduledTaskConfig = cfgBuilder.buildSubmitterWorkerScheduledTaskConfig();
+  }
+
   private final ScheduledExecutorService submitter;
   @Nullable
   private final ExecutorService worker;
@@ -113,23 +134,11 @@ public class SubmitterWorkerRateMeasuringExecutorService
    * {@linkplain DefaultSubmitterWorkerRateListener#onMeasurement(SubmitterWorkerRateMeasuredEvent) detects}
    * any incorrectly registered ticks by using {@link ConcurrentRateMeterStats} thus guaranteeing correctness of all measurements.
    */
-  public static SubmitterWorkerScheduledTaskConfig<
+  public static final SubmitterWorkerScheduledTaskConfig<
       SubmitterWorkerRateMeasuredEvent<Void, ConcurrentRateMeterStats>,
       Void,
-      ConcurrentRateMeterStats> defaultSubmitterWorkerScheduledTaskConfig() {//TODO return static field
-    final SubmitterWorkerScheduledTaskConfig.Builder<SubmitterWorkerRateMeasuredEvent<Void, ConcurrentRateMeterStats>, Void, ConcurrentRateMeterStats>
-        result = newSubmitterWorkerScheduleConfigBuilder();
-    result.setSubmitterRateMeterSupplier((startNanos, targetRate) -> new RingBufferRateMeter(startNanos, targetRate.getUnit()))
-        .setWorkerRateMeterSupplier((startNanos, targetRate) -> new ConcurrentRingBufferRateMeter(
-            startNanos,
-            targetRate.getUnit(),
-            ConcurrentRingBufferRateMeter.defaultConfig()
-                .toBuilder()
-                .setMode(Mode.RELAXED_TICKS)
-                .setCollectStats(true)
-                .build()))
-        .setRateListener(defaultRateListenerInstance());
-    return result.buildSubmitterWorkerScheduledTaskConfig();
+      ConcurrentRateMeterStats> defaultScheduledTaskConfig() {
+    return defaultScheduledTaskConfig;
   }
 
   /**
