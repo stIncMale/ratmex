@@ -108,7 +108,7 @@ public final class SubmitterWorkerRateMeasuringExecutorService
   @Nullable
   private final ExecutorService worker;
   private final int workerThreadsCount;
-  private final AtomicBoolean startThreadsOnFirstTask;
+  private final AtomicBoolean startAllThreads;
   private final boolean shutdownSubmitterAndWorker;
 
   /**
@@ -179,7 +179,8 @@ public final class SubmitterWorkerRateMeasuringExecutorService
    * If {@code threadsCount} is 1, then the number of worker threads is 0, and the submitter takes over worker role and executes tasks by itself.
    * @param prestartThreads A flag that specifies if all submitter and worker threads must be started
    * upon the construction of {@link SubmitterWorkerRateMeasuringExecutorService}, causing them to idly wait for work.
-   * If false, then all threads are started with the first {@linkplain #scheduleAtFixedRate(Runnable, Rate, C) scheduled task}.
+   * If false, then all threads are started as soon as the first task is submitted to this executor via any of the exposed methods
+   * (e.g. {@linkplain #scheduleAtFixedRate(Runnable, Rate, C)}, {@link #execute(Runnable)}, etc.).
    */
   public SubmitterWorkerRateMeasuringExecutorService(
       final ThreadFactory submitterThreadFactory,
@@ -202,7 +203,8 @@ public final class SubmitterWorkerRateMeasuringExecutorService
    * If {@code threadsCount} is 1, then the number of worker threads is 0, and the submitter takes over worker role and executes tasks by itself.
    * @param prestartThreads A flag that specifies if all submitter and worker threads must be started
    * upon the construction of {@link SubmitterWorkerRateMeasuringExecutorService}, causing them to idly wait for work.
-   * If false, then all threads are started with the first {@linkplain #scheduleAtFixedRate(Runnable, Rate, C) scheduled task}.
+   * If false, then all threads are started as soon as the first task is submitted to this executor via any of the exposed methods
+   * (e.g. {@linkplain #scheduleAtFixedRate(Runnable, Rate, C)}, {@link #execute(Runnable)}, etc.).
    */
   public SubmitterWorkerRateMeasuringExecutorService(final int threadsCount, final boolean prestartThreads) {
     this(
@@ -217,7 +219,7 @@ public final class SubmitterWorkerRateMeasuringExecutorService
       final ScheduledExecutorService submitter,
       @Nullable final ExecutorService worker,
       final int workerThreadsCount,
-      final boolean startThreadsOnFirstTask,
+      final boolean startAllThreadsOnFirstTask,
       final boolean shutdownSubmitterAndWorker) {
     checkNotNull(submitter, "submitter");
     checkArgument(workerThreadsCount >= -1, "workerThreadsCount", "Must be greater than or equal to -1");
@@ -225,7 +227,7 @@ public final class SubmitterWorkerRateMeasuringExecutorService
     this.submitter = submitter;
     this.worker = worker;
     this.workerThreadsCount = workerThreadsCount;
-    this.startThreadsOnFirstTask = new AtomicBoolean(startThreadsOnFirstTask);
+    this.startAllThreads = new AtomicBoolean(startAllThreadsOnFirstTask);
     this.shutdownSubmitterAndWorker = shutdownSubmitterAndWorker;
   }
 
@@ -342,6 +344,7 @@ public final class SubmitterWorkerRateMeasuringExecutorService
    */
   @Override
   public <T> Future<T> submit(final Callable<T> task) {
+    ensureAllThreadsStarted();
     return actualWorker().submit(task);
   }
 
@@ -352,6 +355,7 @@ public final class SubmitterWorkerRateMeasuringExecutorService
    */
   @Override
   public <T> Future<T> submit(final Runnable task, final T result) {
+    ensureAllThreadsStarted();
     return actualWorker().submit(task, result);
   }
 
@@ -362,6 +366,7 @@ public final class SubmitterWorkerRateMeasuringExecutorService
    */
   @Override
   public Future<?> submit(final Runnable task) {
+    ensureAllThreadsStarted();
     return actualWorker().submit(task);
   }
 
@@ -372,6 +377,7 @@ public final class SubmitterWorkerRateMeasuringExecutorService
    */
   @Override
   public <T> List<Future<T>> invokeAll(final Collection<? extends Callable<T>> tasks) throws InterruptedException {
+    ensureAllThreadsStarted();
     return actualWorker().invokeAll(tasks);
   }
 
@@ -383,6 +389,7 @@ public final class SubmitterWorkerRateMeasuringExecutorService
   @Override
   public <T> List<Future<T>> invokeAll(final Collection<? extends Callable<T>> tasks, final long timeout, final TimeUnit unit)
       throws InterruptedException {
+    ensureAllThreadsStarted();
     return actualWorker().invokeAll(tasks, timeout, unit);
   }
 
@@ -393,6 +400,7 @@ public final class SubmitterWorkerRateMeasuringExecutorService
    */
   @Override
   public <T> T invokeAny(final Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
+    ensureAllThreadsStarted();
     return actualWorker().invokeAny(tasks);
   }
 
@@ -404,6 +412,7 @@ public final class SubmitterWorkerRateMeasuringExecutorService
   @Override
   public <T> T invokeAny(final Collection<? extends Callable<T>> tasks, final long timeout, final TimeUnit unit)
       throws InterruptedException, ExecutionException, TimeoutException {
+    ensureAllThreadsStarted();
     return actualWorker().invokeAny(tasks, timeout, unit);
   }
 
@@ -414,6 +423,7 @@ public final class SubmitterWorkerRateMeasuringExecutorService
    */
   @Override
   public void execute(final Runnable task) {
+    ensureAllThreadsStarted();
     actualWorker().execute(task);
   }
 
@@ -422,9 +432,9 @@ public final class SubmitterWorkerRateMeasuringExecutorService
   }
 
   private final void ensureAllThreadsStarted() {
-    if (startThreadsOnFirstTask.get() && startThreadsOnFirstTask.compareAndSet(true, false)) {
-      prestartAllThreads(submitter, 1);
-      prestartAllThreads(worker, workerThreadsCount);
+    if (startAllThreads.get() && startAllThreads.compareAndSet(true, false)) {
+      startAllThreads(submitter, 1);
+      startAllThreads(worker, workerThreadsCount);
     }
   }
 
@@ -471,10 +481,10 @@ public final class SubmitterWorkerRateMeasuringExecutorService
   }
 
   /**
-   * This method must only be called for {@code executor} that was constructed by {@link SubmitterWorkerRateMeasuringExecutorService},
+   * This method must only be called for {@link ThreadPoolExecutor} that was constructed by {@link SubmitterWorkerRateMeasuringExecutorService},
    * i.e. was not received from somewhere.
    */
-  private static final void prestartAllThreads(final ExecutorService executor, final int threadsCount) {
+  private static final void startAllThreads(final ExecutorService executor, final int threadsCount) {
     assert EXCLUDE_ASSERTIONS_FROM_BYTECODE || executor instanceof ThreadPoolExecutor;
     final ThreadPoolExecutor ex = (ThreadPoolExecutor)executor;
     assert EXCLUDE_ASSERTIONS_FROM_BYTECODE || ex.getMaximumPoolSize() == ex.getCorePoolSize();
