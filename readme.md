@@ -8,8 +8,6 @@
 </p>
 
 ## About
-**This is still a work in progress.**
-
 An [open source](https://opensource.org/osd) Java library that supplies a [rate meter](https://stincmale.github.io/ratmex/apidocs/current/stincmale/ratmex/meter/RateMeter.html)
 and a [**Rat**e-**M**easuring **eX**ecutor](https://stincmale.github.io/ratmex/apidocs/current/stincmale/ratmex/executor/RateMeasuringExecutorService.html).
 This library is designed to be:
@@ -29,6 +27,9 @@ This tells us that `ScheduledExecutorService`:
 * executes a scheduled task serially, which means we cannot easily benefit from multithreading, and the rate is heavily limited by the time the task takes to complete
 
 RatMeX overcomes both of the above shortcomings.
+
+## Versioning
+This project uses [semantic versioning](https://semver.org). The current version is `0.1.0-SNAPSHOT`.
 
 ---
 
