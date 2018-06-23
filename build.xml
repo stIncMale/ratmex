@@ -64,7 +64,7 @@
             <properties>
               <includeTags>${ratmex.maven-surefire-plugin.includeTags}</includeTags>
               <excludeTags>${ratmex.maven-surefire-plugin.excludeTags}</excludeTags>
-              <argLine>${ratmex.maven-surefire-plugin.assertions} -Xmx1024m</argLine>
+              <argLine>-enableassertions</argLine>
             </properties>
           </configuration>
         </plugin>
@@ -187,7 +187,6 @@
         <ratmex.maven-surefire-plugin.parallel>classes</ratmex.maven-surefire-plugin.parallel>
         <ratmex.maven-surefire-plugin.includeTags/>
         <ratmex.maven-surefire-plugin.excludeTags>performance, concurrency</ratmex.maven-surefire-plugin.excludeTags>
-        <ratmex.maven-surefire-plugin.assertions>-enableassertions</ratmex.maven-surefire-plugin.assertions>
       </properties>
     </profile>
     <profile>
@@ -197,7 +196,6 @@
         <ratmex.maven-surefire-plugin.parallel/>
         <ratmex.maven-surefire-plugin.includeTags>performance</ratmex.maven-surefire-plugin.includeTags>
         <ratmex.maven-surefire-plugin.excludeTags>concurrency</ratmex.maven-surefire-plugin.excludeTags>
-        <ratmex.maven-surefire-plugin.assertions/>
       </properties>
     </profile>
     <profile>
@@ -207,7 +205,6 @@
         <ratmex.maven-surefire-plugin.parallel/>
         <ratmex.maven-surefire-plugin.includeTags>concurrency</ratmex.maven-surefire-plugin.includeTags>
         <ratmex.maven-surefire-plugin.excludeTags>performance</ratmex.maven-surefire-plugin.excludeTags>
-        <ratmex.maven-surefire-plugin.assertions>-enableassertions</ratmex.maven-surefire-plugin.assertions>
       </properties>
     </profile>
     <profile>

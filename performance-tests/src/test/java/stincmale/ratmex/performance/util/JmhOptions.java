@@ -29,7 +29,7 @@ import static org.openjdk.jmh.runner.options.TimeValue.milliseconds;
 
 @NotThreadSafe
 public final class JmhOptions {
-  private static final boolean DRY_RUN = parseBoolean(System.getProperty("stincmale.ratmex.performance.dryRun", "true"));
+  private static final boolean DRY_RUN = parseBoolean(System.getProperty("stincmale.ratmex.performance.dryRun", "false"));
   private static final boolean JAVA_SERVER = true;
   private static final boolean JAVA_ASSERTIONS = DRY_RUN;
   public static final SortedSet<Integer> numbersOfThreads = DRY_RUN
@@ -44,7 +44,8 @@ public final class JmhOptions {
 
   public static final OptionsBuilder get() {
     final OptionsBuilder result = new OptionsBuilder();
-    result.jvmArgsAppend(
+    result.jvmArgs("-Xms1536m", "-Xmx1536m")
+      .jvmArgsAppend(
         JAVA_SERVER ? "-server" : "-client",
         JAVA_ASSERTIONS ? "-enableassertions" : "-disableassertions")
         .shouldDoGC(false)

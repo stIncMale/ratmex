@@ -69,7 +69,7 @@ import static stincmale.ratmex.performance.util.Utils.format;
 @TestInstance(Lifecycle.PER_CLASS)
 public class RateMeterPerformanceTest {
   private static final long ACCEPTABLE_INCORRECTLY_REGISTERED_TICKS_EVENTS_COUNT_PER_TRIAL = 0;
-  private static final String SYSTEM_PROPERTY_GROUP_OF_RUNS_DESCRIPTOR = "groupOfRunsDescriptor";
+  private static final String SYSTEM_PROPERTY_GROUP_OF_RUNS_DESCRIPTOR = "stincmale.ratmex.performance.groupOfRunsDescriptor";
   private static final Duration samplesInterval = Duration.of(10, ChronoUnit.MILLIS);
   private static final LinkedHashSet<GroupOfRunsDescriptor> groupOfRunsDescriptors;
 
@@ -287,7 +287,7 @@ public class RateMeterPerformanceTest {
     final Collection<RunResult> runResults = new ArrayList<>();
     for (int numberOfThreads : groupOfRunsDescriptor.numbersOfThreads) {
       runResults.addAll(runThroughput(groupOfRunsDescriptor, numberOfThreads));
-      if (numberOfThreads <= numberOfAvailableProcessors) {
+      if (numberOfThreads <= numberOfAvailableProcessors) {//there is no sense in measuring latency of a system oversaturated with threads
         runResults.addAll(runLatency(groupOfRunsDescriptor, numberOfThreads));
       }
     }
