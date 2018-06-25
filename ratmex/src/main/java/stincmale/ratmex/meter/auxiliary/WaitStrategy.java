@@ -14,29 +14,20 @@
  * limitations under the License.
  */
 
-package stincmale.ratmex.meter;
+package stincmale.ratmex.meter.auxiliary;
 
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.BooleanSupplier;
 import stincmale.ratmex.doc.ThreadSafe;
 
 /**
- * This {@link TicksCounter} uses {@link AtomicLong} field to store its {@linkplain #get() value}.
+ * An abstraction which allows implementations of different approaches to block on a condition.
  */
 @ThreadSafe
-public final class AtomicLongTicksCounter extends AbstractTicksCounter {
-  private final AtomicLong aValue;
-
-  public AtomicLongTicksCounter(final long initialValue) {
-    aValue = new AtomicLong(initialValue);
-  }
-
-  @Override
-  public final void add(final long delta) {
-    aValue.addAndGet(delta);
-  }
-
-  @Override
-  public final long get() {
-    return aValue.get();
-  }
+public interface WaitStrategy {
+  /**
+   * This method blocks until the {@code condition} is true.
+   *
+   * @param condition A boolean condition.
+   */
+  void await(BooleanSupplier condition);
 }

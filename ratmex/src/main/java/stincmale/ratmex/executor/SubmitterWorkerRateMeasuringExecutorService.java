@@ -35,20 +35,21 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 import stincmale.ratmex.doc.Nullable;
 import stincmale.ratmex.doc.ThreadSafe;
+import stincmale.ratmex.executor.config.SubmitterWorkerScheduledTaskConfig;
 import stincmale.ratmex.executor.listener.DefaultSubmitterWorkerRateListener;
 import stincmale.ratmex.executor.listener.RateListener;
 import stincmale.ratmex.executor.listener.RateMeasuredEvent;
 import stincmale.ratmex.executor.listener.SubmitterWorkerRateMeasuredEvent;
-import stincmale.ratmex.meter.ConcurrentRateMeterConfig;
-import stincmale.ratmex.meter.ConcurrentRateMeterConfig.Mode;
+import stincmale.ratmex.meter.config.ConcurrentRateMeterConfig;
+import stincmale.ratmex.meter.config.ConcurrentRateMeterConfig.Mode;
 import stincmale.ratmex.meter.ConcurrentRateMeterStats;
 import stincmale.ratmex.meter.ConcurrentRingBufferRateMeter;
 import stincmale.ratmex.meter.RateMeter;
+import stincmale.ratmex.meter.RateMeterReading;
 import stincmale.ratmex.meter.RingBufferRateMeter;
-import static stincmale.ratmex.executor.listener.DefaultRateListener.defaultRateListenerInstance;
-import static stincmale.ratmex.executor.SubmitterWorkerScheduledTaskConfig.newSubmitterWorkerScheduleConfigBuilder;
 import static stincmale.ratmex.internal.util.Constants.EXCLUDE_ASSERTIONS_FROM_BYTECODE;
 import static stincmale.ratmex.internal.util.Preconditions.checkArgument;
 import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;
@@ -61,8 +62,10 @@ import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;
  * then the tasks are not only being submitted but also are being completed with the target rate.
  * <p>
  * <b>Implementation notes</b><br>
+ * This class uses {@link RateMeter} to measure rate.
+ * <p>
  * A submitter always has exactly 1 thread, and a worker may have an arbitrary fixed number of threads
- * including 0 (current-thread executor) and varying number of threads.
+ * including 0 and varying number of threads.
  * If a worker has no threads, then a submitter takes over the worker role and executes tasks by itself.
  * <p>
  * Submitting tasks by a submitter to a worker means that the submitter and the worker threads communicate.
@@ -75,33 +78,31 @@ import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;
  * and distribute batched tasks evenly among worker threads.
  *
  * @param <C> A type of scheduled task config used in {@link #scheduleAtFixedRate(Runnable, Rate, C)}.
- * @param <E> A type of container with data provided to {@link RateListener} by {@link SubmitterWorkerRateMeasuringExecutorService}.
  * @param <SRS> A type that represents {@linkplain RateMeter#stats() statistics} of submitter {@link RateMeter}.
  * @param <WRS> A type that represents {@linkplain RateMeter#stats() statistics} of worker {@link RateMeter}.
  */
 @ThreadSafe
-public final class SubmitterWorkerRateMeasuringExecutorService
-    <C extends SubmitterWorkerScheduledTaskConfig<E, SRS, WRS>, E extends SubmitterWorkerRateMeasuredEvent<SRS, WRS>, SRS, WRS>
-    implements RateMeasuringExecutorService<C, E> {
+public final class SubmitterWorkerRateMeasuringExecutorService<
+    C extends SubmitterWorkerScheduledTaskConfig<SubmitterWorkerRateMeasuredEvent<SRS, WRS>, SRS, WRS>, SRS, WRS>
+    implements RateMeasuringExecutorService<C, SubmitterWorkerRateMeasuredEvent<SRS, WRS>> {
   private static final SubmitterWorkerScheduledTaskConfig<
-    SubmitterWorkerRateMeasuredEvent<Void, ConcurrentRateMeterStats>,
-    Void,
-    ConcurrentRateMeterStats> defaultScheduledTaskConfig;
+      SubmitterWorkerRateMeasuredEvent<Void, ConcurrentRateMeterStats>, Void, ConcurrentRateMeterStats> defaultScheduledTaskConfig;
 
   static {
-    final SubmitterWorkerScheduledTaskConfig.Builder<SubmitterWorkerRateMeasuredEvent<Void, ConcurrentRateMeterStats>, Void, ConcurrentRateMeterStats>
-      cfgBuilder = newSubmitterWorkerScheduleConfigBuilder();
-    cfgBuilder.setSubmitterRateMeterSupplier((startNanos, targetRate) -> new RingBufferRateMeter(startNanos, targetRate.getUnit()))
-      .setWorkerRateMeterSupplier((startNanos, targetRate) -> new ConcurrentRingBufferRateMeter(
-        startNanos,
-        targetRate.getUnit(),
-        ConcurrentRingBufferRateMeter.defaultConfig()
-          .toBuilder()
-          .setMode(Mode.RELAXED_TICKS)
-          .setCollectStats(true)
-          .build()))
-      .setRateListener(defaultRateListenerInstance());
-    defaultScheduledTaskConfig = cfgBuilder.buildSubmitterWorkerScheduledTaskConfig();
+      final SubmitterWorkerScheduledTaskConfig.Builder<
+          SubmitterWorkerRateMeasuredEvent<Void, ConcurrentRateMeterStats>, Void, ConcurrentRateMeterStats>
+          builder = SubmitterWorkerScheduledTaskConfig.newSubmitterWorkerScheduledTaskConfigBuilder(
+              RingBufferRateMeter::new,
+              (startNanos, samplesInterval) -> new ConcurrentRingBufferRateMeter(
+                  startNanos,
+                  samplesInterval,
+                  ConcurrentRingBufferRateMeter.defaultConfig()
+                      .toBuilder()
+                      .setMode(Mode.RELAXED_TICKS)
+                      .setCollectStats(true)
+                      .build()));
+    builder.setRateListenerSupplier(DefaultSubmitterWorkerRateListener::instance);
+    defaultScheduledTaskConfig = builder.buildSubmitterWorkerScheduledTaskConfig();
   }
 
   private final ScheduledExecutorService submitter;
@@ -130,14 +131,12 @@ public final class SubmitterWorkerRateMeasuringExecutorService
    *  </li>
    * </ul>
    * <p>
-   * Note that despite using {@link Mode#RELAXED_TICKS} {@link DefaultSubmitterWorkerRateListener#defaultSubmitterWorkerRateListenerInstance()}
+   * Note that despite using {@link Mode#RELAXED_TICKS}, {@link DefaultSubmitterWorkerRateListener}
    * {@linkplain DefaultSubmitterWorkerRateListener#onMeasurement(SubmitterWorkerRateMeasuredEvent) detects}
    * any incorrectly registered ticks by using {@link ConcurrentRateMeterStats} thus guaranteeing correctness of all measurements.
    */
   public static final SubmitterWorkerScheduledTaskConfig<
-      SubmitterWorkerRateMeasuredEvent<Void, ConcurrentRateMeterStats>,
-      Void,
-      ConcurrentRateMeterStats> defaultScheduledTaskConfig() {
+    SubmitterWorkerRateMeasuredEvent<Void, ConcurrentRateMeterStats>, Void, ConcurrentRateMeterStats> defaultScheduledTaskConfig() {
     return defaultScheduledTaskConfig;
   }
 
@@ -157,7 +156,7 @@ public final class SubmitterWorkerRateMeasuringExecutorService
    * @param shutdownSubmitterAndWorker A flag that specifies whether the externally provided submitter and the worker must be
    * shut down when this {@link ExecutorService} is shutting down.
    */
-  public SubmitterWorkerRateMeasuringExecutorService(
+  protected SubmitterWorkerRateMeasuringExecutorService(
       final ScheduledExecutorService submitter,
       final ExecutorService worker,
       final int workerThreadsCount,
@@ -182,7 +181,7 @@ public final class SubmitterWorkerRateMeasuringExecutorService
    * If false, then all threads are started as soon as the first task is submitted to this executor via any of the exposed methods
    * (e.g. {@linkplain #scheduleAtFixedRate(Runnable, Rate, C)}, {@link #execute(Runnable)}, etc.).
    */
-  public SubmitterWorkerRateMeasuringExecutorService(
+  protected SubmitterWorkerRateMeasuringExecutorService(
       final ThreadFactory submitterThreadFactory,
       final ThreadFactory workerThreadFactory,
       final int threadsCount,
@@ -206,7 +205,7 @@ public final class SubmitterWorkerRateMeasuringExecutorService
    * If false, then all threads are started as soon as the first task is submitted to this executor via any of the exposed methods
    * (e.g. {@linkplain #scheduleAtFixedRate(Runnable, Rate, C)}, {@link #execute(Runnable)}, etc.).
    */
-  public SubmitterWorkerRateMeasuringExecutorService(final int threadsCount, final boolean prestartThreads) {
+  protected SubmitterWorkerRateMeasuringExecutorService(final int threadsCount, final boolean prestartThreads) {
     this(
         createSubmitter(null, prestartThreads),
         createWorker(null, checkThreadsCountPositive(threadsCount) - 1, prestartThreads),
@@ -232,9 +231,20 @@ public final class SubmitterWorkerRateMeasuringExecutorService
   }
 
   /**
-   * @param config An additional configuration. Must not be {@code null}.
-   * <p>
-   * Method {@link RateListener#onMeasurement(RateMeasuredEvent)} is called each time the submitter measures the current submission rate,
+   * @param targetRate {@inheritDoc}
+   * {@link Rate#getUnit()} is used as {@linkplain RateMeter#getSamplesInterval() samples interval}, this two mathematically identical rates
+   * <pre>{@code
+   * Rate rateMs = Rate.withRelativeDeviation(10, 0.1, Duration.ofMillis(1));
+   * Rate rateS = Rate.withRelativeDeviation(10_000, 0.1, Duration.ofSeconds(1))
+   * }</pre>
+   * impose different constraints on the uniformity of the rate distribution over time: {@code rateMs} imposes a more even distribution by requiring
+   * 10 ± 1 tasks to be executed roughly every 1ms, while {@code rateS} requires 10_000 ± 1000 tasks to be executed roughly every 1s,
+   * thus allowing arbitrary (but still limited, e.g. 0, or 42) number of tasks to be executed at some millisecond intervals.
+   * Hence, maintaining {@code rateMs} may be more difficult than maintaining {@code rateS}.
+   * This is something to consider in situations when task execution duration is expected to be varying.
+   * @param config {@inheritDoc}
+   * {@linkplain C#getRateListenerSupplier() Provides} {@link RateListener}, which method {@link RateListener#onMeasurement(RateMeasuredEvent)}
+   * is called each time the submitter measures the current submission rate,
    * which in turn happens each time the submitter decides if new tasks need to be submitted to the worker.
    */
   @Override
@@ -243,7 +253,34 @@ public final class SubmitterWorkerRateMeasuringExecutorService
     checkNotNull(targetRate, "targetRate");
     checkNotNull(config, "config");
     ensureAllThreadsStarted();
-    return null;//TODO
+    final long currentNanos = System.nanoTime();
+    final long delayNanos = config.getInitialDelay()
+        .toNanos();
+    final long startNanos = currentNanos + delayNanos;//this may overflow, and it is as intended
+    final Duration sampleInterval = targetRate.getUnit();
+    final RateMeter<? extends SRS> submitterRateMeter = config.getSubmitterRateMeterSupplier()
+        .apply(startNanos, sampleInterval);
+    final RateMeter<? extends WRS> workerRateMeter = config.getWorkerRateMeterSupplier()
+        .apply(startNanos, sampleInterval);
+    final long periodNanos = submitterRateMeter.getTimeSensitivity()
+        .toNanos();
+    @Nullable
+    final RateListener<? super SubmitterWorkerRateMeasuredEvent<SRS, WRS>> rateListener = config.getRateListenerSupplier()
+        .map(Supplier::get)
+        .orElseGet(null);
+    @Nullable
+    final SubmitterWorkerRateMeasuredEvent<SRS, WRS> rateMeasuredEvent = rateListener == null
+        ? null
+        : new SubmitterWorkerRateMeasuredEvent<>(targetRate, new RateMeterReading(), new RateMeterReading(),
+            submitterRateMeter.stats()
+                .orElse(null),
+            workerRateMeter.stats()
+                .orElse(null));
+    final SubmitterTask<? extends SRS, ? extends WRS, SubmitterWorkerRateMeasuredEvent<SRS, WRS>> submitterTask = new SubmitterTask<>(
+        targetRate, submitterRateMeter, workerRateMeter, rateListener, rateMeasuredEvent);
+    final ScheduledFuture<?> result = submitter.scheduleAtFixedRate(submitterTask, delayNanos, periodNanos, TimeUnit.NANOSECONDS);
+    submitterTask.setExternallyVisibleFuture(result);
+    return result;
   }
 
   /**
@@ -495,5 +532,45 @@ public final class SubmitterWorkerRateMeasuringExecutorService
   private static final int checkThreadsCountPositive(final int threadsCount) {
     checkArgument(threadsCount > 0, "threadsCount", "Must be positive");
     return threadsCount;
+  }
+
+  private static final class SubmitterTask<SRS, WRS, E extends SubmitterWorkerRateMeasuredEvent<? super SRS, ? super WRS>> implements Runnable {
+    private final RateMeter<SRS> submitterRateMeter;
+    private final RateMeter<WRS> workerRateMeter;
+    @Nullable
+    private final RateListener<? super E> rateListener;
+    @Nullable
+    private final E rateMeasuredEvent;
+    @Nullable
+    private volatile ScheduledFuture<?> externallyVisibleFuture;
+
+    private SubmitterTask(
+      final Rate targetRate,
+      final RateMeter<SRS> submitterRateMeter,
+      final RateMeter<WRS> workerRateMeter,
+      @Nullable final RateListener<? super E> rateListener,
+      @Nullable final E rateMeasuredEvent) {
+      this.submitterRateMeter = submitterRateMeter;
+      this.workerRateMeter = workerRateMeter;
+      assert EXCLUDE_ASSERTIONS_FROM_BYTECODE ||
+          (rateListener == null && rateMeasuredEvent == null) || (rateListener != null && rateMeasuredEvent != null);
+      this.rateListener = rateListener;
+      this.rateMeasuredEvent = rateMeasuredEvent;
+    }
+
+    private final void setExternallyVisibleFuture(final ScheduledFuture<?> future) {
+      externallyVisibleFuture = future;
+    }
+
+    @Override
+    public final void run() {
+      final long tNanos = System.nanoTime();
+      //TODO implement
+      submitterRateMeter.rate(tNanos, rateMeasuredEvent.getSubmissionRate());
+      if (rateListener != null) {
+        workerRateMeter.rate(tNanos, rateMeasuredEvent.getCompletionRate());
+        rateListener.onMeasurement(rateMeasuredEvent);
+      }
+    }
   }
 }

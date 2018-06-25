@@ -16,7 +16,8 @@
 
 package stincmale.ratmex.meter;
 
-import stincmale.ratmex.meter.RateMeterConfig.Builder;
+import stincmale.ratmex.meter.config.RateMeterConfig;
+import stincmale.ratmex.meter.config.RateMeterConfig.Builder;
 
 public final class NavigableMapRateMeterTest extends AbstractRateMeterUnitTest<Builder, RateMeterConfig> {
   public NavigableMapRateMeterTest() {

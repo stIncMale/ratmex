@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package stincmale.ratmex.meter;
+package stincmale.ratmex.meter.auxiliary;
 
 /**
  * An array abstraction which allows implementations with different semantics.

@@ -14,13 +14,16 @@
  * limitations under the License.
  */
 
-package stincmale.ratmex.executor;
+package stincmale.ratmex.executor.config;
 
 import java.time.Duration;
 import java.util.Optional;
+import java.util.function.Supplier;
 import stincmale.ratmex.doc.Nullable;
 import stincmale.ratmex.doc.Immutable;
 import stincmale.ratmex.doc.NotThreadSafe;
+import stincmale.ratmex.executor.Rate;
+import stincmale.ratmex.executor.RateMeasuringExecutorService;
 import stincmale.ratmex.executor.listener.RateListener;
 import stincmale.ratmex.executor.listener.RateMeasuredEvent;
 import static stincmale.ratmex.internal.util.ConversionsAndChecks.checkDuration;
@@ -34,29 +37,28 @@ import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;
  * <ul>
  * <li>{@link #getInitialDelay()} - {@link Duration#ZERO}</li>
  * <li>{@link #getDuration()} - {@link Optional}{@code .}{@linkplain Optional#empty() empty()}</li>
- * <li>{@link #getRateListener()} - {@link Optional}{@code .}{@linkplain Optional#empty() empty()}</li>
+ * <li>{@link #getRateListenerSupplier()} - {@link Optional}{@code .}{@linkplain Optional#empty() empty()}</li>
  * </ul>
  *
  * @param <E> A type of container with data provided to {@link RateListener} by {@link RateMeasuringExecutorService}.
  */
-//see comments in SubmitterWorkerScheduledTaskConfig for reasons why rateListener do not have a default value different from null
 @Immutable
 public class ScheduledTaskConfig<E extends RateMeasuredEvent> {
   private final Duration initialDelay;
   @Nullable
   private final Duration duration;
   @Nullable
-  private final RateListener<? super E> rateListener;
+  private final Supplier<? extends RateListener<? super E>> rateListenerSupplier;
 
   /**
    * @param initialDelay See {@link Builder#setInitialDelay(Duration)}.
    * @param duration See {@link Builder#setDuration(Duration)}.
-   * @param rateListener See {@link Builder#setRateListener(RateListener)}.
+   * @param rateListenerSupplier See {@link Builder#setRateListenerSupplier(Supplier)}.
    */
   protected ScheduledTaskConfig(
       final Duration initialDelay,
       @Nullable final Duration duration,
-      @Nullable final RateListener<? super E> rateListener) {
+      @Nullable final Supplier<? extends RateListener<? super E>> rateListenerSupplier) {
     checkDuration(initialDelay, "initialDelay");
     if (duration != null) {
       checkArgument(!duration.isZero(), "duration", "Must not be zero");
@@ -64,10 +66,10 @@ public class ScheduledTaskConfig<E extends RateMeasuredEvent> {
     }
     this.initialDelay = initialDelay;
     this.duration = duration;
-    this.rateListener = rateListener;
+    this.rateListenerSupplier = rateListenerSupplier;
   }
 
-  public static <E extends RateMeasuredEvent> Builder<E> newScheduleConfigBuilder() {
+  public static <E extends RateMeasuredEvent> Builder<E> newScheduledTaskConfigBuilder() {
     return new Builder<>();
   }
 
@@ -95,11 +97,11 @@ public class ScheduledTaskConfig<E extends RateMeasuredEvent> {
   }
 
   /**
-   * A listener allowing monitoring the rate and reacting if there are deviations from the
+   * A supplier of a listener allowing monitoring the rate and reacting if there are deviations from the
    * {@linkplain RateMeasuredEvent#getTargetRate() target rate}.
    */
-  public final Optional<RateListener<? super E>> getRateListener() {
-    return Optional.ofNullable(rateListener);
+  public final Optional<Supplier<? extends RateListener<? super E>>> getRateListenerSupplier() {
+    return Optional.ofNullable(rateListenerSupplier);
   }
 
   @Override
@@ -107,7 +109,7 @@ public class ScheduledTaskConfig<E extends RateMeasuredEvent> {
     return getClass().getSimpleName() +
         "{initialDelay=" + initialDelay +
         ", duration=" + duration +
-        ", rateListener=" + rateListener +
+        ", rateListenerSupplier=" + rateListenerSupplier +
         '}';
   }
 
@@ -117,12 +119,12 @@ public class ScheduledTaskConfig<E extends RateMeasuredEvent> {
     @Nullable
     protected Duration duration;
     @Nullable
-    protected RateListener<? super E> rateListener;
+    protected Supplier<? extends RateListener<? super E>> rateListenerSupplier;
 
     protected Builder() {
       initialDelay = Duration.ZERO;
       duration = null;
-      rateListener = null;
+      rateListenerSupplier = null;
     }
 
     /**
@@ -133,7 +135,7 @@ public class ScheduledTaskConfig<E extends RateMeasuredEvent> {
       initialDelay = config.getInitialDelay();
       duration = config.getDuration()
           .orElse(null);
-      rateListener = config.getRateListener()
+      rateListenerSupplier = config.getRateListenerSupplier()
           .orElse(null);
       return this;
     }
@@ -162,10 +164,10 @@ public class ScheduledTaskConfig<E extends RateMeasuredEvent> {
     }
 
     /**
-     * @see ScheduledTaskConfig#getRateListener()
+     * @see ScheduledTaskConfig#getRateListenerSupplier()
      */
-    public final Builder<E> setRateListener(@Nullable final RateListener<? super E> rateListener) {
-      this.rateListener = rateListener;
+    public final Builder<E> setRateListenerSupplier(@Nullable final Supplier<? extends RateListener<? super E>> rateListenerSupplier) {
+      this.rateListenerSupplier = rateListenerSupplier;
       return this;
     }
 
@@ -173,7 +175,7 @@ public class ScheduledTaskConfig<E extends RateMeasuredEvent> {
       return new ScheduledTaskConfig<>(
           initialDelay,
           duration,
-          rateListener);
+          rateListenerSupplier);
     }
   }
 }

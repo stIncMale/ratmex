@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package stincmale.ratmex.meter;
+package stincmale.ratmex.meter.auxiliary;
 
 import java.time.Duration;
 import java.util.concurrent.ThreadLocalRandom;

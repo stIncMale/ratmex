@@ -19,6 +19,8 @@ package stincmale.ratmex.meter;
 import java.time.Duration;
 import stincmale.ratmex.common.Configurable;
 import stincmale.ratmex.internal.util.Preconditions;
+import stincmale.ratmex.meter.auxiliary.TicksCounter;
+import stincmale.ratmex.meter.config.RateMeterConfig;
 import static stincmale.ratmex.internal.util.ConversionsAndChecks.checkTNanos;
 import static stincmale.ratmex.internal.util.ConversionsAndChecks.checkUnit;
 import static stincmale.ratmex.internal.util.ConversionsAndChecks.maxTNanos;

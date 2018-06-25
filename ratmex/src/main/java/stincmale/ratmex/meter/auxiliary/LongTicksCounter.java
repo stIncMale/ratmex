@@ -14,20 +14,28 @@
  * limitations under the License.
  */
 
-package stincmale.ratmex.meter;
+package stincmale.ratmex.meter.auxiliary;
 
-import java.util.function.BooleanSupplier;
-import stincmale.ratmex.doc.ThreadSafe;
+import stincmale.ratmex.doc.NotThreadSafe;
 
 /**
- * An abstraction which allows implementations of different approaches to block on a condition.
+ * This {@link TicksCounter} uses plain long field to store its {@linkplain #get() value}.
  */
-@ThreadSafe
-public interface WaitStrategy {
-  /**
-   * This method blocks until the {@code condition} is true.
-   *
-   * @param condition A boolean condition.
-   */
-  void await(BooleanSupplier condition);
+@NotThreadSafe
+public final class LongTicksCounter extends AbstractTicksCounter {
+  private long value;
+
+  public LongTicksCounter(final long initialValue) {
+    value = initialValue;
+  }
+
+  @Override
+  public final void add(final long delta) {
+    value += delta;
+  }
+
+  @Override
+  public final long get() {
+    return value;
+  }
 }

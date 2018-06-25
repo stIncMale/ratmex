@@ -17,6 +17,7 @@
 package stincmale.ratmex.meter;
 
 import stincmale.ratmex.doc.ThreadSafe;
+import stincmale.ratmex.meter.config.ConcurrentRateMeterConfig;
 
 /**
  * Stats gathered by a thread-safe implementation of {@link RateMeter} which implements {@link RateMeter#tick(long, long)} in a relaxed way,

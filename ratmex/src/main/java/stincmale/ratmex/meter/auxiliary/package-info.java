@@ -14,19 +14,7 @@
  * limitations under the License.
  */
 
-package stincmale.ratmex.meter;
-
-import org.junit.jupiter.api.Tag;
-import stincmale.ratmex.meter.config.RateMeterConfig;
-import stincmale.ratmex.util.ConcurrencyTestTag;
-import stincmale.ratmex.meter.config.RateMeterConfig.Builder;
-
-@Tag(ConcurrencyTestTag.VALUE)
-public final class RingBufferRateMeterSequentialTest extends AbstractRateMeterConcurrencyTest<Builder, RateMeterConfig> {
-  public RingBufferRateMeterSequentialTest() {
-    super(
-        () -> RingBufferRateMeter.defaultConfig()
-            .toBuilder(),
-        RingBufferRateMeter::new, 1);
-  }
-}
+/**
+ * Contains auxiliary interfaces and classes for {@link stincmale.ratmex.meter.RateMeter}.
+ */
+package stincmale.ratmex.meter.auxiliary;

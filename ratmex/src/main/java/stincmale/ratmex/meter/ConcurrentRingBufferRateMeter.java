@@ -20,6 +20,9 @@ import java.time.Duration;
 import java.util.Optional;
 import stincmale.ratmex.doc.Nullable;
 import stincmale.ratmex.doc.ThreadSafe;
+import stincmale.ratmex.meter.auxiliary.AtomikLongArray;
+import stincmale.ratmex.meter.auxiliary.LongArray;
+import stincmale.ratmex.meter.config.ConcurrentRateMeterConfig;
 
 /**
  * A thread-safe implementation of {@link AbstractRingBufferRateMeter},

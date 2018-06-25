@@ -17,8 +17,9 @@
 package stincmale.ratmex.meter;
 
 import org.junit.jupiter.api.Tag;
+import stincmale.ratmex.meter.config.RateMeterConfig;
 import stincmale.ratmex.util.ConcurrencyTestTag;
-import stincmale.ratmex.meter.RateMeterConfig.Builder;
+import stincmale.ratmex.meter.config.RateMeterConfig.Builder;
 
 @Tag(ConcurrencyTestTag.VALUE)
 public final class NavigableMapRateMeterSequentialTest extends AbstractRateMeterConcurrencyTest<Builder, RateMeterConfig> {

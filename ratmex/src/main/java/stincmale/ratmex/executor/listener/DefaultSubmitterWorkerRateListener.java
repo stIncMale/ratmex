@@ -16,53 +16,51 @@
 
 package stincmale.ratmex.executor.listener;
 
-import stincmale.ratmex.doc.NotThreadSafe;
+import stincmale.ratmex.doc.Nullable;
+import stincmale.ratmex.doc.ThreadSafe;
 import stincmale.ratmex.executor.Rate;
 import stincmale.ratmex.meter.ConcurrentRateMeterStats;
-import stincmale.ratmex.meter.RateMeter;
 import static stincmale.ratmex.internal.util.Utils.format;
 
 /**
- * A default implementation of {@link RateListener}
- * which {@linkplain #onMeasurement(RateMeasuredEvent) throws} {@link RateException} if notices that the target rate is not respected
- * by either {@linkplain SubmitterWorkerRateMeasuredEvent#getSubmissionRate() submitter}
- * or {@linkplain SubmitterWorkerRateMeasuredEvent#getCompletionRate() worker}.
+ * A default implementation of {@link SubmitterWorkerRateListener}.
  *
- * @param <E> A type of a {@link SubmitterWorkerRateMeasuredEvent} which this listener can react to.
- * @param <SRS> A type that represents {@linkplain RateMeter#stats() statistics} of submitter {@link RateMeter}.
- * @param <WRS> A type of {@link ConcurrentRateMeterStats} that represents {@linkplain RateMeter#stats() statistics} of worker {@link RateMeter}.
+ * @param <E> See {@link SubmitterWorkerRateListener}.
+ * @param <SRS> See {@link SubmitterWorkerRateListener}.
+ * @param <WRS> See {@link SubmitterWorkerRateListener}.
  */
-@NotThreadSafe
+@ThreadSafe
 public class DefaultSubmitterWorkerRateListener<E extends SubmitterWorkerRateMeasuredEvent<SRS, WRS>, SRS, WRS extends ConcurrentRateMeterStats>
-    extends DefaultRateListener<E> {
+    extends SubmitterWorkerRateListener<E, SRS, WRS> {
   private static final DefaultSubmitterWorkerRateListener<?, ?, ?> instance = new DefaultSubmitterWorkerRateListener<>();
 
   protected DefaultSubmitterWorkerRateListener() {
   }
 
   /**
+   * Always returns the same instance.
+   *
    * @param <E> See {@link DefaultSubmitterWorkerRateListener}.
    * @param <SRS> See {@link DefaultSubmitterWorkerRateListener}.
    * @param <WRS> See {@link DefaultSubmitterWorkerRateListener}.
    *
-   * @return A default {@link RateListener} for {@link SubmitterWorkerRateMeasuredEvent}.
+   * @return An instance of {@link DefaultSubmitterWorkerRateListener}.
    */
   @SuppressWarnings("unchecked")
   public static <E extends SubmitterWorkerRateMeasuredEvent<SRS, WRS>, SRS, WRS extends ConcurrentRateMeterStats>
-  DefaultSubmitterWorkerRateListener<E, SRS, WRS> defaultSubmitterWorkerRateListenerInstance() {
+  DefaultSubmitterWorkerRateListener<E, SRS, WRS> instance() {
     return (DefaultSubmitterWorkerRateListener<E, SRS, WRS>)instance;
   }
 
   /**
    * @throws RateException If the {@linkplain RateMeasuredEvent#getTargetRate() target rate} is not respected
-   * by either {@linkplain SubmitterWorkerRateMeasuredEvent#getSubmissionRate() submitter}
-   * or {@linkplain SubmitterWorkerRateMeasuredEvent#getCompletionRate() worker}.
+   * by either a {@linkplain SubmitterWorkerRateMeasuredEvent#getSubmissionRate() submitter}
+   * or a {@linkplain SubmitterWorkerRateMeasuredEvent#getCompletionRate() worker}.
    * @throws CorrectnessException If {@link ConcurrentRateMeterStats#incorrectlyRegisteredTickEventsCount()}
    * from {@link SubmitterWorkerRateMeasuredEvent#getWorkerRateMeterStats()} is greater than 0.
    */
   @Override
   public boolean onMeasurement(final E e) throws RateException, CorrectnessException {
-    super.onMeasurement(e);
     final Rate targetRate = e.getTargetRate();
     if (targetRate.compareTo(e.getSubmissionRate()) != 0) {
       throw new RateException("The target rate was violated by the submission rate. ", e.getTargetRate(), e.getSubmissionRate()
@@ -72,15 +70,16 @@ public class DefaultSubmitterWorkerRateListener<E extends SubmitterWorkerRateMea
       throw new RateException("The target rate was violated by the completion rate. ", e.getTargetRate(), e.getCompletionRate()
           .getValueDouble());
     }
-    e.getWorkerRateMeterStats()
-      .map(ConcurrentRateMeterStats::incorrectlyRegisteredTickEventsCount)
-      .ifPresent(incorrectlyRegisteredTickEventsCount -> {
-        if (incorrectlyRegisteredTickEventsCount > 0) {
-          throw new CorrectnessException(format("Worker rate meter failed to accurately register ticks. " +
+    @Nullable
+    final WRS workerRateMeterStats = e.getWorkerRateMeterStats();
+    if (workerRateMeterStats != null) {
+      final long incorrectlyRegisteredTickEventsCount = workerRateMeterStats.incorrectlyRegisteredTickEventsCount();
+      if (incorrectlyRegisteredTickEventsCount > 0) {
+        throw new CorrectnessException(format("Worker rate meter failed to accurately register ticks. " +
             "incorrectlyRegisteredTickEventsCount={}, completionRate={}", incorrectlyRegisteredTickEventsCount, e.getCompletionRate()
                 .getValueDouble()));
-        }
-      });
+      }
+    }
     return true;
   }
 }

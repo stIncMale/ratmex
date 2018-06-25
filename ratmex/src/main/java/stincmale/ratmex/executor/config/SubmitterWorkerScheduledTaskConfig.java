@@ -14,20 +14,27 @@
  * limitations under the License.
  */
 
-package stincmale.ratmex.executor;
+package stincmale.ratmex.executor.config;
 
 import java.time.Duration;
 import java.util.function.BiFunction;
+import java.util.function.Supplier;
 import stincmale.ratmex.doc.Nullable;
 import stincmale.ratmex.doc.Immutable;
 import stincmale.ratmex.doc.NotThreadSafe;
+import stincmale.ratmex.executor.Rate;
+import stincmale.ratmex.executor.RateMeasuringExecutorService;
+import stincmale.ratmex.executor.SubmitterWorkerRateMeasuringExecutorService;
 import stincmale.ratmex.executor.listener.RateListener;
 import stincmale.ratmex.executor.listener.RateMeasuredEvent;
+import stincmale.ratmex.meter.AbstractRateMeter;
 import stincmale.ratmex.meter.RateMeter;
+import stincmale.ratmex.meter.config.RateMeterConfig;
 import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;
 
 /**
- * A configuration of a {@linkplain SubmitterWorkerRateMeasuringExecutorService#scheduleAtFixedRate(Runnable, Rate, SubmitterWorkerScheduledTaskConfig) scheduled task}
+ * A configuration of a
+ * {@linkplain SubmitterWorkerRateMeasuringExecutorService#scheduleAtFixedRate(Runnable, Rate, SubmitterWorkerScheduledTaskConfig) scheduled task}
  * for {@link SubmitterWorkerRateMeasuringExecutorService}.
  * <p>
  * The default values:
@@ -41,48 +48,62 @@ import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;
  * @param <SRS> A type that represents {@linkplain RateMeter#stats() statistics} of submitter {@link RateMeter}.
  * @param <WRS> A type that represents {@linkplain RateMeter#stats() statistics} of worker {@link RateMeter}.
  */
-/* submitterRateMeterSupplier and workerRateMeterSupplier do not have default values because this is technically impossible;
-    problems arise because of the parameter types SRS and WRS. The similar problem is with ScheduledTaskConfig.rateListener*/
 @Immutable
 public class SubmitterWorkerScheduledTaskConfig<E extends RateMeasuredEvent, SRS, WRS> extends ScheduledTaskConfig<E> {
-  private final BiFunction<Long, Rate, ? extends RateMeter<? extends SRS>> submitterRateMeterSupplier;
-  private final BiFunction<Long, Rate, ? extends RateMeter<? extends WRS>> workerRateMeterSupplier;
+  private final BiFunction<Long, Duration, ? extends RateMeter<? extends SRS>> submitterRateMeterSupplier;
+  private final BiFunction<Long, Duration, ? extends RateMeter<? extends WRS>> workerRateMeterSupplier;
 
   protected SubmitterWorkerScheduledTaskConfig(
       final Duration initialDelay,
       @Nullable final Duration duration,
-      @Nullable final RateListener<? super E> rateListener,
-      final BiFunction<Long, Rate, ? extends RateMeter<? extends SRS>> submitterRateMeterSupplier,
-      final BiFunction<Long, Rate, ? extends RateMeter<? extends WRS>> workerRateMeterSupplier) {
-    super(initialDelay, duration, rateListener);
+      @Nullable final Supplier<? extends RateListener<? super E>> rateListenerSupplier,
+      final BiFunction<Long, Duration, ? extends RateMeter<? extends SRS>> submitterRateMeterSupplier,
+      final BiFunction<Long, Duration, ? extends RateMeter<? extends WRS>> workerRateMeterSupplier) {
+    super(initialDelay, duration, rateListenerSupplier);
     checkNotNull(submitterRateMeterSupplier, "submitterRateMeterSupplier");
     checkNotNull(workerRateMeterSupplier, "workerRateMeterSupplier");
     this.submitterRateMeterSupplier = submitterRateMeterSupplier;
     this.workerRateMeterSupplier = workerRateMeterSupplier;
   }
 
-  public static <E extends RateMeasuredEvent, SRS, WRS> Builder<E, SRS, WRS> newSubmitterWorkerScheduleConfigBuilder() {
-    return new Builder<>();
+  /**
+   * @param submitterRateMeterSupplier See {@link SubmitterWorkerScheduledTaskConfig#getSubmitterRateMeterSupplier()}. Must not be null.
+   * @param workerRateMeterSupplier See {@link SubmitterWorkerScheduledTaskConfig#getWorkerRateMeterSupplier()}. Must not be null.
+   */
+  public static <E extends RateMeasuredEvent, SRS, WRS> Builder<E, SRS, WRS> newSubmitterWorkerScheduledTaskConfigBuilder(
+      final BiFunction<Long, Duration, ? extends RateMeter<? extends SRS>> submitterRateMeterSupplier,
+      final BiFunction<Long, Duration, ? extends RateMeter<? extends WRS>> workerRateMeterSupplier) {
+    checkNotNull(submitterRateMeterSupplier, "submitterRateMeterSupplier");
+    checkNotNull(workerRateMeterSupplier, "workerRateMeterSupplier");
+    return new Builder<>(submitterRateMeterSupplier, workerRateMeterSupplier);
   }
 
   @Override
   public Builder<E, SRS, WRS> toBuilder() {
-    return new Builder<E, SRS, WRS>().set(this);
+    return new Builder<E, SRS, WRS>(this.submitterRateMeterSupplier, this.workerRateMeterSupplier).set(this);
   }
 
   /**
    * Specifies a supplier which must be used by {@link SubmitterWorkerRateMeasuringExecutorService}
    * to create a {@link RateMeter} for measuring the submission rate.
+   * <p>
+   * Usage example: {@code config.getSubmitterRateMeterSupplier().apply(startNanos, sampleInterval)},
+   * where {@code startNanos} and {@code sampleInterval} are the first to arguments for
+   * {@link AbstractRateMeter#AbstractRateMeter(long, Duration, RateMeterConfig)}.
    */
-  public final BiFunction<Long, Rate, ? extends RateMeter<? extends SRS>> getSubmitterRateMeterSupplier() {
+  public final BiFunction<Long, Duration, ? extends RateMeter<? extends SRS>> getSubmitterRateMeterSupplier() {
     return submitterRateMeterSupplier;
   }
 
   /**
    * Specifies a supplier which must be used by {@link SubmitterWorkerRateMeasuringExecutorService}
    * to create a {@link RateMeter} for measuring the completion rate.
+   * <p>
+   * Usage example: {@code config.getWorkerRateMeterSupplier().apply(startNanos, sampleInterval)},
+   * where {@code startNanos} and {@code sampleInterval} are the first to arguments for
+   * {@link AbstractRateMeter#AbstractRateMeter(long, Duration, RateMeterConfig)}.
    */
-  public final BiFunction<Long, Rate, ? extends RateMeter<? extends WRS>> getWorkerRateMeterSupplier() {
+  public final BiFunction<Long, Duration, ? extends RateMeter<? extends WRS>> getWorkerRateMeterSupplier() {
     return workerRateMeterSupplier;
   }
 
@@ -91,7 +112,7 @@ public class SubmitterWorkerScheduledTaskConfig<E extends RateMeasuredEvent, SRS
     return getClass().getSimpleName() +
         "{initialDelay=" + getInitialDelay() +
         ", duration=" + getDuration() +
-        ", rateListener=" + getRateListener() +
+        ", rateListenerSupplier=" + getRateListenerSupplier() +
         ", submitterRateMeterSupplier" + submitterRateMeterSupplier +
         ", workerRateMeterSupplier" + workerRateMeterSupplier +
         '}';
@@ -99,10 +120,20 @@ public class SubmitterWorkerScheduledTaskConfig<E extends RateMeasuredEvent, SRS
 
   @NotThreadSafe
   public static class Builder<E extends RateMeasuredEvent, SRS, WRS> extends ScheduledTaskConfig.Builder<E> {
-    private BiFunction<Long, Rate, ? extends RateMeter<? extends SRS>> submitterRateMeterSupplier;
-    private BiFunction<Long, Rate, ? extends RateMeter<? extends WRS>> workerRateMeterSupplier;
+    protected BiFunction<Long, Duration, ? extends RateMeter<? extends SRS>> submitterRateMeterSupplier;
+    protected BiFunction<Long, Duration, ? extends RateMeter<? extends WRS>> workerRateMeterSupplier;
 
-    protected Builder() {
+    /**
+     * @param submitterRateMeterSupplier See {@link SubmitterWorkerScheduledTaskConfig#getSubmitterRateMeterSupplier()}. Must not be null.
+     * @param workerRateMeterSupplier See {@link SubmitterWorkerScheduledTaskConfig#getWorkerRateMeterSupplier()}. Must not be null.
+     */
+    protected Builder(
+        final BiFunction<Long, Duration, ? extends RateMeter<? extends SRS>> submitterRateMeterSupplier,
+        final BiFunction<Long, Duration, ? extends RateMeter<? extends WRS>> workerRateMeterSupplier) {
+      checkNotNull(submitterRateMeterSupplier, "submitterRateMeterSupplier");
+      checkNotNull(workerRateMeterSupplier, "workerRateMeterSupplier");
+        this.submitterRateMeterSupplier = submitterRateMeterSupplier;
+        this.workerRateMeterSupplier = workerRateMeterSupplier;
     }
 
     /**
@@ -116,33 +147,11 @@ public class SubmitterWorkerScheduledTaskConfig<E extends RateMeasuredEvent, SRS
       return this;
     }
 
-    /**
-     * @param submitterRateMeterSupplier Must not be null.
-     *
-     * @see #getSubmitterRateMeterSupplier()
-     */
-    public final Builder<E, SRS, WRS> setSubmitterRateMeterSupplier(final BiFunction<Long, Rate, ? extends RateMeter<? extends SRS>> submitterRateMeterSupplier) {
-      checkNotNull(submitterRateMeterSupplier, "submitterRateMeterSupplier");
-      this.submitterRateMeterSupplier = submitterRateMeterSupplier;
-      return this;
-    }
-
-    /**
-     * @param workerRateMeterSupplier Must not be null.
-     *
-     * @see #getWorkerRateMeterSupplier()
-     */
-    public final Builder<E, SRS, WRS> setWorkerRateMeterSupplier(final BiFunction<Long, Rate, ? extends RateMeter<? extends WRS>> workerRateMeterSupplier) {
-      checkNotNull(workerRateMeterSupplier, "workerRateMeterSupplier");
-      this.workerRateMeterSupplier = workerRateMeterSupplier;
-      return this;
-    }
-
     public final SubmitterWorkerScheduledTaskConfig<E, SRS, WRS> buildSubmitterWorkerScheduledTaskConfig() {
       return new SubmitterWorkerScheduledTaskConfig<>(
           initialDelay,
           duration,
-          rateListener,
+          rateListenerSupplier,
           submitterRateMeterSupplier,
           workerRateMeterSupplier);
     }

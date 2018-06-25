@@ -16,7 +16,8 @@
 
 package stincmale.ratmex.meter;
 
-import stincmale.ratmex.meter.ConcurrentRateMeterConfig.Builder;
+import stincmale.ratmex.meter.config.ConcurrentRateMeterConfig;
+import stincmale.ratmex.meter.config.ConcurrentRateMeterConfig.Builder;
 
 public final class ConcurrentRingBufferRateMeterTest extends AbstractRateMeterUnitTest<Builder, ConcurrentRateMeterConfig> {
   public ConcurrentRingBufferRateMeterTest() {

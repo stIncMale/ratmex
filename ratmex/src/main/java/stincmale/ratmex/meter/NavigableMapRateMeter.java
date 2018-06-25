@@ -21,6 +21,8 @@ import java.util.NavigableMap;
 import java.util.TreeMap;
 import stincmale.ratmex.doc.NotThreadSafe;
 import stincmale.ratmex.common.NanosComparator;
+import stincmale.ratmex.meter.config.ConcurrentRateMeterConfig;
+import stincmale.ratmex.meter.config.RateMeterConfig;
 
 /**
  * A not thread-safe implementation of {@link AbstractNavigableMapRateMeter},

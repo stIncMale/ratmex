@@ -18,11 +18,12 @@ package stincmale.ratmex.executor.listener;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledFuture;
+import stincmale.ratmex.doc.Immutable;
 import stincmale.ratmex.doc.NotThreadSafe;
+import stincmale.ratmex.doc.ThreadSafe;
 import stincmale.ratmex.executor.Rate;
 import stincmale.ratmex.executor.RateMeasuringExecutorService;
-import stincmale.ratmex.executor.ScheduledTaskConfig;
-import stincmale.ratmex.meter.ConcurrentRateMeterConfig.Mode;
+import stincmale.ratmex.executor.config.ScheduledTaskConfig;
 
 /**
  * A listener allowing monitoring the rate and reacting if there are deviations from the {@linkplain RateMeasuredEvent#getTargetRate() target rate}.
@@ -32,9 +33,12 @@ import stincmale.ratmex.meter.ConcurrentRateMeterConfig.Mode;
 @NotThreadSafe
 public interface RateListener<E extends RateMeasuredEvent> {
   /**
-   * This method is called by {@link RateMeasuringExecutorService} each time it decides it makes sense to notify about the
-   * {@linkplain RateMeasuredEvent#getCompletionRate() current rate}.
-   * This method must never be called concurrently, and implementations of {@link RateMeasuringExecutorService} must not call the method concurrently.
+   * This method is called by {@link RateMeasuringExecutorService} each time it decides to notify about the current measured data,
+   * which should include current execution rate of the scheduled task.
+   * This method must never be called concurrently with events generated for the same scheduled task, implementations of
+   * {@link RateMeasuringExecutorService} must adhere to this constraint.
+   * However, implementations of {@link RateListener} still may be made {@linkplain ThreadSafe thread-safe},
+   * thus allowing reusing the same instance for different scheduled tasks.
    * <p>
    * Any {@link RuntimeException} thrown from this method causes the
    * {@linkplain RateMeasuringExecutorService#scheduleAtFixedRate(Runnable, Rate, ScheduledTaskConfig) scheduled execution}
@@ -44,9 +48,9 @@ public interface RateListener<E extends RateMeasuredEvent> {
    *
    * @param e An event with data provided by {@link RateMeasuringExecutorService}.
    * An implementation of this method must not pass on a reference to the event
-   * in a way that allows accessing the event outside of this method invocation because an event is mutable and its contents are only guaranteed to
-   * stay unchanged within an invocation of this method. Data extracted from the event can, however, be transferred anywhere if that data is either
-   * primitive or immutable.
+   * in a way that allows accessing the event outside of this method invocation because an event may be mutable and its contents are only
+   * guaranteed to stay unchanged within an invocation of this method. Primitive or {@linkplain Immutable immutable} data extracted from the event
+   * can, however, be transferred anywhere.
    *
    * @return true if the {@linkplain RateMeasuringExecutorService#scheduleAtFixedRate(Runnable, Rate, ScheduledTaskConfig) scheduled execution}
    * for which the event was generated must continue; otherwise it will be {@linkplain ScheduledFuture#cancel(boolean) cancelled}.
@@ -54,8 +58,8 @@ public interface RateListener<E extends RateMeasuredEvent> {
    * @throws RateException Optional, may be thrown if the {@linkplain RateMeasuredEvent#getTargetRate() target rate} is not respected.
    * Note that implementation of this method may choose to ignore the deviation and return true
    * instead thus continuing the scheduled repetitive execution.
-   * @throws CorrectnessException Optional, may be thrown if any incorrectness related to relaxed behaviour
-   * (e.g. see {@link Mode#RELAXED_TICKS}) is detected.
+   * @throws CorrectnessException Optional, may be thrown if any incorrectness is detected
+   * (e.g. incorrectness related to relaxed behaviour of any of the tools involved).
    */
   boolean onMeasurement(E e) throws RateException, CorrectnessException;
 }

@@ -23,6 +23,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import stincmale.ratmex.doc.ThreadSafe;
+import stincmale.ratmex.executor.config.ScheduledTaskConfig;
 import stincmale.ratmex.executor.listener.RateListener;
 import stincmale.ratmex.executor.listener.RateMeasuredEvent;
 
@@ -44,7 +45,7 @@ import stincmale.ratmex.executor.listener.RateMeasuredEvent;
  * {@link RateMeasuringExecutorService} overcomes both of the above points.
  *
  * @param <C> A type of scheduled task config used in {@link #scheduleAtFixedRate(Runnable, Rate, C)}.
- * @param <E> A type of container with data provided to a {@linkplain ScheduledTaskConfig#getRateListener() rate listener}.
+ * @param <E> A type of container with data provided to a {@linkplain ScheduledTaskConfig#getRateListenerSupplier() rate listener}.
  */
 @ThreadSafe
 public interface RateMeasuringExecutorService<C extends ScheduledTaskConfig<E>, E extends RateMeasuredEvent> extends ExecutorService, AutoCloseable {
@@ -59,7 +60,7 @@ public interface RateMeasuringExecutorService<C extends ScheduledTaskConfig<E>, 
    * <li>An execution of the task throws a {@link RuntimeException}.
    * In this case calling {@link Future#get() get()} on the returned future will throw {@link ExecutionException}.</li>
    * <li>The scheduled task {@linkplain ScheduledTaskConfig#getDuration() times out}.</li>
-   * <li>The {@linkplain ScheduledTaskConfig#getRateListener() rate listener}'s method
+   * <li>The {@linkplain ScheduledTaskConfig#getRateListenerSupplier() rate listener}'s method
    * {@link RateListener#onMeasurement(RateMeasuredEvent)} returns false,
    * also resulting in task {@linkplain Future#cancel(boolean) cancellation}.</li>
    * </ul>

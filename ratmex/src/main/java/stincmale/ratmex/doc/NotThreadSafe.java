@@ -30,7 +30,7 @@ import java.lang.annotation.Target;
  * as well as in some cases where an explicit statement about the lack of thread-safety can help avoid misunderstanding.
  * <p>
  * This annotation does not forbid a type to be thread-safe
- * but rather informs a user that it is not safe to use an object of the type concurrently
+ * but rather informs a user that it may be not safe to use an object of the type concurrently
  * without any additional synchronization or coordination on the part of the user.
  */
 @Documented

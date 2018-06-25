@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-package stincmale.ratmex.meter;
+package stincmale.ratmex.meter.auxiliary;
+
+import stincmale.ratmex.meter.RateMeter;
 
 /**
  * A counter of ticks that can be used by {@link RateMeter} implementations.

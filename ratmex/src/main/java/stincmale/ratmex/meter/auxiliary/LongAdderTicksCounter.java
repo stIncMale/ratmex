@@ -14,28 +14,30 @@
  * limitations under the License.
  */
 
-package stincmale.ratmex.meter;
+package stincmale.ratmex.meter.auxiliary;
 
-import stincmale.ratmex.doc.NotThreadSafe;
+import java.util.concurrent.atomic.LongAdder;
+import stincmale.ratmex.doc.ThreadSafe;
 
 /**
- * This {@link TicksCounter} uses plain long field to store its {@linkplain #get() value}.
+ * This {@link TicksCounter} uses {@link LongAdder} field to store its {@linkplain #get() value}.
  */
-@NotThreadSafe
-public final class LongTicksCounter extends AbstractTicksCounter {
-  private long value;
+@ThreadSafe
+public final class LongAdderTicksCounter extends AbstractTicksCounter {
+  private final LongAdder adder;
 
-  public LongTicksCounter(final long initialValue) {
-    value = initialValue;
+  public LongAdderTicksCounter(final long initialValue) {
+    adder = new LongAdder();
+    adder.add(initialValue);
   }
 
   @Override
   public final void add(final long delta) {
-    value += delta;
+    adder.add(delta);
   }
 
   @Override
   public final long get() {
-    return value;
+    return adder.sum();
   }
 }

@@ -14,17 +14,29 @@
  * limitations under the License.
  */
 
-package stincmale.ratmex.meter;
+package stincmale.ratmex.meter.auxiliary;
+
+import java.util.concurrent.atomic.AtomicLong;
+import stincmale.ratmex.doc.ThreadSafe;
 
 /**
- * An abstract {@link TicksCounter}, which is a good start for a {@link TicksCounter} implementation.
+ * This {@link TicksCounter} uses {@link AtomicLong} field to store its {@linkplain #get() value}.
  */
-public abstract class AbstractTicksCounter implements TicksCounter {
-  protected AbstractTicksCounter() {
+@ThreadSafe
+public final class AtomicLongTicksCounter extends AbstractTicksCounter {
+  private final AtomicLong aValue;
+
+  public AtomicLongTicksCounter(final long initialValue) {
+    aValue = new AtomicLong(initialValue);
   }
 
   @Override
-  public String toString() {
-    return String.valueOf(get());
+  public final void add(final long delta) {
+    aValue.addAndGet(delta);
+  }
+
+  @Override
+  public final long get() {
+    return aValue.get();
   }
 }

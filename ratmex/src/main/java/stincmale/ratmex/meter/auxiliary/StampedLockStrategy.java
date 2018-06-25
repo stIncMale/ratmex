@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package stincmale.ratmex.meter;
+package stincmale.ratmex.meter.auxiliary;
 
 import java.util.concurrent.locks.StampedLock;
 import stincmale.ratmex.doc.ThreadSafe;

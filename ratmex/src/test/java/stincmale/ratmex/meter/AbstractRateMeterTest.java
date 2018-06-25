@@ -18,7 +18,8 @@ package stincmale.ratmex.meter;
 
 import java.time.Duration;
 import java.util.function.Supplier;
-import stincmale.ratmex.meter.RateMeterConfig.Builder;
+import stincmale.ratmex.meter.config.RateMeterConfig;
+import stincmale.ratmex.meter.config.RateMeterConfig.Builder;
 
 abstract class AbstractRateMeterTest<B extends Builder, C extends RateMeterConfig> {
   private final Supplier<B> rateMeterConfigBuilderSupplier;

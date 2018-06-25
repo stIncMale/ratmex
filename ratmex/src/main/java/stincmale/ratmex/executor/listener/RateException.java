@@ -19,7 +19,7 @@ package stincmale.ratmex.executor.listener;
 import stincmale.ratmex.doc.Nullable;
 import stincmale.ratmex.executor.Rate;
 import stincmale.ratmex.executor.RateMeasuringExecutorService;
-import stincmale.ratmex.executor.ScheduledTaskConfig;
+import stincmale.ratmex.executor.config.ScheduledTaskConfig;
 import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;
 import static stincmale.ratmex.internal.util.Utils.format;
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package stincmale.ratmex.meter;
+package stincmale.ratmex.meter.config;
 
 import java.time.Duration;
 import java.util.Optional;
@@ -22,6 +22,11 @@ import java.util.function.Function;
 import stincmale.ratmex.doc.Nullable;
 import stincmale.ratmex.doc.Immutable;
 import stincmale.ratmex.doc.NotThreadSafe;
+import stincmale.ratmex.meter.AbstractRateMeter;
+import stincmale.ratmex.meter.auxiliary.LongTicksCounter;
+import stincmale.ratmex.meter.RateMeter;
+import stincmale.ratmex.meter.RateMeterReading;
+import stincmale.ratmex.meter.auxiliary.TicksCounter;
 import static stincmale.ratmex.internal.util.Preconditions.checkArgument;
 import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;
 

@@ -14,19 +14,17 @@
  * limitations under the License.
  */
 
-package stincmale.ratmex.meter;
+package stincmale.ratmex.meter.auxiliary;
 
-import org.junit.jupiter.api.Tag;
-import stincmale.ratmex.meter.config.RateMeterConfig;
-import stincmale.ratmex.util.ConcurrencyTestTag;
-import stincmale.ratmex.meter.config.RateMeterConfig.Builder;
+/**
+ * An abstract {@link TicksCounter}, which is a good start for a {@link TicksCounter} implementation.
+ */
+public abstract class AbstractTicksCounter implements TicksCounter {
+  protected AbstractTicksCounter() {
+  }
 
-@Tag(ConcurrencyTestTag.VALUE)
-public final class RingBufferRateMeterSequentialTest extends AbstractRateMeterConcurrencyTest<Builder, RateMeterConfig> {
-  public RingBufferRateMeterSequentialTest() {
-    super(
-        () -> RingBufferRateMeter.defaultConfig()
-            .toBuilder(),
-        RingBufferRateMeter::new, 1);
+  @Override
+  public String toString() {
+    return String.valueOf(get());
   }
 }
