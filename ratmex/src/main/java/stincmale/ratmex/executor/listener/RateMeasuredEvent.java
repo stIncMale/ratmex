@@ -24,6 +24,7 @@ import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;
 
 /**
  * A container with data provided to {@link RateListener} by {@link RateMeasuringExecutorService}.
+ * This container may be mutable, and must always be considered as such.
  */
 @NotThreadSafe
 public class RateMeasuredEvent {

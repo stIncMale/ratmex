@@ -16,19 +16,19 @@
 
 package stincmale.ratmex.executor.listener;
 
-import stincmale.ratmex.executor.SubmitterWorkerRateMeasuringExecutorService;
+import stincmale.ratmex.executor.AbstractSubmitterWorkerRateMeasuringExecutorService;
 import stincmale.ratmex.meter.ConcurrentRateMeterStats;
 import stincmale.ratmex.meter.RateMeter;
 
 /**
- * A {@link RateListener} which can be used with {@link SubmitterWorkerRateMeasuringExecutorService}.
+ * A {@link RateListener} which can be used with {@link AbstractSubmitterWorkerRateMeasuringExecutorService}.
  *
  * @param <E> A type of a {@link SubmitterWorkerRateMeasuredEvent} which this listener can react to.
  * @param <SRS> A type that represents {@linkplain RateMeter#stats() statistics} of submitter {@link RateMeter}.
  * @param <WRS> A type of {@link ConcurrentRateMeterStats} that represents {@linkplain RateMeter#stats() statistics} of worker {@link RateMeter}.
  */
 public abstract class SubmitterWorkerRateListener<
-    E extends SubmitterWorkerRateMeasuredEvent<SRS, WRS>, SRS, WRS extends ConcurrentRateMeterStats> implements RateListener<E> {
+    E extends SubmitterWorkerRateMeasuredEvent<? extends SRS, ? extends WRS>, SRS, WRS extends ConcurrentRateMeterStats> implements RateListener<E> {
   protected SubmitterWorkerRateListener() {
   }
 }

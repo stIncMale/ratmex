@@ -130,7 +130,7 @@ public class ScheduledTaskConfig<E extends RateMeasuredEvent> {
     /**
      * @param config Must not be null.
      */
-    public final Builder<E> set(final ScheduledTaskConfig<E> config) {
+    public final Builder<E> set(final ScheduledTaskConfig<? super E> config) {
       checkNotNull(config, "config");
       initialDelay = config.getInitialDelay();
       duration = config.getDuration()

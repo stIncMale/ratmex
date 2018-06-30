@@ -48,7 +48,8 @@ import stincmale.ratmex.executor.listener.RateMeasuredEvent;
  * @param <E> A type of container with data provided to a {@linkplain ScheduledTaskConfig#getRateListenerSupplier() rate listener}.
  */
 @ThreadSafe
-public interface RateMeasuringExecutorService<C extends ScheduledTaskConfig<E>, E extends RateMeasuredEvent> extends ExecutorService, AutoCloseable {
+public interface RateMeasuringExecutorService<C extends ScheduledTaskConfig<? extends E>, E extends RateMeasuredEvent> extends ExecutorService,
+  AutoCloseable {
   /**
    * Schedules a {@code task} to be executed with a fixed {@code rate}.
    * <p>

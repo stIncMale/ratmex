@@ -30,7 +30,8 @@ import static stincmale.ratmex.internal.util.Utils.format;
  * @param <WRS> See {@link SubmitterWorkerRateListener}.
  */
 @ThreadSafe
-public class DefaultSubmitterWorkerRateListener<E extends SubmitterWorkerRateMeasuredEvent<SRS, WRS>, SRS, WRS extends ConcurrentRateMeterStats>
+public class DefaultSubmitterWorkerRateListener<
+    E extends SubmitterWorkerRateMeasuredEvent<? extends SRS, ? extends WRS>, SRS, WRS extends ConcurrentRateMeterStats>
     extends SubmitterWorkerRateListener<E, SRS, WRS> {
   private static final DefaultSubmitterWorkerRateListener<?, ?, ?> instance = new DefaultSubmitterWorkerRateListener<>();
 
@@ -47,8 +48,8 @@ public class DefaultSubmitterWorkerRateListener<E extends SubmitterWorkerRateMea
    * @return An instance of {@link DefaultSubmitterWorkerRateListener}.
    */
   @SuppressWarnings("unchecked")
-  public static <E extends SubmitterWorkerRateMeasuredEvent<SRS, WRS>, SRS, WRS extends ConcurrentRateMeterStats>
-  DefaultSubmitterWorkerRateListener<E, SRS, WRS> instance() {
+  public static <E extends SubmitterWorkerRateMeasuredEvent<? extends SRS, ? extends WRS>, SRS, WRS extends ConcurrentRateMeterStats>
+      DefaultSubmitterWorkerRateListener<E, SRS, WRS> instance() {
     return (DefaultSubmitterWorkerRateListener<E, SRS, WRS>)instance;
   }
 

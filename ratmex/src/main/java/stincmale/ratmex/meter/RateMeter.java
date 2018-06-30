@@ -207,7 +207,7 @@ public interface RateMeter<S> {
    *
    * @return The same value as {@link #rateAverage(long) rateAverage}{@code (}{@link #rightSamplesWindowBoundary()}{@code )}.
    */
-  default double rateAverage() {
+  default double rateAverage() {//TODO override and make final?
     return rateAverage(rightSamplesWindowBoundary());
   }
 

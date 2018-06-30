@@ -22,9 +22,9 @@ import java.util.function.Supplier;
 import stincmale.ratmex.doc.Nullable;
 import stincmale.ratmex.doc.Immutable;
 import stincmale.ratmex.doc.NotThreadSafe;
+import stincmale.ratmex.executor.AbstractSubmitterWorkerRateMeasuringExecutorService;
 import stincmale.ratmex.executor.Rate;
 import stincmale.ratmex.executor.RateMeasuringExecutorService;
-import stincmale.ratmex.executor.SubmitterWorkerRateMeasuringExecutorService;
 import stincmale.ratmex.executor.listener.RateListener;
 import stincmale.ratmex.executor.listener.RateMeasuredEvent;
 import stincmale.ratmex.meter.AbstractRateMeter;
@@ -34,8 +34,8 @@ import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;
 
 /**
  * A configuration of a
- * {@linkplain SubmitterWorkerRateMeasuringExecutorService#scheduleAtFixedRate(Runnable, Rate, SubmitterWorkerScheduledTaskConfig) scheduled task}
- * for {@link SubmitterWorkerRateMeasuringExecutorService}.
+ * {@linkplain AbstractSubmitterWorkerRateMeasuringExecutorService#scheduleAtFixedRate(Runnable, Rate, SubmitterWorkerScheduledTaskConfig) scheduled task}
+ * for {@link AbstractSubmitterWorkerRateMeasuringExecutorService}.
  * <p>
  * The default values:
  * <ul>
@@ -53,6 +53,13 @@ public class SubmitterWorkerScheduledTaskConfig<E extends RateMeasuredEvent, SRS
   private final BiFunction<Long, Duration, ? extends RateMeter<? extends SRS>> submitterRateMeterSupplier;
   private final BiFunction<Long, Duration, ? extends RateMeter<? extends WRS>> workerRateMeterSupplier;
 
+  /**
+   * @param initialDelay See {@link ScheduledTaskConfig#ScheduledTaskConfig(Duration, Duration, Supplier)}.
+   * @param duration See {@link ScheduledTaskConfig#ScheduledTaskConfig(Duration, Duration, Supplier)}.
+   * @param rateListenerSupplier See {@link ScheduledTaskConfig#ScheduledTaskConfig(Duration, Duration, Supplier)}.
+   * @param submitterRateMeterSupplier See {@link Builder#Builder(BiFunction, BiFunction)}.
+   * @param workerRateMeterSupplier See {@link Builder#Builder(BiFunction, BiFunction)}.
+   */
   protected SubmitterWorkerScheduledTaskConfig(
       final Duration initialDelay,
       @Nullable final Duration duration,
@@ -84,7 +91,7 @@ public class SubmitterWorkerScheduledTaskConfig<E extends RateMeasuredEvent, SRS
   }
 
   /**
-   * Specifies a supplier which must be used by {@link SubmitterWorkerRateMeasuringExecutorService}
+   * Specifies a supplier which must be used by {@link AbstractSubmitterWorkerRateMeasuringExecutorService}
    * to create a {@link RateMeter} for measuring the submission rate.
    * <p>
    * Usage example: {@code config.getSubmitterRateMeterSupplier().apply(startNanos, sampleInterval)},
@@ -96,7 +103,7 @@ public class SubmitterWorkerScheduledTaskConfig<E extends RateMeasuredEvent, SRS
   }
 
   /**
-   * Specifies a supplier which must be used by {@link SubmitterWorkerRateMeasuringExecutorService}
+   * Specifies a supplier which must be used by {@link AbstractSubmitterWorkerRateMeasuringExecutorService}
    * to create a {@link RateMeter} for measuring the completion rate.
    * <p>
    * Usage example: {@code config.getWorkerRateMeterSupplier().apply(startNanos, sampleInterval)},
@@ -139,9 +146,9 @@ public class SubmitterWorkerScheduledTaskConfig<E extends RateMeasuredEvent, SRS
     /**
      * @param config Must not be null.
      */
-    public final Builder<E, SRS, WRS> set(final SubmitterWorkerScheduledTaskConfig<E, SRS, WRS> config) {
+    public final Builder<E, SRS, WRS> set(final SubmitterWorkerScheduledTaskConfig<? super E, ? extends SRS, ? extends WRS> config) {
       checkNotNull(config, "config");
-      set((ScheduledTaskConfig<E>)config);
+      super.set(config);
       submitterRateMeterSupplier = config.getSubmitterRateMeterSupplier();
       workerRateMeterSupplier = config.getWorkerRateMeterSupplier();
       return this;

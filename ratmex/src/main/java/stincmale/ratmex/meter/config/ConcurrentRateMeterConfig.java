@@ -183,7 +183,7 @@ public class ConcurrentRateMeterConfig extends RateMeterConfig {
      */
     public final Builder set(final ConcurrentRateMeterConfig config) {
       checkNotNull(config, "config");
-      set((RateMeterConfig)config);
+      super.set(config);
       maxTicksCountAttempts = config.getMaxTicksCountAttempts();
       mode = config.getMode();
       collectStats = config.isCollectStats();

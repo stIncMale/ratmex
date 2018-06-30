@@ -18,15 +18,15 @@ package stincmale.ratmex.executor.listener;
 
 import stincmale.ratmex.doc.Nullable;
 import stincmale.ratmex.doc.NotThreadSafe;
+import stincmale.ratmex.executor.AbstractSubmitterWorkerRateMeasuringExecutorService;
 import stincmale.ratmex.executor.Rate;
 import stincmale.ratmex.executor.config.ScheduledTaskConfig;
-import stincmale.ratmex.executor.SubmitterWorkerRateMeasuringExecutorService;
 import stincmale.ratmex.meter.RateMeter;
 import stincmale.ratmex.meter.RateMeterReading;
 import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;
 
 /**
- *{@link RateMeasuredEvent} used by {@link SubmitterWorkerRateMeasuringExecutorService}.
+ *{@link RateMeasuredEvent} used by {@link AbstractSubmitterWorkerRateMeasuringExecutorService}.
  *
  * @param <SRS> A type that represents {@linkplain RateMeter#stats() statistics} of submitter {@link RateMeter}.
  * @param <WRS> A type that represents {@linkplain RateMeter#stats() statistics} of worker {@link RateMeter}.
@@ -43,10 +43,10 @@ public class SubmitterWorkerRateMeasuredEvent<SRS, WRS> extends RateMeasuredEven
   /**
    * @param targetRate See {@link RateMeasuredEvent#RateMeasuredEvent(Rate)}.
    * @param submissionRate The current submission rate of the
-   * {@linkplain SubmitterWorkerRateMeasuringExecutorService#scheduleAtFixedRate(Runnable, Rate, ScheduledTaskConfig) scheduled task}.
+   * {@linkplain AbstractSubmitterWorkerRateMeasuringExecutorService#scheduleAtFixedRate(Runnable, Rate, ScheduledTaskConfig) scheduled task}.
    * Must not be null.
    * @param completionRate The current completion rate of the
-   * {@linkplain SubmitterWorkerRateMeasuringExecutorService#scheduleAtFixedRate(Runnable, Rate, ScheduledTaskConfig) scheduled task}.
+   * {@linkplain AbstractSubmitterWorkerRateMeasuringExecutorService#scheduleAtFixedRate(Runnable, Rate, ScheduledTaskConfig) scheduled task}.
    * Must not be null.
    * @param submitterRateMeterStats {@linkplain RateMeter#stats() Statistics} of the submitter {@link RateMeter}.
    * @param workerRateMeterStats {@linkplain RateMeter#stats() Statistics} of the worker {@link RateMeter}.
@@ -70,7 +70,7 @@ public class SubmitterWorkerRateMeasuredEvent<SRS, WRS> extends RateMeasuredEven
 
   /**
    * @return The current submission rate of the
-   * {@linkplain SubmitterWorkerRateMeasuringExecutorService#scheduleAtFixedRate(Runnable, Rate, ScheduledTaskConfig) scheduled task}.
+   * {@linkplain AbstractSubmitterWorkerRateMeasuringExecutorService#scheduleAtFixedRate(Runnable, Rate, ScheduledTaskConfig) scheduled task}.
    */
   public final RateMeterReading getSubmissionRate() {
     return submissionRate;
@@ -78,7 +78,7 @@ public class SubmitterWorkerRateMeasuredEvent<SRS, WRS> extends RateMeasuredEven
 
   /**
    * @return The current completion rate of the
-   * {@linkplain SubmitterWorkerRateMeasuringExecutorService#scheduleAtFixedRate(Runnable, Rate, ScheduledTaskConfig) scheduled task}.
+   * {@linkplain AbstractSubmitterWorkerRateMeasuringExecutorService#scheduleAtFixedRate(Runnable, Rate, ScheduledTaskConfig) scheduled task}.
    */
   public final RateMeterReading getCompletionRate() {
     return submissionRate;
