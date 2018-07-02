@@ -19,6 +19,7 @@ package stincmale.ratmex.executor;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -74,8 +75,10 @@ public interface RateMeasuringExecutorService<C extends ScheduledTaskConfig<? ex
    * @return A {@link ScheduledFuture} representing pending completion of the {@code task}.
    * The future's {@link Future#get() get()} method will never return normally,
    * and will throw an exception upon task cancellation or abnormal termination of a task execution.
+   *
+   * @throws RejectedExecutionException If the task cannot be scheduled for execution.
    */
-  ScheduledFuture<?> scheduleAtFixedRate(Runnable task, Rate targetRate, C config);
+  ScheduledFuture<?> scheduleAtFixedRate(Runnable task, Rate targetRate, C config) throws RejectedExecutionException;
 
   /**
    * This method is equivalent to calling {@link #shutdownNow()}.

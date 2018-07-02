@@ -16,17 +16,18 @@
 
 package stincmale.ratmex.executor;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -39,16 +40,11 @@ import stincmale.ratmex.doc.Nullable;
 import stincmale.ratmex.doc.ThreadSafe;
 import stincmale.ratmex.executor.config.ScheduledTaskConfig;
 import stincmale.ratmex.executor.config.SubmitterWorkerScheduledTaskConfig;
-import stincmale.ratmex.executor.listener.DefaultSubmitterWorkerRateListener;
 import stincmale.ratmex.executor.listener.RateListener;
 import stincmale.ratmex.executor.listener.RateMeasuredEvent;
 import stincmale.ratmex.executor.listener.SubmitterWorkerRateMeasuredEvent;
-import stincmale.ratmex.meter.config.ConcurrentRateMeterConfig;
-import stincmale.ratmex.meter.config.ConcurrentRateMeterConfig.Mode;
-import stincmale.ratmex.meter.ConcurrentRateMeterStats;
-import stincmale.ratmex.meter.ConcurrentRingBufferRateMeter;
 import stincmale.ratmex.meter.RateMeter;
-import stincmale.ratmex.meter.RingBufferRateMeter;
+import static java.lang.Math.max;
 import static stincmale.ratmex.internal.util.Constants.EXCLUDE_ASSERTIONS_FROM_BYTECODE;
 import static stincmale.ratmex.internal.util.Preconditions.checkArgument;
 import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;
@@ -86,6 +82,12 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
     C extends SubmitterWorkerScheduledTaskConfig<E, ? extends SRS, ? extends WRS>,
     E extends SubmitterWorkerRateMeasuredEvent<? extends SRS, ? extends WRS>, SRS, WRS>
     implements RateMeasuringExecutorService<C, E> {
+  private static final BlockingQueue<Runnable> emptyQueue = new LinkedBlockingQueue<>(1);
+
+  /**
+   * This field is only used to simplify implementation of methods like {@link #shutdown()}, {@link #awaitTermination(long, TimeUnit)}, etc.
+   */
+  private final ExecutorService self;
   private final ScheduledExecutorService submitter;
   @Nullable
   private final ExecutorService worker;
@@ -96,7 +98,8 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
   /**
    * This constructor wraps provided submitter and worker thus giving a user the maximum agility and control.
    *
-   * @param submitter An externally provided submitter. Must have exactly 1 thread. If this constraint is violated, then the behavior is unspecified.
+   * @param submitter An externally provided submitter. Must have exactly 1 thread (the creation of the thread may be delayed);
+   * if this constraint is violated, then the behavior is unspecified.
    * @param worker An externally provided worker. May have an arbitrary number of threads,
    * including 0 (current-thread executor) and varying number of threads.
    * The submitter submits tasks to the worker by using {@link ExecutorService#execute(Runnable)}.
@@ -128,7 +131,8 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
    * @param submitterThreadFactory A thread factory for submitter threads.
    * @param workerThreadFactory A thread factory for worker threads.
    * @param threadsCount A total number of both submitter and worker threads. {@code threadsCount} \u2208 [1,{@link Integer#MAX_VALUE}].
-   * If {@code threadsCount} is 1, then the number of worker threads is 0, and the submitter takes over worker role and executes tasks by itself.
+   * If {@code threadsCount} is 1, then the number of worker threads is 0, and the submitter takes over worker role and executes tasks by itself;
+   * one may provide the same thread factory as both {@code submitterThreadFactory}, {@code workerThreadFactory} in this case.
    * @param prestartThreads A flag that specifies if all submitter and worker threads must be started
    * upon the construction of {@link AbstractSubmitterWorkerRateMeasuringExecutorService}, causing them to idly wait for work.
    * If false, then all threads are started as soon as the first task is submitted to this executor via any of the exposed methods
@@ -178,6 +182,7 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
     checkNotNull(submitter, "submitter");
     checkArgument(workerThreadsCount >= -1, "workerThreadsCount", "Must be greater than or equal to -1");
     assert EXCLUDE_ASSERTIONS_FROM_BYTECODE || (worker == null && workerThreadsCount == 0) || worker != null;
+    this.self = new ThreadPoolExecutor(0, 1, 0L, TimeUnit.MILLISECONDS, emptyQueue, runnable -> null);
     this.submitter = submitter;
     this.worker = worker;
     this.workerThreadsCount = workerThreadsCount;
@@ -211,11 +216,11 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
    * which in turn happens each time the submitter decides if new tasks need to be submitted to the worker.
    */
   @Override
-  public final ScheduledFuture<?> scheduleAtFixedRate(final Runnable task, final Rate targetRate, final C config) {
+  public final ScheduledFuture<?> scheduleAtFixedRate(final Runnable task, final Rate targetRate, final C config) throws RejectedExecutionException {
     checkNotNull(task, "task");
     checkNotNull(targetRate, "targetRate");
     checkNotNull(config, "config");
-    ensureAllThreadsStartedIfRequired();
+    ensureActiveAndAllThreadsStarted();
     return scheduleAtFixedRate(task, targetRate, config, submitter, getWorker());
   }
 
@@ -230,13 +235,15 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
    * @param worker The worker. In cases when the submitter takes over the worker role, this is the same as {@code submitter}.
    *
    * @return See {@link #scheduleAtFixedRate(Runnable, Rate, SubmitterWorkerScheduledTaskConfig)}.
+   *
+   * @throws RejectedExecutionException See {@link #scheduleAtFixedRate(Runnable, Rate, SubmitterWorkerScheduledTaskConfig)}.
    */
   protected abstract ScheduledFuture<?> scheduleAtFixedRate(
       final Runnable task,
       final Rate targetRate,
       final C config,
       final ScheduledExecutorService submitter,
-      final ExecutorService worker);
+      final ExecutorService worker) throws RejectedExecutionException;
 
   @Override
   public final void close() {
@@ -244,92 +251,105 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
   }
 
   /**
-   * Delegates calls to the submitter and to the worker if and only if those were created by {@link AbstractSubmitterWorkerRateMeasuringExecutorService},
-   * or were provided externally with enabled {@code shutdownSubmitterAndWorker} option.
+   * {@inheritDoc}
+   * <p>
+   * Also forwards calls to the submitter and to the worker
+   * if and only if those were created by {@link AbstractSubmitterWorkerRateMeasuringExecutorService}, or were
+   * {@linkplain #AbstractSubmitterWorkerRateMeasuringExecutorService(ScheduledExecutorService, ExecutorService, int, boolean) provided externally}
+   * with {@code shutdownSubmitterAndWorker} option enabled.
    */
   @Override
   public final void shutdown() {
-    if (shutdownSubmitterAndWorker) {
-      try {
-        submitter.shutdown();
-      } finally {
-        if (worker != null) {
-          worker.shutdown();
+    try {
+      self.shutdown();
+    } finally {
+      if (shutdownSubmitterAndWorker) {
+        try {
+          submitter.shutdown();
+        } finally {
+          if (worker != null) {
+            worker.shutdown();
+          }
         }
       }
     }
   }
 
   /**
-   * Delegates calls to the submitter and to the worker if and only if those were created by {@link AbstractSubmitterWorkerRateMeasuringExecutorService},
-   * or were provided externally with enabled {@code shutdownSubmitterAndWorker} option.
+   * {@inheritDoc}
+   * <p>
+   * Also forwards calls to the submitter and to the worker
+   * if and only if those were created by {@link AbstractSubmitterWorkerRateMeasuringExecutorService}, or were
+   * {@linkplain #AbstractSubmitterWorkerRateMeasuringExecutorService(ScheduledExecutorService, ExecutorService, int, boolean) provided externally}
+   * with {@code shutdownSubmitterAndWorker} option enabled.
    *
    * @return A list that contains combined results from the submitter and the worker,
-   * or an {@linkplain Collections#emptyList() empty list} if the call was not delegated to them.
+   * or an {@linkplain Collections#emptyList() empty list} if the call was not forwarded to them.
    */
   @Override
   public final List<Runnable> shutdownNow() {
     final List<Runnable> result;
-    if (shutdownSubmitterAndWorker) {
-      result = new ArrayList<>();
-      try {
-        result.addAll(submitter.shutdownNow());
-      } finally {
-        if (worker != null) {
-          result.addAll(worker.shutdownNow());
+    try {
+      self.shutdownNow();
+    } finally {
+      if (shutdownSubmitterAndWorker) {
+        result = new ArrayList<>();
+        try {
+          result.addAll(submitter.shutdownNow());
+        } finally {
+          if (worker != null) {
+            result.addAll(worker.shutdownNow());
+          }
         }
+      } else {
+        result = Collections.emptyList();
       }
-    } else {
-      result = Collections.emptyList();
     }
     return result;
   }
 
-  /**
-   * Delegates calls to the submitter and to the worker.
-   * Note that if the submitter and the worker were externally provided, then this method may return true
-   * even if neither method {@link #shutdown()} nor {@link #shutdownNow()} was executed on this object.
-   *
-   * @return true if either the submitter or the worker return true; false otherwise.
-   */
   @Override
   public final boolean isShutdown() {
-    return submitter.isShutdown() || getWorker().isShutdown();
+    return self.isShutdown();
   }
 
   /**
-   * Delegates calls to the submitter and to the worker.
-   * Note that if the submitter and the worker were externally provided, then this method may return true
-   * even if neither method {@link #shutdown()} nor {@link #shutdownNow()} was executed on this object.
-   *
-   * @return true if both the submitter and the worker return true; false otherwise.
+   * {@inheritDoc}
+   * <p>
+   * Also forwards calls to the submitter and to the worker
+   * if and only if those were created by {@link AbstractSubmitterWorkerRateMeasuringExecutorService}, or were
+   * {@linkplain #AbstractSubmitterWorkerRateMeasuringExecutorService(ScheduledExecutorService, ExecutorService, int, boolean) provided externally}
+   * with {@code shutdownSubmitterAndWorker} option enabled.
    */
   @Override
   public final boolean isTerminated() {
-    return submitter.isTerminated() && getWorker().isTerminated();
+    return self.isTerminated() &&
+      (!shutdownSubmitterAndWorker || (submitter.isTerminated() && (worker == null || worker.isTerminated())));
   }
 
   /**
-   * Delegates calls to the submitter and to the worker, while making sure that both calls together do not take more than the specified timeout.
-   * There is no guarantee beyond best-effort attempt to not exceed this duration.
+   * {@inheritDoc}
+   * <p>
+   * Also forwards calls to the submitter and to the worker
+   * if and only if those were created by {@link AbstractSubmitterWorkerRateMeasuringExecutorService}, or were
+   * {@linkplain #AbstractSubmitterWorkerRateMeasuringExecutorService(ScheduledExecutorService, ExecutorService, int, boolean) provided externally}
+   * with {@code shutdownSubmitterAndWorker} option enabled.
    *
-   * @return true if both the submitter and the worker return true; false otherwise.
+   * @param timeout {@inheritDoc}.
+   * There is no guarantee beyond best-effort attempt to not exceed this duration.
    */
   @Override
   public final boolean awaitTermination(final long timeout, final TimeUnit unit) throws InterruptedException {
     checkNotNull(unit, "unit");
-    final long timeoutDurationNanos = unit.toNanos(timeout);
     final long startNanos = System.nanoTime();
+    final long timeoutNanos = unit.toNanos(timeout);
     boolean result = false;
-    try {
-      result = submitter.awaitTermination(timeout, unit);
-    } finally {
-      if (worker != null) {
-        final long passedDurationNanos = System.nanoTime() - startNanos;
-        if (passedDurationNanos < timeoutDurationNanos) {
-          result = result && worker.awaitTermination(timeoutDurationNanos - passedDurationNanos, TimeUnit.NANOSECONDS);
-        }
-      }
+    self.awaitTermination(timeout, unit);
+    long remainingNanos = max(System.nanoTime() - startNanos, 0);
+    result = result && submitter.awaitTermination(remainingNanos, TimeUnit.NANOSECONDS);
+    if (worker != null) {
+      remainingNanos = max(System.nanoTime() - startNanos, 0);
+      result = result && worker.awaitTermination(remainingNanos, TimeUnit.NANOSECONDS);
     }
     return result;
   }
@@ -340,8 +360,8 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
    * {@inheritDoc}
    */
   @Override
-  public final <T> Future<T> submit(final Callable<T> task) {
-    ensureAllThreadsStartedIfRequired();
+  public final <T> Future<T> submit(final Callable<T> task) throws RejectedExecutionException {
+    ensureActiveAndAllThreadsStarted();
     return getWorker().submit(task);
   }
 
@@ -351,8 +371,8 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
    * {@inheritDoc}
    */
   @Override
-  public final <T> Future<T> submit(final Runnable task, final T result) {
-    ensureAllThreadsStartedIfRequired();
+  public final <T> Future<T> submit(final Runnable task, final T result) throws RejectedExecutionException {
+    ensureActiveAndAllThreadsStarted();
     return getWorker().submit(task, result);
   }
 
@@ -362,8 +382,8 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
    * {@inheritDoc}
    */
   @Override
-  public final Future<?> submit(final Runnable task) {
-    ensureAllThreadsStartedIfRequired();
+  public final Future<?> submit(final Runnable task) throws RejectedExecutionException {
+    ensureActiveAndAllThreadsStarted();
     return getWorker().submit(task);
   }
 
@@ -373,8 +393,8 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
    * {@inheritDoc}
    */
   @Override
-  public final <T> List<Future<T>> invokeAll(final Collection<? extends Callable<T>> tasks) throws InterruptedException {
-    ensureAllThreadsStartedIfRequired();
+  public final <T> List<Future<T>> invokeAll(final Collection<? extends Callable<T>> tasks) throws InterruptedException, RejectedExecutionException {
+    ensureActiveAndAllThreadsStarted();
     return getWorker().invokeAll(tasks);
   }
 
@@ -385,8 +405,8 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
    */
   @Override
   public final <T> List<Future<T>> invokeAll(final Collection<? extends Callable<T>> tasks, final long timeout, final TimeUnit unit)
-      throws InterruptedException {
-    ensureAllThreadsStartedIfRequired();
+      throws InterruptedException, RejectedExecutionException {
+    ensureActiveAndAllThreadsStarted();
     return getWorker().invokeAll(tasks, timeout, unit);
   }
 
@@ -396,8 +416,9 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
    * {@inheritDoc}
    */
   @Override
-  public final <T> T invokeAny(final Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
-    ensureAllThreadsStartedIfRequired();
+  public final <T> T invokeAny(final Collection<? extends Callable<T>> tasks)
+      throws InterruptedException, ExecutionException, RejectedExecutionException {
+    ensureActiveAndAllThreadsStarted();
     return getWorker().invokeAny(tasks);
   }
 
@@ -408,8 +429,8 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
    */
   @Override
   public final <T> T invokeAny(final Collection<? extends Callable<T>> tasks, final long timeout, final TimeUnit unit)
-      throws InterruptedException, ExecutionException, TimeoutException {
-    ensureAllThreadsStartedIfRequired();
+      throws InterruptedException, ExecutionException, TimeoutException, RejectedExecutionException {
+    ensureActiveAndAllThreadsStarted();
     return getWorker().invokeAny(tasks, timeout, unit);
   }
 
@@ -419,12 +440,15 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
    * {@inheritDoc}
    */
   @Override
-  public final void execute(final Runnable task) {
-    ensureAllThreadsStartedIfRequired();
+  public final void execute(final Runnable task) throws RejectedExecutionException {
+    ensureActiveAndAllThreadsStarted();
     getWorker().execute(task);
   }
 
-  private final void ensureAllThreadsStartedIfRequired() {
+  private final void ensureActiveAndAllThreadsStarted() throws RejectedExecutionException {
+    if (isShutdown()) {
+      throw new RejectedExecutionException();
+    }
     if (startAllThreads.get() && startAllThreads.compareAndSet(true, false)) {
       startAllThreads(submitter, 1);
       startAllThreads(worker, workerThreadsCount);
@@ -474,8 +498,8 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
   }
 
   /**
-   * This method must only be called for {@link ThreadPoolExecutor} that was constructed by {@link AbstractSubmitterWorkerRateMeasuringExecutorService},
-   * i.e. was not received from somewhere.
+   * This method must only be called for {@link ThreadPoolExecutor}
+   * that was constructed by {@link AbstractSubmitterWorkerRateMeasuringExecutorService}, i.e. was not received from somewhere.
    */
   private static final void startAllThreads(final ExecutorService executor, final int threadsCount) {
     assert EXCLUDE_ASSERTIONS_FROM_BYTECODE || executor instanceof ThreadPoolExecutor;
