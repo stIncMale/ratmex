@@ -35,21 +35,21 @@ import stincmale.ratmex.performance.util.PerformanceTestTag;
 
 /**
  * <pre>{@code
- * Benchmark                         Mode  Cnt    Score   Error   Units
- * LongIntPerformanceTest.divInt    thrpt   80   40.053 ± 0.257  ops/us
- * LongIntPerformanceTest.divLong   thrpt   80   13.765 ± 0.067  ops/us
- * LongIntPerformanceTest.multInt   thrpt   80  129.498 ± 1.327  ops/us
- * LongIntPerformanceTest.multLong  thrpt   80  151.811 ± 1.636  ops/us
- * LongIntPerformanceTest.sumInt    thrpt   80  140.531 ± 2.560  ops/us
- * LongIntPerformanceTest.sumLong   thrpt   80  138.163 ± 4.309  ops/us
+ * Benchmark                         Mode  Cnt    Score    Error   Units
+ * LongIntPerformanceTest.divInt    thrpt   80   38.843 ±  1.248  ops/us
+ * LongIntPerformanceTest.divLong   thrpt   80   12.112 ±  0.334  ops/us
+ * LongIntPerformanceTest.multInt   thrpt   80  172.284 ±  9.633  ops/us
+ * LongIntPerformanceTest.multLong  thrpt   80  190.793 ± 11.651  ops/us
+ * LongIntPerformanceTest.sumInt    thrpt   80  166.411 ±  7.004  ops/us
+ * LongIntPerformanceTest.sumLong   thrpt   80  169.654 ±  4.665  ops/us
  * }</pre>
  */
 @Disabled
 @Tag(PerformanceTestTag.VALUE)
 @TestInstance(Lifecycle.PER_CLASS)
 public class LongIntPerformanceTest {
-  private static int[] operandsInt = {-123456789, -1234567, -12345, -123, 123, 12345, 1234567, 123456789};
-  private static long[] operandsLong = {-123456789, -1234567, -12345, -123, 123, 12345, 1234567, 123456789};
+  private static final int[] operandsInt = {-123456789, -1234567, -12345, -123, 123, 12345, 1234567, 123456789};
+  private static final long[] operandsLong = {-123456789, -1234567, -12345, -123, 123, 12345, 1234567, 123456789};
 
   public LongIntPerformanceTest() {
   }
