@@ -23,8 +23,11 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+import stincmale.ratmex.common.NanosComparator;
 import stincmale.ratmex.doc.Nullable;
 import stincmale.ratmex.doc.ThreadSafe;
+import stincmale.ratmex.executor.auxiliary.SystemTime;
+import stincmale.ratmex.executor.auxiliary.Time;
 import stincmale.ratmex.executor.config.SubmitterWorkerScheduledTaskConfig;
 import stincmale.ratmex.executor.listener.DefaultSubmitterWorkerRateListener;
 import stincmale.ratmex.executor.listener.RateListener;
@@ -98,32 +101,35 @@ public final class SubmitterWorkerRateMeasuringExecutorService extends AbstractS
   }
 
   /**
-   * See {@link AbstractSubmitterWorkerRateMeasuringExecutorService#AbstractSubmitterWorkerRateMeasuringExecutorService(ScheduledExecutorService, ExecutorService, int, boolean)}.
+   * See {@link AbstractSubmitterWorkerRateMeasuringExecutorService#AbstractSubmitterWorkerRateMeasuringExecutorService(ScheduledExecutorService, ExecutorService, int, boolean, Time)}.
+   * Uses {@link SystemTime} as {@link Time}.
    */
   public SubmitterWorkerRateMeasuringExecutorService(
     final ScheduledExecutorService submitter,
     final ExecutorService worker,
     final int workerThreadsCount,
     final boolean shutdownSubmitterAndWorker) {
-    super(submitter, worker, workerThreadsCount, shutdownSubmitterAndWorker);
+    super(submitter, worker, workerThreadsCount, shutdownSubmitterAndWorker, SystemTime.instance());
   }
 
   /**
-   * See {@link AbstractSubmitterWorkerRateMeasuringExecutorService#AbstractSubmitterWorkerRateMeasuringExecutorService(ThreadFactory, ThreadFactory, int, boolean)}.
+   * See {@link AbstractSubmitterWorkerRateMeasuringExecutorService#AbstractSubmitterWorkerRateMeasuringExecutorService(ThreadFactory, ThreadFactory, int, boolean, Time)}.
+   * Uses {@link SystemTime} as {@link Time}.
    */
   public SubmitterWorkerRateMeasuringExecutorService(
     final ThreadFactory submitterThreadFactory,
     final ThreadFactory workerThreadFactory,
     final int threadsCount,
     final boolean prestartThreads) {
-    super(submitterThreadFactory, workerThreadFactory, threadsCount, prestartThreads);
+    super(submitterThreadFactory, workerThreadFactory, threadsCount, prestartThreads, SystemTime.instance());
   }
 
   /**
-   * See {@link AbstractSubmitterWorkerRateMeasuringExecutorService#AbstractSubmitterWorkerRateMeasuringExecutorService(int, boolean)}.
+   * See {@link AbstractSubmitterWorkerRateMeasuringExecutorService#AbstractSubmitterWorkerRateMeasuringExecutorService(int, boolean, Time)}.
+   * Uses {@link SystemTime} as {@link Time}.
    */
   public SubmitterWorkerRateMeasuringExecutorService(final int threadsCount, final boolean prestartThreads) {
-    super(threadsCount, prestartThreads);
+    super(threadsCount, prestartThreads, SystemTime.instance());
   }
 
   /**
@@ -152,10 +158,14 @@ public final class SubmitterWorkerRateMeasuringExecutorService extends AbstractS
     checkNotNull(config, "config");
     checkNotNull(submitter, "submitter");
     checkNotNull(submitter, "worker");
-    final long currentNanos = System.nanoTime();
+    final Time time = getTime();
+    final long currentNanos = time.nanoTime();
     final long delayNanos = config.getInitialDelay()
         .toNanos();
     final long startNanos = currentNanos + delayNanos;//this may overflow, and it is as intended
+    final long endNanos = config.getDuration()
+        .map(duration -> startNanos + duration.toNanos())//this may overflow, and it is as intended
+        .orElse(startNanos + Long.MAX_VALUE);//this may overflow, and it is as intended
     final Duration sampleInterval = targetRate.getUnit();
     final RateMeter<?> submitterRateMeter = config.getSubmitterRateMeterSupplier()
         .apply(startNanos, sampleInterval);
@@ -174,13 +184,22 @@ public final class SubmitterWorkerRateMeasuringExecutorService extends AbstractS
             targetRate, new RateMeterReading(), new RateMeterReading(), null, workerRateMeter.stats()
             .orElse(null));
     final SubmitterTask<SubmitterWorkerRateMeasuredEvent<Object, ConcurrentRateMeterStats>, Object, ConcurrentRateMeterStats>
-        submitterTask = new SubmitterTask<>(targetRate, submitterRateMeter, workerRateMeter, rateListener, rateMeasuredEvent);
-    final ScheduledFuture<?> result = submitter.scheduleAtFixedRate(submitterTask, delayNanos, periodNanos, TimeUnit.NANOSECONDS);
-    submitterTask.setExternallyVisibleFuture(result);
+        submitterTask = new SubmitterTask<>(time, task, targetRate, endNanos, submitterRateMeter, workerRateMeter, rateListener, rateMeasuredEvent);
+    @Nullable
+    ScheduledFuture<?> result = null;
+    try {
+      result = submitter.scheduleAtFixedRate(submitterTask, delayNanos, periodNanos, TimeUnit.NANOSECONDS);
+    } finally {
+      submitterTask.setExternallyVisibleFuture(result);
+    }
     return result;
   }
 
   private static final class SubmitterTask<E extends SubmitterWorkerRateMeasuredEvent<? extends SRS, ? extends WRS>, SRS, WRS> implements Runnable {
+    private final Time time;
+    private final Runnable workerTask;
+    private final Rate targetRate;
+    private final long endNanos;
     private final RateMeter<? extends SRS> submitterRateMeter;
     private final RateMeter<? extends WRS> workerRateMeter;
     @Nullable
@@ -189,13 +208,25 @@ public final class SubmitterWorkerRateMeasuringExecutorService extends AbstractS
     private final E rateMeasuredEvent;
     @Nullable
     private volatile ScheduledFuture<?> externallyVisibleFuture;
+    /**
+     * Plain field because {@link ScheduledExecutorService#scheduleAtFixedRate(Runnable, long, long, TimeUnit)}
+     * guarantees that {@link #run()} will not be executed concurrently.
+     */
+    private long lastSubmitTNanos;
 
     private SubmitterTask(
+      final Time time,
+      final Runnable workerTask,
       final Rate targetRate,
+      final long endNanos,
       final RateMeter<? extends SRS> submitterRateMeter,
       final RateMeter<? extends WRS> workerRateMeter,
       @Nullable final RateListener<? super E> rateListener,
       @Nullable final E rateMeasuredEvent) {
+      this.time = time;
+      this.workerTask = workerTask;
+      this.targetRate = targetRate;
+      this.endNanos = endNanos;
       this.submitterRateMeter = submitterRateMeter;
       this.workerRateMeter = workerRateMeter;
       assert EXCLUDE_ASSERTIONS_FROM_BYTECODE ||
@@ -204,18 +235,27 @@ public final class SubmitterWorkerRateMeasuringExecutorService extends AbstractS
       this.rateMeasuredEvent = rateMeasuredEvent;
     }
 
-    private final void setExternallyVisibleFuture(final ScheduledFuture<?> future) {
+    /**
+     * @param future null means that this {@link SubmitterTask} probably wasn't actually scheduled.
+     */
+    //TODO pass exceptions to externallyVisibleFuture, check cancellations
+    private final void setExternallyVisibleFuture(@Nullable final ScheduledFuture<?> future) {
       externallyVisibleFuture = future;
     }
 
     @Override
     public final void run() {
-      final long tNanos = System.nanoTime();
-      //TODO implement
-      submitterRateMeter.rate(tNanos, rateMeasuredEvent.getSubmissionRate());
-      if (rateListener != null) {
-        workerRateMeter.rate(tNanos, rateMeasuredEvent.getCompletionRate());
-        rateListener.onMeasurement(rateMeasuredEvent);
+      final long tNanos = time.nanoTime();
+      if (NanosComparator.compare(endNanos, tNanos) <= 0) {
+        //TODO cancel externallyVisibleFuture with timeout
+      } else if ((externallyVisibleFuture == null || !externallyVisibleFuture.isDone()) &&
+          !Thread.currentThread().isInterrupted()) {//it's OK to proceed
+        //TODO implement
+        submitterRateMeter.rate(tNanos, rateMeasuredEvent.getSubmissionRate());
+        if (rateListener != null) {
+          workerRateMeter.rate(tNanos, rateMeasuredEvent.getCompletionRate());
+          rateListener.onMeasurement(rateMeasuredEvent);
+        }
       }
     }
   }

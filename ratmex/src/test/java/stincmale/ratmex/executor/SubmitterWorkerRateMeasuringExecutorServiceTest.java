@@ -102,7 +102,7 @@ public final class SubmitterWorkerRateMeasuringExecutorServiceTest {
   }
 
   @Test
-  public final void shutdownWithSubmitterAndWorker1() {
+  public final void shutdownWithSubmitterAndWorker1() throws InterruptedException {
     final ScheduledExecutorService submitter = Executors.newScheduledThreadPool(1);
     final ExecutorService worker = Executors.newFixedThreadPool(2);
     final SubmitterWorkerRateMeasuringExecutorService executor;
@@ -115,6 +115,7 @@ public final class SubmitterWorkerRateMeasuringExecutorServiceTest {
       assertFalse(worker.isTerminated());
       assertFalse(ex.isShutdown());
       assertFalse(ex.isTerminated());
+      assertFalse(ex.awaitTermination(10, TimeUnit.MILLISECONDS));
     }
     assertTrue(submitter.isShutdown());
     assertTrue(worker.isShutdown());
@@ -122,10 +123,11 @@ public final class SubmitterWorkerRateMeasuringExecutorServiceTest {
     assertTrue(worker.isTerminated());
     assertTrue(executor.isShutdown());
     assertTrue(executor.isTerminated());
+    assertTrue(executor.awaitTermination(10, TimeUnit.MILLISECONDS));
   }
 
   @Test
-  public final void shutdownWithSubmitterAndWorker2() {
+  public final void shutdownWithSubmitterAndWorker2() throws InterruptedException {
     final ScheduledExecutorService submitter = Executors.newScheduledThreadPool(1);
     submitter.shutdownNow();
     final ExecutorService worker = Executors.newFixedThreadPool(2);
@@ -140,13 +142,15 @@ public final class SubmitterWorkerRateMeasuringExecutorServiceTest {
       assertTrue(worker.isTerminated());
       assertFalse(ex.isShutdown());
       assertFalse(ex.isTerminated());
+      assertFalse(ex.awaitTermination(10, TimeUnit.MILLISECONDS));
     }
     assertTrue(executor.isShutdown());
     assertTrue(executor.isTerminated());
+    assertTrue(executor.awaitTermination(10, TimeUnit.MILLISECONDS));
   }
 
   @Test
-  public final void shutdownWithoutSubmitterAndWorker1() {
+  public final void shutdownWithoutSubmitterAndWorker1() throws InterruptedException {
     final ScheduledExecutorService submitter = Executors.newScheduledThreadPool(1);
     final ExecutorService worker = Executors.newFixedThreadPool(2);
     final SubmitterWorkerRateMeasuringExecutorService executor;
@@ -159,6 +163,7 @@ public final class SubmitterWorkerRateMeasuringExecutorServiceTest {
       assertFalse(worker.isTerminated());
       assertFalse(ex.isShutdown());
       assertFalse(ex.isTerminated());
+      assertFalse(ex.awaitTermination(10, TimeUnit.MILLISECONDS));
     }
     assertFalse(submitter.isShutdown());
     assertFalse(worker.isShutdown());
@@ -166,10 +171,11 @@ public final class SubmitterWorkerRateMeasuringExecutorServiceTest {
     assertFalse(worker.isTerminated());
     assertTrue(executor.isShutdown());
     assertTrue(executor.isTerminated());
+    assertTrue(executor.awaitTermination(10, TimeUnit.MILLISECONDS));
   }
 
   @Test
-  public final void shutdownWithoutSubmitterAndWorker2() {
+  public final void shutdownWithoutSubmitterAndWorker2() throws InterruptedException {
     final ScheduledExecutorService submitter = Executors.newScheduledThreadPool(1);
     submitter.shutdownNow();
     final ExecutorService worker = Executors.newFixedThreadPool(2);
@@ -184,16 +190,18 @@ public final class SubmitterWorkerRateMeasuringExecutorServiceTest {
       assertTrue(worker.isTerminated());
       assertFalse(ex.isShutdown());
       assertFalse(ex.isTerminated());
+      assertFalse(ex.awaitTermination(10, TimeUnit.MILLISECONDS));
     }
     assertTrue(executor.isShutdown());
     assertTrue(executor.isTerminated());
+    assertTrue(executor.awaitTermination(10, TimeUnit.MILLISECONDS));
   }
 
   private static final class CountingThreadFactory implements ThreadFactory {
     private AtomicInteger count;
 
     private CountingThreadFactory() {
-      count = new AtomicInteger();
+      count = new AtomicInteger(0);
     }
 
     @Override

@@ -16,6 +16,7 @@
 
 package stincmale.ratmex.executor.listener;
 
+import java.util.Optional;
 import stincmale.ratmex.doc.Nullable;
 import stincmale.ratmex.doc.NotThreadSafe;
 import stincmale.ratmex.executor.AbstractSubmitterWorkerRateMeasuringExecutorService;
@@ -87,17 +88,15 @@ public class SubmitterWorkerRateMeasuredEvent<SRS, WRS> extends RateMeasuredEven
   /**
    * @return {@linkplain RateMeter#stats() Statistics} of the submitter {@link RateMeter}.
    */
-  @Nullable
-  public final SRS getSubmitterRateMeterStats() {
-    return submitterRateMeterStats;
+  public final Optional<SRS> getSubmitterRateMeterStats() {
+    return Optional.ofNullable(submitterRateMeterStats);
   }
 
   /**
    * @return {@linkplain RateMeter#stats() Statistics} of the worker {@link RateMeter}.
    */
-  @Nullable
-  public final WRS getWorkerRateMeterStats() {
-    return workerRateMeterStats;
+  public final Optional<WRS >getWorkerRateMeterStats() {
+    return Optional.ofNullable(workerRateMeterStats);
   }
 
   @Override

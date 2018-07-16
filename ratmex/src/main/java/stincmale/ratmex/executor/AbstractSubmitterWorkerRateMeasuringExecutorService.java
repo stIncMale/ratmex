@@ -38,6 +38,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import stincmale.ratmex.doc.Nullable;
 import stincmale.ratmex.doc.ThreadSafe;
+import stincmale.ratmex.executor.auxiliary.Time;
 import stincmale.ratmex.executor.config.ScheduledTaskConfig;
 import stincmale.ratmex.executor.config.SubmitterWorkerScheduledTaskConfig;
 import stincmale.ratmex.executor.listener.RateListener;
@@ -84,6 +85,7 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
     implements RateMeasuringExecutorService<C, E> {
   private static final BlockingQueue<Runnable> emptyQueue = new LinkedBlockingQueue<>(1);
 
+  private final Time time;
   /**
    * This field is only used to simplify implementation of methods like {@link #shutdown()}, {@link #awaitTermination(long, TimeUnit)}, etc.
    */
@@ -111,18 +113,21 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
    * If this constraint is violated, then the {@link RateMeasuringExecutorService} may fail to conform to the target rate because of batching.
    * @param shutdownSubmitterAndWorker A flag that specifies whether the externally provided submitter and the worker must be
    * shut down when this {@link ExecutorService} is shutting down.
+   * @param time {@link Time} that must be used by this {@link AbstractSubmitterWorkerRateMeasuringExecutorService}.
    */
   protected AbstractSubmitterWorkerRateMeasuringExecutorService(
       final ScheduledExecutorService submitter,
       final ExecutorService worker,
       final int workerThreadsCount,
-      final boolean shutdownSubmitterAndWorker) {
+      final boolean shutdownSubmitterAndWorker,
+      final Time time) {
     this(
         checkNotNull(submitter, "submitter"),
         checkNotNull(worker, "worker"),
         workerThreadsCount,
         false,
-        shutdownSubmitterAndWorker);
+        shutdownSubmitterAndWorker,
+        checkNotNull(time, "time"));
   }
 
   /**
@@ -137,6 +142,7 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
    * upon the construction of {@link AbstractSubmitterWorkerRateMeasuringExecutorService}, causing them to idly wait for work.
    * If false, then all threads are started as soon as the first task is submitted to this executor via any of the exposed methods
    * (e.g. {@linkplain #scheduleAtFixedRate(Runnable, Rate, C)}, {@link #execute(Runnable)}, etc.).
+   * @param time {@link Time} that must be used by this {@link AbstractSubmitterWorkerRateMeasuringExecutorService}.
    *
    * @see #scheduleAtFixedRate(Runnable, Rate, SubmitterWorkerScheduledTaskConfig, ScheduledExecutorService, ExecutorService)
    */
@@ -144,13 +150,15 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
       final ThreadFactory submitterThreadFactory,
       final ThreadFactory workerThreadFactory,
       final int threadsCount,
-      final boolean prestartThreads) {
+      final boolean prestartThreads,
+      final Time time) {
     this(
         createSubmitter(checkNotNull(submitterThreadFactory, "submitterThreadFactory"), prestartThreads),
         createWorker(checkNotNull(workerThreadFactory, "workerThreadFactory"), checkThreadsCountPositive(threadsCount) - 1, prestartThreads),
         threadsCount - 1,
         !prestartThreads,
-        true);
+        true,
+        checkNotNull(time, "time"));
   }
 
   /**
@@ -163,14 +171,16 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
    * upon the construction of {@link AbstractSubmitterWorkerRateMeasuringExecutorService}, causing them to idly wait for work.
    * If false, then all threads are started as soon as the first task is submitted to this executor via any of the exposed methods
    * (e.g. {@linkplain #scheduleAtFixedRate(Runnable, Rate, C)}, {@link #execute(Runnable)}, etc.).
+   * @param time {@link Time} that must be used by this {@link AbstractSubmitterWorkerRateMeasuringExecutorService}.
    */
-  protected AbstractSubmitterWorkerRateMeasuringExecutorService(final int threadsCount, final boolean prestartThreads) {
+  protected AbstractSubmitterWorkerRateMeasuringExecutorService(final int threadsCount, final boolean prestartThreads, final Time time) {
     this(
         createSubmitter(null, prestartThreads),
         createWorker(null, checkThreadsCountPositive(threadsCount) - 1, prestartThreads),
         threadsCount - 1,
         !prestartThreads,
-        true);
+        true,
+        checkNotNull(time, "time"));
   }
 
   private AbstractSubmitterWorkerRateMeasuringExecutorService(
@@ -178,16 +188,26 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
       @Nullable final ExecutorService worker,
       final int workerThreadsCount,
       final boolean startAllThreadsOnFirstTask,
-      final boolean shutdownSubmitterAndWorker) {
-    checkNotNull(submitter, "submitter");
-    checkArgument(workerThreadsCount >= -1, "workerThreadsCount", "Must be greater than or equal to -1");
+      final boolean shutdownSubmitterAndWorker,
+      final Time time) {
+    assert EXCLUDE_ASSERTIONS_FROM_BYTECODE || submitter != null;
     assert EXCLUDE_ASSERTIONS_FROM_BYTECODE || (worker == null && workerThreadsCount == 0) || worker != null;
+    assert EXCLUDE_ASSERTIONS_FROM_BYTECODE || workerThreadsCount >= -1;
+    assert EXCLUDE_ASSERTIONS_FROM_BYTECODE || time != null;
+    this.time = time;
     this.self = new ThreadPoolExecutor(0, 1, 0L, TimeUnit.MILLISECONDS, emptyQueue, runnable -> null);
     this.submitter = submitter;
     this.worker = worker;
     this.workerThreadsCount = workerThreadsCount;
     this.startAllThreads = new AtomicBoolean(startAllThreadsOnFirstTask);
     this.shutdownSubmitterAndWorker = shutdownSubmitterAndWorker;
+  }
+
+  /**
+   * @return {@link Time} that must be used by this {@link AbstractSubmitterWorkerRateMeasuringExecutorService}.
+   */
+  protected final Time getTime() {
+    return time;
   }
 
   /**
@@ -255,7 +275,7 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
    * <p>
    * Also forwards calls to the submitter and to the worker
    * if and only if those were created by {@link AbstractSubmitterWorkerRateMeasuringExecutorService}, or were
-   * {@linkplain #AbstractSubmitterWorkerRateMeasuringExecutorService(ScheduledExecutorService, ExecutorService, int, boolean) provided externally}
+   * {@linkplain #AbstractSubmitterWorkerRateMeasuringExecutorService(ScheduledExecutorService, ExecutorService, int, boolean, Time) provided externally}
    * with {@code shutdownSubmitterAndWorker} option enabled.
    */
   @Override
@@ -280,7 +300,7 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
    * <p>
    * Also forwards calls to the submitter and to the worker
    * if and only if those were created by {@link AbstractSubmitterWorkerRateMeasuringExecutorService}, or were
-   * {@linkplain #AbstractSubmitterWorkerRateMeasuringExecutorService(ScheduledExecutorService, ExecutorService, int, boolean) provided externally}
+   * {@linkplain #AbstractSubmitterWorkerRateMeasuringExecutorService(ScheduledExecutorService, ExecutorService, int, boolean, Time) provided externally}
    * with {@code shutdownSubmitterAndWorker} option enabled.
    *
    * @return A list that contains combined results from the submitter and the worker,
@@ -318,7 +338,7 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
    * <p>
    * Also forwards calls to the submitter and to the worker
    * if and only if those were created by {@link AbstractSubmitterWorkerRateMeasuringExecutorService}, or were
-   * {@linkplain #AbstractSubmitterWorkerRateMeasuringExecutorService(ScheduledExecutorService, ExecutorService, int, boolean) provided externally}
+   * {@linkplain #AbstractSubmitterWorkerRateMeasuringExecutorService(ScheduledExecutorService, ExecutorService, int, boolean, Time) provided externally}
    * with {@code shutdownSubmitterAndWorker} option enabled.
    */
   @Override
@@ -332,7 +352,7 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
    * <p>
    * Also forwards calls to the submitter and to the worker
    * if and only if those were created by {@link AbstractSubmitterWorkerRateMeasuringExecutorService}, or were
-   * {@linkplain #AbstractSubmitterWorkerRateMeasuringExecutorService(ScheduledExecutorService, ExecutorService, int, boolean) provided externally}
+   * {@linkplain #AbstractSubmitterWorkerRateMeasuringExecutorService(ScheduledExecutorService, ExecutorService, int, boolean, Time) provided externally}
    * with {@code shutdownSubmitterAndWorker} option enabled.
    *
    * @param timeout {@inheritDoc}.
@@ -341,15 +361,18 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
   @Override
   public final boolean awaitTermination(final long timeout, final TimeUnit unit) throws InterruptedException {
     checkNotNull(unit, "unit");
-    final long startNanos = System.nanoTime();
+    final long startNanos = time.nanoTime();
     final long timeoutNanos = unit.toNanos(timeout);
-    boolean result = false;
-    self.awaitTermination(timeout, unit);
-    long remainingNanos = max(System.nanoTime() - startNanos, 0);
-    result = result && submitter.awaitTermination(remainingNanos, TimeUnit.NANOSECONDS);
-    if (worker != null) {
-      remainingNanos = max(System.nanoTime() - startNanos, 0);
-      result = result && worker.awaitTermination(remainingNanos, TimeUnit.NANOSECONDS);
+    boolean result = self.awaitTermination(timeout, unit);
+    if (result && shutdownSubmitterAndWorker) {
+      long remainingNanos = max(time.nanoTime() - startNanos, 0);
+      result = submitter.awaitTermination(remainingNanos, TimeUnit.NANOSECONDS);
+      if (result) {
+        if (worker != null) {
+          remainingNanos = max(time.nanoTime() - startNanos, 0);
+          result = worker.awaitTermination(remainingNanos, TimeUnit.NANOSECONDS);
+        }
+      }
     }
     return result;
   }
@@ -456,7 +479,7 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
   }
 
   private static final ScheduledExecutorService createSubmitter(@Nullable final ThreadFactory threadFactory, final boolean prestartThreads) {
-    final ScheduledThreadPoolExecutor result = new ScheduledThreadPoolExecutor(1, ensureThreadFactory(threadFactory, "submitter-"));
+    final ScheduledThreadPoolExecutor result = new ScheduledThreadPoolExecutor(1, ensureThreadFactory(threadFactory, "submitter-", 1));
     result.setMaximumPoolSize(1);
     result.setRemoveOnCancelPolicy(true);
     result.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
@@ -472,6 +495,7 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
       @Nullable final ThreadFactory threadFactory,
       final int threadsCount,
       final boolean prestartThreads) {
+    assert EXCLUDE_ASSERTIONS_FROM_BYTECODE || threadsCount >= 0;
     @Nullable
     final ThreadPoolExecutor result;
     if (threadsCount == 0) {
@@ -483,7 +507,7 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
           0L,
           TimeUnit.MILLISECONDS,
           new LinkedBlockingQueue<>(),
-          ensureThreadFactory(threadFactory, "worker-"));
+          ensureThreadFactory(threadFactory, "worker-", threadsCount));
       if (prestartThreads) {
         result.prestartAllCoreThreads();
       }
@@ -491,10 +515,13 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
     return result;
   }
 
-  private static final ThreadFactory ensureThreadFactory(@Nullable final ThreadFactory threadFactory, @Nullable String namePrefix) {
-    return threadFactory == null
-        ? namePrefix == null ? Executors.defaultThreadFactory() : new NamePrefixThreadFactory(Executors.defaultThreadFactory(), namePrefix)
-        : threadFactory;
+  private static final ThreadFactory ensureThreadFactory(
+      @Nullable final ThreadFactory threadFactory, @Nullable final String namePrefix, final int maxThreads) {
+    return new BoundedThreadFactory(
+        threadFactory == null
+            ? namePrefix == null ? Executors.defaultThreadFactory() : new NamePrefixThreadFactory(Executors.defaultThreadFactory(), namePrefix)
+            : threadFactory,
+        maxThreads);
   }
 
   /**

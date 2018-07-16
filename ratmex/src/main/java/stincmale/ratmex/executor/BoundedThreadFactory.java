@@ -17,29 +17,39 @@
 package stincmale.ratmex.executor;
 
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 import stincmale.ratmex.doc.Nullable;
 import stincmale.ratmex.doc.ThreadSafe;
+import static stincmale.ratmex.internal.util.Preconditions.checkArgument;
 import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;
 
 @ThreadSafe
-final class NamePrefixThreadFactory implements ThreadFactory {
+final class BoundedThreadFactory implements ThreadFactory {
   private final ThreadFactory threadFactory;
-  private final String namePrefix;
+  private final int max;
+  private final AtomicInteger counter;
 
-  NamePrefixThreadFactory(final ThreadFactory threadFactory, final String namePrefix) {
+  BoundedThreadFactory(final ThreadFactory threadFactory, final int maxThreads) {
     checkNotNull(threadFactory, "threadFactory");
-    checkNotNull(namePrefix, "namePrefix");
+    checkArgument(maxThreads >= 0, "maxThreads", "Must not be negative");
     this.threadFactory = threadFactory;
-    this.namePrefix = namePrefix;
+    max = maxThreads;
+    counter = new AtomicInteger(0);
   }
 
   @Nullable
   @Override
   public final Thread newThread(@Nullable final Runnable r) {
     @Nullable
-    final Thread result = threadFactory.newThread(r);
-    if (result != null) {
-      result.setName(namePrefix + result.getName());
+    final Thread result;
+    if (counter.get() < max) {//omit CAS when possible (similar to DCL idiom)
+      if (counter.incrementAndGet() <= max) {
+        result = threadFactory.newThread(r);
+      } else {
+        result = null;
+      }
+    } else {
+      result = null;
     }
     return result;
   }

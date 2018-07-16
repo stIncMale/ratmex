@@ -16,7 +16,6 @@
 
 package stincmale.ratmex.executor.listener;
 
-import stincmale.ratmex.doc.Nullable;
 import stincmale.ratmex.doc.ThreadSafe;
 import stincmale.ratmex.executor.Rate;
 import stincmale.ratmex.meter.ConcurrentRateMeterStats;
@@ -71,16 +70,15 @@ public class DefaultSubmitterWorkerRateListener<
       throw new RateException("The target rate was violated by the completion rate. ", e.getTargetRate(), e.getCompletionRate()
           .getValueDouble());
     }
-    @Nullable
-    final WRS workerRateMeterStats = e.getWorkerRateMeterStats();
-    if (workerRateMeterStats != null) {
-      final long incorrectlyRegisteredTickEventsCount = workerRateMeterStats.incorrectlyRegisteredTickEventsCount();
-      if (incorrectlyRegisteredTickEventsCount > 0) {
-        throw new CorrectnessException(format("Worker rate meter failed to accurately register ticks. " +
-            "incorrectlyRegisteredTickEventsCount={}, completionRate={}", incorrectlyRegisteredTickEventsCount, e.getCompletionRate()
+    e.getWorkerRateMeterStats()
+        .map(WRS::incorrectlyRegisteredTickEventsCount)
+        .ifPresent(incorrectlyRegisteredTickEventsCount -> {
+          if (incorrectlyRegisteredTickEventsCount > 0) {
+            throw new CorrectnessException(format("Worker rate meter failed to accurately register ticks. " +
+                "incorrectlyRegisteredTickEventsCount={}, completionRate={}", incorrectlyRegisteredTickEventsCount, e.getCompletionRate()
                 .getValueDouble()));
-      }
-    }
+          }
+        });
     return true;
   }
 }

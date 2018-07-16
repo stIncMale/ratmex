@@ -177,6 +177,7 @@ public abstract class AbstractRingBufferRateMeter<S, C extends ConcurrentRateMet
 
   /*The implementation of this method is an exact copy of rate(RateMeterReading) except for lines related to RateMeterReading.
     This is bad, but I don't see any other way to implement both methods in a garbage-free way.*/
+  //TODO remove methods which do not take explicit RateMeterReading, or implement them as default and don't care about garbage
   @Override
   public final long rate() {
     final long value;
