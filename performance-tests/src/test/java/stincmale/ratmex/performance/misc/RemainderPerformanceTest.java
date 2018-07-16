@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package stincmale.ratmex.performance;
+package stincmale.ratmex.performance.misc;
 
+import java.math.BigInteger;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
@@ -23,8 +24,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
@@ -33,53 +36,59 @@ import stincmale.ratmex.performance.util.PerformanceTestTag;
 
 /**
  * <pre>{@code
- * Benchmark                                  Mode  Cnt    Score   Error   Units
- * ArrayFillPerformanceTest.forLoop          thrpt   15  236.610 ± 4.036  ops/ms
- * ArrayFillPerformanceTest.systemArrayCopy  thrpt   15  105.536 ± 1.747  ops/ms
+ * Benchmark                                   Mode  Cnt    Score    Error   Units
+ * RemainderPerformanceTest.bitwiseRemainder  thrpt   15  387.239 ± 15.700  ops/us
+ * RemainderPerformanceTest.remainder         thrpt   15  300.034 ±  9.423  ops/us
+ * RemainderPerformanceTest.remainderPow2     thrpt   15  343.877 ±  9.826  ops/us
  * }</pre>
  */
 @Disabled
 @Tag(PerformanceTestTag.VALUE)
 @TestInstance(Lifecycle.PER_CLASS)
-public class ArrayFillPerformanceTest {
-  private static final int ARRAY_SIZE = 20_000;
-  private static final long[] arrFilledWithZeros = new long[ARRAY_SIZE];
+public class RemainderPerformanceTest {
+  private static final long denominatorPow2 = BigInteger.valueOf(2)
+      .pow(10)
+      .longValueExact();
+  private static final long bitwiseDenominatorPow2 = denominatorPow2 - 1;
+  private static final long denominator = bitwiseDenominatorPow2 - 1;
 
-  static {//just to ignore IDE warning regarding arrFilledWithZeros
-    for (int i = 0; i < arrFilledWithZeros.length; i++) {
-      arrFilledWithZeros[i] = 0;
-    }
-  }
-
-  public ArrayFillPerformanceTest() {
+  public RemainderPerformanceTest() {
   }
 
   @Test
   public void run() throws RunnerException {
     new Runner(JmhOptions.includingClass(getClass())
         .mode(Mode.Throughput)
-        .timeUnit(TimeUnit.MILLISECONDS)
+        .timeUnit(TimeUnit.MICROSECONDS)
         .build())
         .run();
   }
 
   @Benchmark
-  public void forLoop(final ThreadState state) {
-    for (int i = 0; i < state.arr.length; i++) {
-      state.arr[i] = 0;
-    }
+  public long remainder(final ThreadState state) {
+    return (state.counter++) % denominator;
   }
 
   @Benchmark
-  public void systemArrayCopy(final ThreadState state) {
-    System.arraycopy(arrFilledWithZeros, 0, state.arr, 0, state.arr.length);
+  public long remainderPow2(final ThreadState state) {
+    return (state.counter++) % denominatorPow2;
+  }
+
+  @Benchmark
+  public long bitwiseRemainder(final ThreadState state) {
+    return (state.counter++) & bitwiseDenominatorPow2;
   }
 
   @State(Scope.Thread)
   public static class ThreadState {
-    private final long[] arr = new long[ARRAY_SIZE];
+    private long counter;
 
     public ThreadState() {
+    }
+
+    @Setup(Level.Iteration)
+    public final void setup() {
+      counter = 0;
     }
   }
 }
