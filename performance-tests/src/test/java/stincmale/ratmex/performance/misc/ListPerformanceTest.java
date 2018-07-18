@@ -45,36 +45,31 @@ import static java.util.stream.IntStream.range;
 /**
  * <pre>{@code
  * Benchmark                              (listDescriptor)  (size)   Mode  Cnt      Score     Error   Units
- * ListPerformanceTest.add                      ARRAY_LIST      10  thrpt   40  14522.597 ±  85.230  ops/ms
- * ListPerformanceTest.add                      ARRAY_LIST     100  thrpt   40   1471.285 ±  18.341  ops/ms
- * ListPerformanceTest.add                      ARRAY_LIST    1000  thrpt   40    128.794 ±   0.817  ops/ms
- * ListPerformanceTest.add                      ARRAY_LIST   10000  thrpt   40     21.489 ±   0.115  ops/ms
- * ListPerformanceTest.add                      ARRAY_LIST  100000  thrpt   40      2.231 ±   0.014  ops/ms
- * ListPerformanceTest.add                     LINKED_LIST      10  thrpt   40  14874.221 ± 119.266  ops/ms
- * ListPerformanceTest.add                     LINKED_LIST     100  thrpt   40   1631.998 ±  13.034  ops/ms
- * ListPerformanceTest.add                     LINKED_LIST    1000  thrpt   40    167.614 ±   0.952  ops/ms
- * ListPerformanceTest.add                     LINKED_LIST   10000  thrpt   40     18.147 ±   0.188  ops/ms
- * ListPerformanceTest.add                     LINKED_LIST  100000  thrpt   40      1.789 ±   0.016  ops/ms
- * ListPerformanceTest.add      ARRAY_LIST_ENSURE_CAPACITY      10  thrpt   40  12945.806 ±  61.106  ops/ms
- * ListPerformanceTest.add      ARRAY_LIST_ENSURE_CAPACITY     100  thrpt   40   1277.771 ±   6.958  ops/ms
- * ListPerformanceTest.add      ARRAY_LIST_ENSURE_CAPACITY    1000  thrpt   40    147.486 ±   5.359  ops/ms
- * ListPerformanceTest.add      ARRAY_LIST_ENSURE_CAPACITY   10000  thrpt   40     30.944 ±   0.211  ops/ms
- * ListPerformanceTest.add      ARRAY_LIST_ENSURE_CAPACITY  100000  thrpt   40      2.767 ±   0.019  ops/ms
- * ListPerformanceTest.iterate                  ARRAY_LIST      10  thrpt   40  49500.498 ± 272.120  ops/ms
- * ListPerformanceTest.iterate                  ARRAY_LIST     100  thrpt   40  16678.608 ± 199.563  ops/ms
- * ListPerformanceTest.iterate                  ARRAY_LIST    1000  thrpt   40   2080.560 ±  32.715  ops/ms
- * ListPerformanceTest.iterate                  ARRAY_LIST   10000  thrpt   40    221.332 ±   0.898  ops/ms
- * ListPerformanceTest.iterate                  ARRAY_LIST  100000  thrpt   40     22.379 ±   0.104  ops/ms
- * ListPerformanceTest.iterate                 LINKED_LIST      10  thrpt   40  50945.654 ± 215.243  ops/ms
- * ListPerformanceTest.iterate                 LINKED_LIST     100  thrpt   40   7093.456 ±  28.562  ops/ms
- * ListPerformanceTest.iterate                 LINKED_LIST    1000  thrpt   40    584.081 ±   2.632  ops/ms
- * ListPerformanceTest.iterate                 LINKED_LIST   10000  thrpt   40     27.847 ±   0.107  ops/ms
- * ListPerformanceTest.iterate                 LINKED_LIST  100000  thrpt   40      2.702 ±   0.022  ops/ms
- * ListPerformanceTest.iterate  ARRAY_LIST_ENSURE_CAPACITY      10  thrpt   40  49457.966 ± 314.636  ops/ms
- * ListPerformanceTest.iterate  ARRAY_LIST_ENSURE_CAPACITY     100  thrpt   40  16683.608 ± 198.955  ops/ms
- * ListPerformanceTest.iterate  ARRAY_LIST_ENSURE_CAPACITY    1000  thrpt   40   2070.582 ±  28.876  ops/ms
- * ListPerformanceTest.iterate  ARRAY_LIST_ENSURE_CAPACITY   10000  thrpt   40    221.445 ±   1.084  ops/ms
- * ListPerformanceTest.iterate  ARRAY_LIST_ENSURE_CAPACITY  100000  thrpt   40     22.386 ±   0.096  ops/ms
+ * ListPerformanceTest.add                      ARRAY_LIST       5  thrpt   80  20324.444 ± 283.268  ops/ms
+ * ListPerformanceTest.add                      ARRAY_LIST      50  thrpt   80   2306.665 ±  27.666  ops/ms
+ * ListPerformanceTest.add                      ARRAY_LIST     500  thrpt   80    268.222 ±   0.986  ops/ms
+ * ListPerformanceTest.add                      ARRAY_LIST    5000  thrpt   80     38.454 ±   0.933  ops/ms
+ * ListPerformanceTest.add                      ARRAY_LIST   50000  thrpt   80      3.747 ±   0.081  ops/ms
+ * ListPerformanceTest.add      ARRAY_LIST_ENSURE_CAPACITY       5  thrpt   80  20716.422 ±  78.477  ops/ms
+ * ListPerformanceTest.add      ARRAY_LIST_ENSURE_CAPACITY      50  thrpt   80   2527.994 ±  16.440  ops/ms
+ * ListPerformanceTest.add      ARRAY_LIST_ENSURE_CAPACITY     500  thrpt   80    262.597 ±   0.969  ops/ms
+ * ListPerformanceTest.add      ARRAY_LIST_ENSURE_CAPACITY    5000  thrpt   80     55.183 ±   0.234  ops/ms
+ * ListPerformanceTest.add      ARRAY_LIST_ENSURE_CAPACITY   50000  thrpt   80      5.306 ±   0.019  ops/ms
+ * ListPerformanceTest.add                     LINKED_LIST       5  thrpt   80  24355.843 ± 113.264  ops/ms
+ * ListPerformanceTest.add                     LINKED_LIST      50  thrpt   80   2830.576 ±  40.668  ops/ms
+ * ListPerformanceTest.add                     LINKED_LIST     500  thrpt   80    295.308 ±   6.964  ops/ms
+ * ListPerformanceTest.add                     LINKED_LIST    5000  thrpt   80     31.453 ±   0.669  ops/ms
+ * ListPerformanceTest.add                     LINKED_LIST   50000  thrpt   80      3.136 ±   0.080  ops/ms
+ * ListPerformanceTest.iterate                  ARRAY_LIST       5  thrpt   80  59849.843 ± 192.667  ops/ms
+ * ListPerformanceTest.iterate                  ARRAY_LIST      50  thrpt   80  28736.416 ± 277.912  ops/ms
+ * ListPerformanceTest.iterate                  ARRAY_LIST     500  thrpt   80   4479.838 ±  36.147  ops/ms
+ * ListPerformanceTest.iterate                  ARRAY_LIST    5000  thrpt   80    459.256 ±   2.148  ops/ms
+ * ListPerformanceTest.iterate                  ARRAY_LIST   50000  thrpt   80     45.611 ±   0.372  ops/ms
+ * ListPerformanceTest.iterate                 LINKED_LIST       5  thrpt   80  60110.623 ± 802.743  ops/ms
+ * ListPerformanceTest.iterate                 LINKED_LIST      50  thrpt   80  14248.574 ±  51.953  ops/ms
+ * ListPerformanceTest.iterate                 LINKED_LIST     500  thrpt   80   1492.543 ±   7.587  ops/ms
+ * ListPerformanceTest.iterate                 LINKED_LIST    5000  thrpt   80     55.632 ±   0.559  ops/ms
+ * ListPerformanceTest.iterate                 LINKED_LIST   50000  thrpt   80      5.518 ±   0.055  ops/ms
  * }</pre>
  */
 @Disabled
@@ -95,7 +90,7 @@ public class ListPerformanceTest {
   }
 
   @Benchmark
-  public List<Object> add(final ThreadState state) {
+  public List<Object> add(final ThreadStateForAdding state) {
     final int size = state.size;
     final List<Object> list = state.listDescriptor.create(size);
     for (int i = 0; i < size; i++) {
@@ -105,7 +100,7 @@ public class ListPerformanceTest {
   }
 
   @Benchmark
-  public boolean iterate(final ThreadState state) {
+  public boolean iterate(final ThreadStateForIterating state) {
     boolean result = false;
     final List<Object> list = state.listDescriptor.get(state.size);
     for (final Object o : list) {
@@ -117,18 +112,49 @@ public class ListPerformanceTest {
   }
 
   @State(Scope.Thread)
-  public static class ThreadState {
+  public static class ThreadStateForAdding {
+    @Param({"5", "50", "500", "5000", "50000"})
+    private int size;
+    @Param({"ARRAY_LIST", "ARRAY_LIST_ENSURE_CAPACITY", "LINKED_LIST"})
+    private ListDescriptor listDescriptor;
+
+    public ThreadStateForAdding() {
+    }
+
+    public enum ListDescriptor {
+      ARRAY_LIST(size -> new ArrayList<>()),
+      ARRAY_LIST_ENSURE_CAPACITY(size -> {
+        final ArrayList<Object> result = new ArrayList<>();
+        result.ensureCapacity(size);
+        return result;
+      }),
+      LINKED_LIST(size -> new LinkedList<>());
+
+      private final Function<Integer, List<Object>> supplierOfNew;
+
+      ListDescriptor(final Function<Integer, List<Object>> supplierOfNew) {
+        this.supplierOfNew = supplierOfNew;
+      }
+
+      private List<Object> create(final int size) {
+        return supplierOfNew.apply(size);
+      }
+    }
+  }
+
+  @State(Scope.Thread)
+  public static class ThreadStateForIterating {
     private static final Map<Integer, ArrayList<Object>> arrayLists;
     private static final Map<Integer, LinkedList<Object>> linkedLists;
 
     static {
       final int[] sizes;
       try {
-        sizes = stream(ThreadState.class.getDeclaredField("size")
-            .getAnnotation(Param.class)
-            .value())
-            .mapToInt(Integer::parseInt)
-            .toArray();
+        sizes = stream(ThreadStateForAdding.class.getDeclaredField("size")
+          .getAnnotation(Param.class)
+          .value())
+          .mapToInt(Integer::parseInt)
+          .toArray();
       } catch (final NoSuchFieldException e) {
         throw new RuntimeException(e);
       }
@@ -142,10 +168,10 @@ public class ListPerformanceTest {
 
     @Param({"5", "50", "500", "5000", "50000"})
     private int size;
-    @Param({"ARRAY_LIST", "LINKED_LIST", "ARRAY_LIST_ENSURE_CAPACITY"})
+    @Param({"ARRAY_LIST", "LINKED_LIST"})
     private ListDescriptor listDescriptor;
 
-    public ThreadState() {
+    public ThreadStateForIterating() {
     }
 
     private static final <L extends List<Object>> L createList(final int size, final Supplier<L> listFactory) {
@@ -155,26 +181,13 @@ public class ListPerformanceTest {
     }
 
     public enum ListDescriptor {
-      ARRAY_LIST(size -> new ArrayList<>(), ThreadState.arrayLists::get),
-      ARRAY_LIST_ENSURE_CAPACITY(
-        size -> {
-          final ArrayList<Object> result = new ArrayList<>();
-          result.ensureCapacity(size);
-          return result;
-        },
-        ARRAY_LIST.supplierOfPreconstructed),
-      LINKED_LIST(size -> new LinkedList<>(), ThreadState.linkedLists::get);
+      ARRAY_LIST(arrayLists::get),
+      LINKED_LIST(linkedLists::get);
 
-      private final Function<Integer, List<Object>> supplierOfNew;
       private final Function<Integer, List<Object>> supplierOfPreconstructed;
 
-      ListDescriptor(final Function<Integer, List<Object>> supplierOfNew, final Function<Integer, List<Object>> supplierOfPreconstructed) {
-        this.supplierOfNew = supplierOfNew;
+      ListDescriptor(final Function<Integer, List<Object>> supplierOfPreconstructed) {
         this.supplierOfPreconstructed = supplierOfPreconstructed;
-      }
-
-      private List<Object> create(final int size) {
-        return supplierOfNew.apply(size);
       }
 
       private final List<Object> get(final int size) {
