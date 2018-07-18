@@ -18,13 +18,14 @@ package stincmale.ratmex.performance.misc;
 
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -40,49 +41,47 @@ import org.openjdk.jmh.runner.RunnerException;
 import stincmale.ratmex.performance.util.JmhOptions;
 import stincmale.ratmex.performance.util.PerformanceTestTag;
 import static java.util.Arrays.stream;
+import static java.util.stream.IntStream.range;
 
 /**
  * <pre>{@code
- * Benchmark                                          (size)   Mode  Cnt      Score     Error   Units
- * ListPerformanceTest.arrayListAdd                    10  thrpt   80  13565.997 ±  52.647  ops/ms
- * ListPerformanceTest.arrayListAdd                  1000  thrpt   80    129.276 ±   0.543  ops/ms
- * ListPerformanceTest.arrayListAdd                 10000  thrpt   80     20.771 ±   0.695  ops/ms
- * ListPerformanceTest.arrayListAdd                100000  thrpt   80      2.177 ±   0.020  ops/ms
- * ListPerformanceTest.arrayListEnsureCapacityAdd      10  thrpt   80  19140.346 ± 333.376  ops/ms
- * ListPerformanceTest.arrayListEnsureCapacityAdd    1000  thrpt   80    306.700 ±   1.532  ops/ms
- * ListPerformanceTest.arrayListEnsureCapacityAdd   10000  thrpt   80     27.262 ±   0.751  ops/ms
- * ListPerformanceTest.arrayListEnsureCapacityAdd  100000  thrpt   80      2.621 ±   0.031  ops/ms
- * ListPerformanceTest.arrayListIterate                10  thrpt   80  60346.684 ± 302.753  ops/ms
- * ListPerformanceTest.arrayListIterate              1000  thrpt   80   3732.739 ±  32.308  ops/ms
- * ListPerformanceTest.arrayListIterate             10000  thrpt   80    405.475 ±   1.190  ops/ms
- * ListPerformanceTest.arrayListIterate            100000  thrpt   80     41.210 ±   0.149  ops/ms
- * ListPerformanceTest.linkedListAdd                   10  thrpt   80  12414.910 ±  57.732  ops/ms
- * ListPerformanceTest.linkedListAdd                 1000  thrpt   80    133.345 ±   0.630  ops/ms
- * ListPerformanceTest.linkedListAdd                10000  thrpt   80     17.742 ±   0.182  ops/ms
- * ListPerformanceTest.linkedListAdd               100000  thrpt   80      1.735 ±   0.021  ops/ms
- * ListPerformanceTest.linkedListIterate               10  thrpt   80  59613.872 ± 262.505  ops/ms
- * ListPerformanceTest.linkedListIterate             1000  thrpt   80    535.774 ±   7.280  ops/ms
- * ListPerformanceTest.linkedListIterate            10000  thrpt   80     29.623 ±   0.254  ops/ms
- * ListPerformanceTest.linkedListIterate           100000  thrpt   80      4.481 ±   0.385  ops/ms
+ * Benchmark                              (listDescriptor)  (size)   Mode  Cnt      Score     Error   Units
+ * ListPerformanceTest.add                      ARRAY_LIST      10  thrpt   40  14522.597 ±  85.230  ops/ms
+ * ListPerformanceTest.add                      ARRAY_LIST     100  thrpt   40   1471.285 ±  18.341  ops/ms
+ * ListPerformanceTest.add                      ARRAY_LIST    1000  thrpt   40    128.794 ±   0.817  ops/ms
+ * ListPerformanceTest.add                      ARRAY_LIST   10000  thrpt   40     21.489 ±   0.115  ops/ms
+ * ListPerformanceTest.add                      ARRAY_LIST  100000  thrpt   40      2.231 ±   0.014  ops/ms
+ * ListPerformanceTest.add                     LINKED_LIST      10  thrpt   40  14874.221 ± 119.266  ops/ms
+ * ListPerformanceTest.add                     LINKED_LIST     100  thrpt   40   1631.998 ±  13.034  ops/ms
+ * ListPerformanceTest.add                     LINKED_LIST    1000  thrpt   40    167.614 ±   0.952  ops/ms
+ * ListPerformanceTest.add                     LINKED_LIST   10000  thrpt   40     18.147 ±   0.188  ops/ms
+ * ListPerformanceTest.add                     LINKED_LIST  100000  thrpt   40      1.789 ±   0.016  ops/ms
+ * ListPerformanceTest.add      ARRAY_LIST_ENSURE_CAPACITY      10  thrpt   40  12945.806 ±  61.106  ops/ms
+ * ListPerformanceTest.add      ARRAY_LIST_ENSURE_CAPACITY     100  thrpt   40   1277.771 ±   6.958  ops/ms
+ * ListPerformanceTest.add      ARRAY_LIST_ENSURE_CAPACITY    1000  thrpt   40    147.486 ±   5.359  ops/ms
+ * ListPerformanceTest.add      ARRAY_LIST_ENSURE_CAPACITY   10000  thrpt   40     30.944 ±   0.211  ops/ms
+ * ListPerformanceTest.add      ARRAY_LIST_ENSURE_CAPACITY  100000  thrpt   40      2.767 ±   0.019  ops/ms
+ * ListPerformanceTest.iterate                  ARRAY_LIST      10  thrpt   40  49500.498 ± 272.120  ops/ms
+ * ListPerformanceTest.iterate                  ARRAY_LIST     100  thrpt   40  16678.608 ± 199.563  ops/ms
+ * ListPerformanceTest.iterate                  ARRAY_LIST    1000  thrpt   40   2080.560 ±  32.715  ops/ms
+ * ListPerformanceTest.iterate                  ARRAY_LIST   10000  thrpt   40    221.332 ±   0.898  ops/ms
+ * ListPerformanceTest.iterate                  ARRAY_LIST  100000  thrpt   40     22.379 ±   0.104  ops/ms
+ * ListPerformanceTest.iterate                 LINKED_LIST      10  thrpt   40  50945.654 ± 215.243  ops/ms
+ * ListPerformanceTest.iterate                 LINKED_LIST     100  thrpt   40   7093.456 ±  28.562  ops/ms
+ * ListPerformanceTest.iterate                 LINKED_LIST    1000  thrpt   40    584.081 ±   2.632  ops/ms
+ * ListPerformanceTest.iterate                 LINKED_LIST   10000  thrpt   40     27.847 ±   0.107  ops/ms
+ * ListPerformanceTest.iterate                 LINKED_LIST  100000  thrpt   40      2.702 ±   0.022  ops/ms
+ * ListPerformanceTest.iterate  ARRAY_LIST_ENSURE_CAPACITY      10  thrpt   40  49457.966 ± 314.636  ops/ms
+ * ListPerformanceTest.iterate  ARRAY_LIST_ENSURE_CAPACITY     100  thrpt   40  16683.608 ± 198.955  ops/ms
+ * ListPerformanceTest.iterate  ARRAY_LIST_ENSURE_CAPACITY    1000  thrpt   40   2070.582 ±  28.876  ops/ms
+ * ListPerformanceTest.iterate  ARRAY_LIST_ENSURE_CAPACITY   10000  thrpt   40    221.445 ±   1.084  ops/ms
+ * ListPerformanceTest.iterate  ARRAY_LIST_ENSURE_CAPACITY  100000  thrpt   40     22.386 ±   0.096  ops/ms
  * }</pre>
  */
 @Disabled
 @Tag(PerformanceTestTag.VALUE)
 @TestInstance(Lifecycle.PER_CLASS)
 public class ListPerformanceTest {
-  private static final int[] sizes = {10, 1000, 10_000, 100_000};
-  private static final Map<Integer, ArrayList<Object>> arrayLists;
-  private static final Map<Integer, LinkedList<Object>> linkedLists;
-
-  static {
-    arrayLists = stream(sizes)
-        .mapToObj(size -> new SimpleImmutableEntry<>(size, createList(size, ArrayList::new)))
-        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-    linkedLists = stream(sizes)
-      .mapToObj(size -> new SimpleImmutableEntry<>(size, createList(size, LinkedList::new)))
-      .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-  }
-
   public ListPerformanceTest() {
   }
 
@@ -91,94 +90,97 @@ public class ListPerformanceTest {
     new Runner(JmhOptions.includingClass(getClass())
         .mode(Mode.Throughput)
         .timeUnit(TimeUnit.MILLISECONDS)
+        .shouldDoGC(true)
         .build())
         .run();
   }
 
   @Benchmark
-  public ArrayList<Object> arrayListAdd(final ThreadState state) {
-    return arrayListAdd(state.size);
+  public List<Object> add(final ThreadState state) {
+    final int size = state.size;
+    final List<Object> list = state.listDescriptor.create(size);
+    for (int i = 0; i < size; i++) {
+      list.add(new Object());
+    }
+    return list;
   }
 
   @Benchmark
-  public ArrayList<Object> arrayListEnsureCapacityAdd(final ThreadState state) {
-    return arrayListAddEnsureCapacity(state.size);
-  }
-
-  @Benchmark
-  public boolean arrayListIterate(final ThreadState state) {
-    return arrayListIterate(arrayLists.get(state.size));
-  }
-
-  @Benchmark
-  public LinkedList<Object> linkedListAdd(final ThreadState state) {
-    return linkedListAdd(state.size);
-  }
-
-  @Benchmark
-  public boolean linkedListIterate(final ThreadState state) {
-    return linkedListIterate(linkedLists.get(state.size));
+  public boolean iterate(final ThreadState state) {
+    boolean result = false;
+    final List<Object> list = state.listDescriptor.get(state.size);
+    for (final Object o : list) {
+      if (o == list) {
+        result = true;
+      }
+    }
+    return result;
   }
 
   @State(Scope.Thread)
   public static class ThreadState {
-    @Param({"10", "1000", "10000", "100000"})
+    private static final Map<Integer, ArrayList<Object>> arrayLists;
+    private static final Map<Integer, LinkedList<Object>> linkedLists;
+
+    static {
+      final int[] sizes;
+      try {
+        sizes = stream(ThreadState.class.getDeclaredField("size")
+            .getAnnotation(Param.class)
+            .value())
+            .mapToInt(Integer::parseInt)
+            .toArray();
+      } catch (final NoSuchFieldException e) {
+        throw new RuntimeException(e);
+      }
+      arrayLists = stream(sizes)
+        .mapToObj(size -> new SimpleImmutableEntry<>(size, createList(size, ArrayList::new)))
+        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+      linkedLists = stream(sizes)
+        .mapToObj(size -> new SimpleImmutableEntry<>(size, createList(size, LinkedList::new)))
+        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    @Param({"5", "50", "500", "5000", "50000"})
     private int size;
+    @Param({"ARRAY_LIST", "LINKED_LIST", "ARRAY_LIST_ENSURE_CAPACITY"})
+    private ListDescriptor listDescriptor;
 
     public ThreadState() {
     }
-  }
 
-  private final ArrayList<Object> arrayListAdd(final int size) {
-    final ArrayList<Object> list = new ArrayList<>();
-    for (int i = 0; i < size; i++) {
-      list.add(new Object());
+    private static final <L extends List<Object>> L createList(final int size, final Supplier<L> listFactory) {
+      return range(0, size)
+        .mapToObj(i -> new Object())
+        .collect(Collectors.toCollection(listFactory));
     }
-    return list;
-  }
 
-  private final ArrayList<Object> arrayListAddEnsureCapacity(final int size) {
-    final ArrayList<Object> list = new ArrayList<>();
-    list.ensureCapacity(size);
-    for (int i = 0; i < size; i++) {
-      list.add(new Object());
-    }
-    return list;
-  }
+    public enum ListDescriptor {
+      ARRAY_LIST(size -> new ArrayList<>(), ThreadState.arrayLists::get),
+      ARRAY_LIST_ENSURE_CAPACITY(
+        size -> {
+          final ArrayList<Object> result = new ArrayList<>();
+          result.ensureCapacity(size);
+          return result;
+        },
+        ARRAY_LIST.supplierOfPreconstructed),
+      LINKED_LIST(size -> new LinkedList<>(), ThreadState.linkedLists::get);
 
-  private boolean arrayListIterate(final ArrayList<Object> list) {
-    final Object last = list.get(list.size() - 1);
-    boolean result = false;
-    for (final Object o : list) {
-      if (o == last) {
-        result = true;
+      private final Function<Integer, List<Object>> supplierOfNew;
+      private final Function<Integer, List<Object>> supplierOfPreconstructed;
+
+      ListDescriptor(final Function<Integer, List<Object>> supplierOfNew, final Function<Integer, List<Object>> supplierOfPreconstructed) {
+        this.supplierOfNew = supplierOfNew;
+        this.supplierOfPreconstructed = supplierOfPreconstructed;
+      }
+
+      private List<Object> create(final int size) {
+        return supplierOfNew.apply(size);
+      }
+
+      private final List<Object> get(final int size) {
+        return supplierOfPreconstructed.apply(size);
       }
     }
-    return result;
-  }
-
-  private final LinkedList<Object> linkedListAdd(final int size) {
-    final LinkedList<Object> list = new LinkedList<>();
-    for (int i = 0; i < size; i++) {
-      list.add(new Object());
-    }
-    return list;
-  }
-
-  private boolean linkedListIterate(final LinkedList<Object> list) {
-    final Object last = list.getLast();
-    boolean result = false;
-    for (final Object o : list) {
-      if (o == last) {
-        result = true;
-      }
-    }
-    return result;
-  }
-
-  private static final <L extends List<Object>> L createList(final int size, final Supplier<L> listFactory) {
-    return IntStream.range(0, size)
-      .mapToObj(i -> new Object())
-      .collect(Collectors.toCollection(listFactory));
   }
 }
