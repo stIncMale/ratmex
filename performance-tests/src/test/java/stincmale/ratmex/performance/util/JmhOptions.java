@@ -44,7 +44,7 @@ public final class JmhOptions {
 
   public static final OptionsBuilder get() {
     final OptionsBuilder result = new OptionsBuilder();
-    result.jvmArgs("-Xms1536m", "-Xmx1536m")
+    result.jvmArgs("-Xms2048m", "-Xmx2048m")
       .jvmArgsAppend(
         JAVA_SERVER ? "-server" : "-client",
         JAVA_ASSERTIONS ? "-enableassertions" : "-disableassertions")

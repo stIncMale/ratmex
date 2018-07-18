@@ -35,23 +35,23 @@ import stincmale.ratmex.performance.util.PerformanceTestTag;
 
 /**
  * <pre>{@code
- * Benchmark                         Mode  Cnt    Score    Error   Units
- * LongIntPerformanceTest.divInt    thrpt   80   38.843 ±  1.248  ops/us
- * LongIntPerformanceTest.divLong   thrpt   80   12.112 ±  0.334  ops/us
- * LongIntPerformanceTest.multInt   thrpt   80  172.284 ±  9.633  ops/us
- * LongIntPerformanceTest.multLong  thrpt   80  190.793 ± 11.651  ops/us
- * LongIntPerformanceTest.sumInt    thrpt   80  166.411 ±  7.004  ops/us
- * LongIntPerformanceTest.sumLong   thrpt   80  169.654 ±  4.665  ops/us
+ * Benchmark                         Mode  Cnt    Score   Error   Units
+ * PrimitiveDataTypeMathPerformanceTest.divInt    thrpt   80   45.208 ± 0.332  ops/us
+ * PrimitiveDataTypeMathPerformanceTest.divLong   thrpt   80   12.736 ± 0.535  ops/us
+ * PrimitiveDataTypeMathPerformanceTest.multInt   thrpt   80  194.092 ± 4.246  ops/us
+ * PrimitiveDataTypeMathPerformanceTest.multLong  thrpt   80  210.017 ± 3.077  ops/us
+ * PrimitiveDataTypeMathPerformanceTest.sumInt    thrpt   80  199.729 ± 3.220  ops/us
+ * PrimitiveDataTypeMathPerformanceTest.sumLong   thrpt   80  196.766 ± 3.090  ops/us
  * }</pre>
  */
 @Disabled
 @Tag(PerformanceTestTag.VALUE)
 @TestInstance(Lifecycle.PER_CLASS)
-public class LongIntPerformanceTest {
+public class PrimitiveDataTypeMathPerformanceTest {
   private static final int[] operandsInt = {-123456789, -1234567, -12345, -123, 123, 12345, 1234567, 123456789};
   private static final long[] operandsLong = {-123456789, -1234567, -12345, -123, 123, 12345, 1234567, 123456789};
 
-  public LongIntPerformanceTest() {
+  public PrimitiveDataTypeMathPerformanceTest() {
   }
 
   @Test
@@ -65,7 +65,7 @@ public class LongIntPerformanceTest {
 
   @Benchmark
   public int sumInt(final ThreadState state) {
-    final int l = ++state.counterInt;
+    final int l = --state.counterInt;
     int result = 0;
     for (int r : operandsInt) {
       result += l + r;
@@ -75,7 +75,7 @@ public class LongIntPerformanceTest {
 
   @Benchmark
   public long sumLong(final ThreadState state) {
-    final long l = ++state.counterLong;
+    final long l = --state.counterLong;
     long result = 0;
     for (long r : operandsLong) {
       result += l + r;
@@ -85,7 +85,7 @@ public class LongIntPerformanceTest {
 
   @Benchmark
   public int multInt(final ThreadState state) {
-    final int l = ++state.counterInt;
+    final int l = --state.counterInt;
     int result = 0;
     for (int r : operandsInt) {
       result += l * r;
@@ -95,7 +95,7 @@ public class LongIntPerformanceTest {
 
   @Benchmark
   public long multLong(final ThreadState state) {
-    final long l = ++state.counterLong;
+    final long l = --state.counterLong;
     long result = 0;
     for (long r : operandsLong) {
       result += l * r;
@@ -105,7 +105,7 @@ public class LongIntPerformanceTest {
 
   @Benchmark
   public int divInt(final ThreadState state) {
-    final int l = ++state.counterInt;
+    final int l = --state.counterInt;
     int result = 0;
     for (int r : operandsInt) {
       result += l / r;
@@ -115,7 +115,7 @@ public class LongIntPerformanceTest {
 
   @Benchmark
   public long divLong(final ThreadState state) {
-    final long l = ++state.counterLong;
+    final long l = --state.counterLong;
     long result = 0;
     for (long r : operandsLong) {
       result += l / r;
@@ -133,8 +133,8 @@ public class LongIntPerformanceTest {
 
     @Setup(Level.Iteration)
     public final void setup() {
-      counterInt = 0;
-      counterLong = 0;
+      counterInt = Integer.MAX_VALUE;
+      counterLong = Long.MAX_VALUE;
     }
   }
 }

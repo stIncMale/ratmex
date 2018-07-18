@@ -36,10 +36,10 @@ import stincmale.ratmex.performance.util.PerformanceTestTag;
 
 /**
  * <pre>{@code
- * Benchmark                                   Mode  Cnt    Score    Error   Units
- * RemainderPerformanceTest.bitwiseRemainder  thrpt   15  387.239 ± 15.700  ops/us
- * RemainderPerformanceTest.remainder         thrpt   15  300.034 ±  9.423  ops/us
- * RemainderPerformanceTest.remainderPow2     thrpt   15  343.877 ±  9.826  ops/us
+ * Benchmark                         Mode  Cnt    Score   Error   Units
+ * RemainderPerformanceTest.bitwise  thrpt   80  414.174 ± 5.793  ops/us
+ * RemainderPerformanceTest.ordinary thrpt   80  290.313 ± 2.108  ops/us
+ * RemainderPerformanceTest.pow2     thrpt   80  346.645 ± 4.911  ops/us
  * }</pre>
  */
 @Disabled
@@ -50,7 +50,7 @@ public class RemainderPerformanceTest {
       .pow(10)
       .longValueExact();
   private static final long bitwiseDenominatorPow2 = denominatorPow2 - 1;
-  private static final long denominator = bitwiseDenominatorPow2 - 1;
+  private static final long denominator = denominatorPow2 - 1;
 
   public RemainderPerformanceTest() {
   }
@@ -65,17 +65,23 @@ public class RemainderPerformanceTest {
   }
 
   @Benchmark
-  public long remainder(final ThreadState state) {
+  public long ordinary(final ThreadState state) {
     return (state.counter++) % denominator;
   }
 
+  /**
+   * A special case of {@link #ordinary(ThreadState)} when the denominator is a power of 2.
+   */
   @Benchmark
-  public long remainderPow2(final ThreadState state) {
+  public long pow2(final ThreadState state) {
     return (state.counter++) % denominatorPow2;
   }
 
+  /**
+   * Behaves exactly the same as {@link #pow2(ThreadState)} for non-negative numbers, but uses a different approach.
+   */
   @Benchmark
-  public long bitwiseRemainder(final ThreadState state) {
+  public long bitwise(final ThreadState state) {
     return (state.counter++) & bitwiseDenominatorPow2;
   }
 
