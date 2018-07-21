@@ -60,7 +60,8 @@
           <configuration>
             <trimStackTrace>false</trimStackTrace>
             <parallel>${ratmex.maven-surefire-plugin.parallel}</parallel>
-            <threadCount>5</threadCount>
+            <useUnlimitedThreads>false</useUnlimitedThreads>
+            <threadCount>${ratmex.maven-surefire-plugin.threadCount}</threadCount>
             <properties>
               <includeTags>${ratmex.maven-surefire-plugin.includeTags}</includeTags>
               <excludeTags>${ratmex.maven-surefire-plugin.excludeTags}</excludeTags>
@@ -85,14 +86,6 @@
               </goals>
             </execution>
           </executions>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-antrun-plugin</artifactId>
-        </plugin>
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>build-helper-maven-plugin</artifactId>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -185,6 +178,7 @@
       <properties>
         <maven.test.skip>false</maven.test.skip>
         <ratmex.maven-surefire-plugin.parallel>classes</ratmex.maven-surefire-plugin.parallel>
+        <ratmex.maven-surefire-plugin.threadCount>5</ratmex.maven-surefire-plugin.threadCount>
         <ratmex.maven-surefire-plugin.includeTags/>
         <ratmex.maven-surefire-plugin.excludeTags>performance, concurrency</ratmex.maven-surefire-plugin.excludeTags>
       </properties>
@@ -194,6 +188,7 @@
       <properties>
         <maven.test.skip>false</maven.test.skip>
         <ratmex.maven-surefire-plugin.parallel/>
+        <ratmex.maven-surefire-plugin.threadCount>1</ratmex.maven-surefire-plugin.threadCount>
         <ratmex.maven-surefire-plugin.includeTags>performance</ratmex.maven-surefire-plugin.includeTags>
         <ratmex.maven-surefire-plugin.excludeTags>concurrency</ratmex.maven-surefire-plugin.excludeTags>
       </properties>
@@ -203,6 +198,7 @@
       <properties>
         <maven.test.skip>false</maven.test.skip>
         <ratmex.maven-surefire-plugin.parallel/>
+        <ratmex.maven-surefire-plugin.threadCount>1</ratmex.maven-surefire-plugin.threadCount>
         <ratmex.maven-surefire-plugin.includeTags>concurrency</ratmex.maven-surefire-plugin.includeTags>
         <ratmex.maven-surefire-plugin.excludeTags>performance</ratmex.maven-surefire-plugin.excludeTags>
       </properties>
