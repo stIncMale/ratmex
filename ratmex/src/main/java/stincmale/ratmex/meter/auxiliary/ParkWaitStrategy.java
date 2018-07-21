@@ -79,7 +79,7 @@ public final class ParkWaitStrategy implements WaitStrategy {
         long maxDelayNanos = Math.min(minDelayNanos * 2, this.maxDelayNanos);
         boolean maxReached = false;
         do {
-          //          Thread.onSpinWait(); TODO multi-release JAR ?
+          Thread.onSpinWait();
           final long delayNanos = rnd.nextLong(minDelayNanos, maxDelayNanos);
           LockSupport.parkNanos(condition, rnd.nextLong(delayNanos));
           if (Thread.interrupted()) {

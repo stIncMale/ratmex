@@ -24,8 +24,8 @@
           <artifactId>maven-compiler-plugin</artifactId>
           <configuration>
             <source>9</source>
-            <target>8</target><!-- TODO multi-release JAR ? -->
-            <release>8</release>
+            <target>9</target>
+            <release>9</release>
             <encoding>${ratmex.charset}</encoding>
             <debug>true</debug>
             <debuglevel>lines,vars,source</debuglevel>
