@@ -6,7 +6,7 @@ Run from project root directory:
 
 Command | Description
 --- | ---
-`mvn clean install -f root.xml` | Install root.xml artifact to local Maven repository (usually `~/.m2/repository/` directory).
+`mvn clean install -f root.xml` | Install root.xml artifact to your local Maven repository (usually `~/.m2/repository/` directory).
 `mvn clean install -f version.xml` |
 `mvn clean install -f build.xml` |
 `mvn clean test -f ratmex/pom.xml -P unitTest` | Run unit tests, results are in `ratmex/target/surefire-reports` directory.
