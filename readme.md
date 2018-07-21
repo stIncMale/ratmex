@@ -33,7 +33,7 @@ This project uses [semantic versioning](https://semver.org). The current version
 
 ---
 
-Copyright 2017-2018 [Valiantsin Kavalenka](https://sites.google.com/site/aboutmale/)
+Copyright 2015-2018 [Valiantsin Kavalenka](https://sites.google.com/site/aboutmale/)
 
 Licensed under the Apache License, Version 2.0 (the "License") (except where another license is explicitly specified);
 you may not use this project except in compliance with the License.
