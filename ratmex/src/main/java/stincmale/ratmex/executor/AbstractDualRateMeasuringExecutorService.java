@@ -40,10 +40,10 @@ import stincmale.ratmex.doc.Nullable;
 import stincmale.ratmex.doc.ThreadSafe;
 import stincmale.ratmex.executor.auxiliary.Time;
 import stincmale.ratmex.executor.config.ScheduledTaskConfig;
-import stincmale.ratmex.executor.config.SubmitterWorkerScheduledTaskConfig;
+import stincmale.ratmex.executor.config.DualScheduledTaskConfig;
 import stincmale.ratmex.executor.listener.RateListener;
 import stincmale.ratmex.executor.listener.RateMeasuredEvent;
-import stincmale.ratmex.executor.listener.SubmitterWorkerRateMeasuredEvent;
+import stincmale.ratmex.executor.listener.DualRateMeasuredEvent;
 import stincmale.ratmex.meter.RateMeter;
 import static java.lang.Math.max;
 import static stincmale.ratmex.internal.util.Constants.EXCLUDE_ASSERTIONS_FROM_BYTECODE;
@@ -79,9 +79,9 @@ import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;
  * @param <WRS> A type that represents {@linkplain RateMeter#stats() statistics} of worker {@link RateMeter}.
  */
 @ThreadSafe
-public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
-    C extends SubmitterWorkerScheduledTaskConfig<E, ? extends SRS, ? extends WRS>,
-    E extends SubmitterWorkerRateMeasuredEvent<? extends SRS, ? extends WRS>, SRS, WRS>
+public abstract class AbstractDualRateMeasuringExecutorService<
+    C extends DualScheduledTaskConfig<E, ? extends SRS, ? extends WRS>,
+    E extends DualRateMeasuredEvent<? extends SRS, ? extends WRS>, SRS, WRS>
     implements RateMeasuringExecutorService<C, E> {
   private static final BlockingQueue<Runnable> emptyQueue = new LinkedBlockingQueue<>(1);
 
@@ -113,9 +113,9 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
    * If this constraint is violated, then the {@link RateMeasuringExecutorService} may fail to conform to the target rate because of batching.
    * @param shutdownSubmitterAndWorker A flag that specifies whether the externally provided submitter and the worker must be
    * shut down when this {@link ExecutorService} is shutting down.
-   * @param time {@link Time} that must be used by this {@link AbstractSubmitterWorkerRateMeasuringExecutorService}.
+   * @param time {@link Time} that must be used by this {@link AbstractDualRateMeasuringExecutorService}.
    */
-  protected AbstractSubmitterWorkerRateMeasuringExecutorService(
+  protected AbstractDualRateMeasuringExecutorService(
       final ScheduledExecutorService submitter,
       final ExecutorService worker,
       final int workerThreadsCount,
@@ -139,14 +139,14 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
    * If {@code threadsCount} is 1, then the number of worker threads is 0, and the submitter takes over worker role and executes tasks by itself;
    * one may provide the same thread factory as both {@code submitterThreadFactory}, {@code workerThreadFactory} in this case.
    * @param prestartThreads A flag that specifies if all submitter and worker threads must be started
-   * upon the construction of {@link AbstractSubmitterWorkerRateMeasuringExecutorService}, causing them to idly wait for work.
+   * upon the construction of {@link AbstractDualRateMeasuringExecutorService}, causing them to idly wait for work.
    * If false, then all threads are started as soon as the first task is submitted to this executor via any of the exposed methods
    * (e.g. {@linkplain #scheduleAtFixedRate(Runnable, Rate, C)}, {@link #execute(Runnable)}, etc.).
-   * @param time {@link Time} that must be used by this {@link AbstractSubmitterWorkerRateMeasuringExecutorService}.
+   * @param time {@link Time} that must be used by this {@link AbstractDualRateMeasuringExecutorService}.
    *
-   * @see #scheduleAtFixedRate(Runnable, Rate, SubmitterWorkerScheduledTaskConfig, ScheduledExecutorService, ExecutorService)
+   * @see #scheduleAtFixedRate(Runnable, Rate, DualScheduledTaskConfig, ScheduledExecutorService, ExecutorService)
    */
-  protected AbstractSubmitterWorkerRateMeasuringExecutorService(
+  protected AbstractDualRateMeasuringExecutorService(
       final ThreadFactory submitterThreadFactory,
       final ThreadFactory workerThreadFactory,
       final int threadsCount,
@@ -168,12 +168,12 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
    * @param threadsCount A total number of both submitter and worker threads. {@code threadsCount} \u2208 [1,{@link Integer#MAX_VALUE}].
    * If {@code threadsCount} is 1, then the number of worker threads is 0, and the submitter takes over worker role and executes tasks by itself.
    * @param prestartThreads A flag that specifies if all submitter and worker threads must be started
-   * upon the construction of {@link AbstractSubmitterWorkerRateMeasuringExecutorService}, causing them to idly wait for work.
+   * upon the construction of {@link AbstractDualRateMeasuringExecutorService}, causing them to idly wait for work.
    * If false, then all threads are started as soon as the first task is submitted to this executor via any of the exposed methods
    * (e.g. {@linkplain #scheduleAtFixedRate(Runnable, Rate, C)}, {@link #execute(Runnable)}, etc.).
-   * @param time {@link Time} that must be used by this {@link AbstractSubmitterWorkerRateMeasuringExecutorService}.
+   * @param time {@link Time} that must be used by this {@link AbstractDualRateMeasuringExecutorService}.
    */
-  protected AbstractSubmitterWorkerRateMeasuringExecutorService(final int threadsCount, final boolean prestartThreads, final Time time) {
+  protected AbstractDualRateMeasuringExecutorService(final int threadsCount, final boolean prestartThreads, final Time time) {
     this(
         createSubmitter(null, prestartThreads),
         createWorker(null, checkThreadsCountPositive(threadsCount) - 1, prestartThreads),
@@ -183,7 +183,7 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
         checkNotNull(time, "time"));
   }
 
-  private AbstractSubmitterWorkerRateMeasuringExecutorService(
+  private AbstractDualRateMeasuringExecutorService(
       final ScheduledExecutorService submitter,
       @Nullable final ExecutorService worker,
       final int workerThreadsCount,
@@ -204,7 +204,7 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
   }
 
   /**
-   * @return {@link Time} that must be used by this {@link AbstractSubmitterWorkerRateMeasuringExecutorService}.
+   * @return {@link Time} that must be used by this {@link AbstractDualRateMeasuringExecutorService}.
    */
   protected final Time getTime() {
     return time;
@@ -245,18 +245,18 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
   }
 
   /**
-   * This method is called by {@link #scheduleAtFixedRate(Runnable, Rate, SubmitterWorkerScheduledTaskConfig)}
+   * This method is called by {@link #scheduleAtFixedRate(Runnable, Rate, DualScheduledTaskConfig)}
    * and effectively implements all the logic.
    *
-   * @param task See {@link #scheduleAtFixedRate(Runnable, Rate, SubmitterWorkerScheduledTaskConfig)}.
-   * @param targetRate See {@link #scheduleAtFixedRate(Runnable, Rate, SubmitterWorkerScheduledTaskConfig)}.
-   * @param config See {@link #scheduleAtFixedRate(Runnable, Rate, SubmitterWorkerScheduledTaskConfig)}.
+   * @param task See {@link #scheduleAtFixedRate(Runnable, Rate, DualScheduledTaskConfig)}.
+   * @param targetRate See {@link #scheduleAtFixedRate(Runnable, Rate, DualScheduledTaskConfig)}.
+   * @param config See {@link #scheduleAtFixedRate(Runnable, Rate, DualScheduledTaskConfig)}.
    * @param submitter The submitter.
    * @param worker The worker. In cases when the submitter takes over the worker role, this is the same as {@code submitter}.
    *
-   * @return See {@link #scheduleAtFixedRate(Runnable, Rate, SubmitterWorkerScheduledTaskConfig)}.
+   * @return See {@link #scheduleAtFixedRate(Runnable, Rate, DualScheduledTaskConfig)}.
    *
-   * @throws RejectedExecutionException See {@link #scheduleAtFixedRate(Runnable, Rate, SubmitterWorkerScheduledTaskConfig)}.
+   * @throws RejectedExecutionException See {@link #scheduleAtFixedRate(Runnable, Rate, DualScheduledTaskConfig)}.
    */
   protected abstract ScheduledFuture<?> scheduleAtFixedRate(
       final Runnable task,
@@ -274,8 +274,8 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
    * {@inheritDoc}
    * <p>
    * Also forwards calls to the submitter and to the worker
-   * if and only if those were created by {@link AbstractSubmitterWorkerRateMeasuringExecutorService}, or were
-   * {@linkplain #AbstractSubmitterWorkerRateMeasuringExecutorService(ScheduledExecutorService, ExecutorService, int, boolean, Time) provided externally}
+   * if and only if those were created by {@link AbstractDualRateMeasuringExecutorService}, or were
+   * {@linkplain #AbstractDualRateMeasuringExecutorService(ScheduledExecutorService, ExecutorService, int, boolean, Time) provided externally}
    * with {@code shutdownSubmitterAndWorker} option enabled.
    */
   @Override
@@ -299,8 +299,8 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
    * {@inheritDoc}
    * <p>
    * Also forwards calls to the submitter and to the worker
-   * if and only if those were created by {@link AbstractSubmitterWorkerRateMeasuringExecutorService}, or were
-   * {@linkplain #AbstractSubmitterWorkerRateMeasuringExecutorService(ScheduledExecutorService, ExecutorService, int, boolean, Time) provided externally}
+   * if and only if those were created by {@link AbstractDualRateMeasuringExecutorService}, or were
+   * {@linkplain #AbstractDualRateMeasuringExecutorService(ScheduledExecutorService, ExecutorService, int, boolean, Time) provided externally}
    * with {@code shutdownSubmitterAndWorker} option enabled.
    *
    * @return A list that contains combined results from the submitter and the worker,
@@ -337,8 +337,8 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
    * {@inheritDoc}
    * <p>
    * Also forwards calls to the submitter and to the worker
-   * if and only if those were created by {@link AbstractSubmitterWorkerRateMeasuringExecutorService}, or were
-   * {@linkplain #AbstractSubmitterWorkerRateMeasuringExecutorService(ScheduledExecutorService, ExecutorService, int, boolean, Time) provided externally}
+   * if and only if those were created by {@link AbstractDualRateMeasuringExecutorService}, or were
+   * {@linkplain #AbstractDualRateMeasuringExecutorService(ScheduledExecutorService, ExecutorService, int, boolean, Time) provided externally}
    * with {@code shutdownSubmitterAndWorker} option enabled.
    */
   @Override
@@ -351,8 +351,8 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
    * {@inheritDoc}
    * <p>
    * Also forwards calls to the submitter and to the worker
-   * if and only if those were created by {@link AbstractSubmitterWorkerRateMeasuringExecutorService}, or were
-   * {@linkplain #AbstractSubmitterWorkerRateMeasuringExecutorService(ScheduledExecutorService, ExecutorService, int, boolean, Time) provided externally}
+   * if and only if those were created by {@link AbstractDualRateMeasuringExecutorService}, or were
+   * {@linkplain #AbstractDualRateMeasuringExecutorService(ScheduledExecutorService, ExecutorService, int, boolean, Time) provided externally}
    * with {@code shutdownSubmitterAndWorker} option enabled.
    *
    * @param timeout {@inheritDoc}.
@@ -526,7 +526,7 @@ public abstract class AbstractSubmitterWorkerRateMeasuringExecutorService<
 
   /**
    * This method must only be called for {@link ThreadPoolExecutor}
-   * that was constructed by {@link AbstractSubmitterWorkerRateMeasuringExecutorService}, i.e. was not received from somewhere.
+   * that was constructed by {@link AbstractDualRateMeasuringExecutorService}, i.e. was not received from somewhere.
    */
   private static final void startAllThreads(final ExecutorService executor, final int threadsCount) {
     assert EXCLUDE_ASSERTIONS_FROM_BYTECODE || executor instanceof ThreadPoolExecutor;

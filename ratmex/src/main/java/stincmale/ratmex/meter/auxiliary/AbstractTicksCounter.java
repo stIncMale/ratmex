@@ -19,12 +19,12 @@ package stincmale.ratmex.meter.auxiliary;
 /**
  * An abstract {@link TicksCounter}, which is a good start for a {@link TicksCounter} implementation.
  */
-public abstract class AbstractTicksCounter implements TicksCounter {
+abstract class AbstractTicksCounter implements TicksCounter {
   protected AbstractTicksCounter() {
   }
 
   @Override
-  public String toString() {
+  public final String toString() {
     return String.valueOf(get());
   }
 }

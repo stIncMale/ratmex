@@ -35,6 +35,9 @@ import static stincmale.ratmex.internal.util.Utils.format;
  * @param <C> A type of the {@linkplain #getConfig() configuration}.
  */
 public abstract class AbstractRateMeter<S, C extends RateMeterConfig> implements RateMeter<S>, Configurable<C> {
+  /**
+   * @see RateMeterConfig#getTimeSensitivity()
+   */
   private static final int DEFAULT_SAMPLES_INTERVAL_OVER_TIME_SENSITIVITY_RATIO = 20;
   private final TicksCounter ticksTotal;
   private final long startNanos;
@@ -186,7 +189,7 @@ public abstract class AbstractRateMeter<S, C extends RateMeterConfig> implements
   }
 
   @Override
-  public String toString() {
+  public final String toString() {
     return getClass().getSimpleName() +
         "{startNanos=" + startNanos +
         ", samplesIntervalNanos=" + samplesIntervalNanos +

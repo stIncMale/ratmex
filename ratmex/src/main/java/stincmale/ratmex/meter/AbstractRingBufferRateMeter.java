@@ -37,7 +37,7 @@ import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;
 import static stincmale.ratmex.internal.util.Utils.format;
 
 /**
- * This is an almost complete implementation of {@link AbstractRateMeter}
+ * This is an almost complete implementation of {@link RateMeter}
  * which only requires a correct parameters to be provided to the
  * {@linkplain #AbstractRingBufferRateMeter(long, Duration, ConcurrentRateMeterConfig, Function, boolean) constructor}.
  * Depending on the arguments the constructed object can be either sequential, or concurrent.
@@ -86,8 +86,7 @@ import static stincmale.ratmex.internal.util.Utils.format;
   - writes must be performed based on the write cursor;
   - externally visible reads must be performed based on the read cursor, but must then be validated based on the write cursor.
   Such an approach allows performing writes without blocking reads.*/
-public abstract class AbstractRingBufferRateMeter<S, C extends ConcurrentRateMeterConfig>
-    extends AbstractRateMeter<S, C> {
+public abstract class AbstractRingBufferRateMeter<S, C extends ConcurrentRateMeterConfig> extends AbstractRateMeter<S, C> {
   private final boolean sequential;
   private final LongArray samplesHistory;//the length of this array is multiple of the historyLength
   private final int cellsInSamplesWindow;

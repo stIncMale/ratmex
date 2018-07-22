@@ -29,5 +29,5 @@ public interface WaitStrategy {
    *
    * @param condition A boolean condition.
    */
-  void await(BooleanSupplier condition);
+  void await(BooleanSupplier condition);//TODO think of garbage-less approach; think of notinications
 }

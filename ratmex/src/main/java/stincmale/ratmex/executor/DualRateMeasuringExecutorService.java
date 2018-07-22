@@ -28,10 +28,10 @@ import stincmale.ratmex.doc.Nullable;
 import stincmale.ratmex.doc.ThreadSafe;
 import stincmale.ratmex.executor.auxiliary.SystemTime;
 import stincmale.ratmex.executor.auxiliary.Time;
-import stincmale.ratmex.executor.config.SubmitterWorkerScheduledTaskConfig;
-import stincmale.ratmex.executor.listener.DefaultSubmitterWorkerRateListener;
+import stincmale.ratmex.executor.config.DualScheduledTaskConfig;
+import stincmale.ratmex.executor.listener.StrictDualRateListener;
 import stincmale.ratmex.executor.listener.RateListener;
-import stincmale.ratmex.executor.listener.SubmitterWorkerRateMeasuredEvent;
+import stincmale.ratmex.executor.listener.DualRateMeasuredEvent;
 import stincmale.ratmex.meter.ConcurrentRateMeterStats;
 import stincmale.ratmex.meter.ConcurrentRingBufferRateMeter;
 import stincmale.ratmex.meter.RateMeter;
@@ -43,22 +43,22 @@ import static stincmale.ratmex.internal.util.Constants.EXCLUDE_ASSERTIONS_FROM_B
 import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;
 
 /**
- * An implementation of {@link AbstractSubmitterWorkerRateMeasuringExecutorService} which works with
+ * An implementation of {@link AbstractDualRateMeasuringExecutorService} which works with
  * worker {@link RateMeter}s exposing {@link ConcurrentRateMeterStats}.
- * This implementation produces {@link SubmitterWorkerRateMeasuredEvent}s for {@link RateListener}s.
+ * This implementation produces {@link DualRateMeasuredEvent}s for {@link RateListener}s.
  */
 @ThreadSafe
-public final class SubmitterWorkerRateMeasuringExecutorService extends AbstractSubmitterWorkerRateMeasuringExecutorService<
-    SubmitterWorkerScheduledTaskConfig<SubmitterWorkerRateMeasuredEvent<Object, ConcurrentRateMeterStats>, Object, ConcurrentRateMeterStats>,
-    SubmitterWorkerRateMeasuredEvent<Object, ConcurrentRateMeterStats>,
-    Object, ConcurrentRateMeterStats> {
-  private static final SubmitterWorkerScheduledTaskConfig<
-      SubmitterWorkerRateMeasuredEvent<Object, ConcurrentRateMeterStats>, Object, ConcurrentRateMeterStats> defaultScheduledTaskConfig;
+public final class DualRateMeasuringExecutorService extends AbstractDualRateMeasuringExecutorService<
+  DualScheduledTaskConfig<DualRateMeasuredEvent<Object, ConcurrentRateMeterStats>, Object, ConcurrentRateMeterStats>,
+  DualRateMeasuredEvent<Object, ConcurrentRateMeterStats>,
+  Object, ConcurrentRateMeterStats> {
+  private static final DualScheduledTaskConfig<
+      DualRateMeasuredEvent<Object, ConcurrentRateMeterStats>, Object, ConcurrentRateMeterStats> defaultScheduledTaskConfig;
 
   static {
-    final SubmitterWorkerScheduledTaskConfig.Builder<
-        SubmitterWorkerRateMeasuredEvent<Object, ConcurrentRateMeterStats>, Object, ConcurrentRateMeterStats>
-        builder = SubmitterWorkerScheduledTaskConfig.newSubmitterWorkerScheduledTaskConfigBuilder(
+    final DualScheduledTaskConfig.Builder<
+      DualRateMeasuredEvent<Object, ConcurrentRateMeterStats>, Object, ConcurrentRateMeterStats>
+        builder = DualScheduledTaskConfig.newSubmitterWorkerScheduledTaskConfigBuilder(
         RingBufferRateMeter::new,
         (startNanos, samplesInterval) -> new ConcurrentRingBufferRateMeter(
             startNanos,
@@ -68,16 +68,16 @@ public final class SubmitterWorkerRateMeasuringExecutorService extends AbstractS
               .setMode(Mode.RELAXED_TICKS)
               .setCollectStats(true)
               .build()));
-    builder.setRateListenerSupplier(DefaultSubmitterWorkerRateListener::instance);
+    builder.setRateListenerSupplier(StrictDualRateListener::instance);
     defaultScheduledTaskConfig = builder.buildSubmitterWorkerScheduledTaskConfig();
   }
 
   /**
-   * Returns a default {@link SubmitterWorkerScheduledTaskConfig} with
+   * Returns a default {@link DualScheduledTaskConfig} with
    * <ul>
    *  <li>
    *    {@linkplain RingBufferRateMeter#RingBufferRateMeter(long, Duration) Default} {@link RingBufferRateMeter}
-   *    as {@linkplain SubmitterWorkerScheduledTaskConfig#getSubmitterRateMeterSupplier() submitter rate meter}
+   *    as {@linkplain DualScheduledTaskConfig#getSubmitterRateMeterSupplier() submitter rate meter}
    *  </li>
    *  <li>
    *    {@link ConcurrentRingBufferRateMeter} with modified {@linkplain ConcurrentRingBufferRateMeter#defaultConfig() default}
@@ -87,24 +87,24 @@ public final class SubmitterWorkerRateMeasuringExecutorService extends AbstractS
    *      </li>
    *      <li>{@link ConcurrentRateMeterConfig#isCollectStats()} - true</li>
    *    </ul>
-   *    as {@linkplain SubmitterWorkerScheduledTaskConfig#getWorkerRateMeterSupplier() worker rate meter}.
+   *    as {@linkplain DualScheduledTaskConfig#getWorkerRateMeterSupplier() worker rate meter}.
    *  </li>
    * </ul>
    * <p>
-   * Note that despite using {@link Mode#RELAXED_TICKS}, {@link DefaultSubmitterWorkerRateListener}
-   * {@linkplain DefaultSubmitterWorkerRateListener#onMeasurement(SubmitterWorkerRateMeasuredEvent) detects}
+   * Note that despite using {@link Mode#RELAXED_TICKS}, {@link StrictDualRateListener}
+   * {@linkplain StrictDualRateListener#onMeasurement(DualRateMeasuredEvent) detects}
    * any incorrectly registered ticks by using {@link ConcurrentRateMeterStats} thus guaranteeing correctness of all measurements.
    */
-  public static final SubmitterWorkerScheduledTaskConfig<
-    SubmitterWorkerRateMeasuredEvent<Object, ConcurrentRateMeterStats>, Object, ConcurrentRateMeterStats> defaultScheduledTaskConfig() {
+  public static final DualScheduledTaskConfig<
+      DualRateMeasuredEvent<Object, ConcurrentRateMeterStats>, Object, ConcurrentRateMeterStats> defaultScheduledTaskConfig() {
     return defaultScheduledTaskConfig;
   }
 
   /**
-   * See {@link AbstractSubmitterWorkerRateMeasuringExecutorService#AbstractSubmitterWorkerRateMeasuringExecutorService(ScheduledExecutorService, ExecutorService, int, boolean, Time)}.
+   * See {@link AbstractDualRateMeasuringExecutorService#AbstractDualRateMeasuringExecutorService(ScheduledExecutorService, ExecutorService, int, boolean, Time)}.
    * Uses {@link SystemTime} as {@link Time}.
    */
-  public SubmitterWorkerRateMeasuringExecutorService(
+  public DualRateMeasuringExecutorService(
     final ScheduledExecutorService submitter,
     final ExecutorService worker,
     final int workerThreadsCount,
@@ -113,10 +113,10 @@ public final class SubmitterWorkerRateMeasuringExecutorService extends AbstractS
   }
 
   /**
-   * See {@link AbstractSubmitterWorkerRateMeasuringExecutorService#AbstractSubmitterWorkerRateMeasuringExecutorService(ThreadFactory, ThreadFactory, int, boolean, Time)}.
+   * See {@link AbstractDualRateMeasuringExecutorService#AbstractDualRateMeasuringExecutorService(ThreadFactory, ThreadFactory, int, boolean, Time)}.
    * Uses {@link SystemTime} as {@link Time}.
    */
-  public SubmitterWorkerRateMeasuringExecutorService(
+  public DualRateMeasuringExecutorService(
     final ThreadFactory submitterThreadFactory,
     final ThreadFactory workerThreadFactory,
     final int threadsCount,
@@ -125,10 +125,10 @@ public final class SubmitterWorkerRateMeasuringExecutorService extends AbstractS
   }
 
   /**
-   * See {@link AbstractSubmitterWorkerRateMeasuringExecutorService#AbstractSubmitterWorkerRateMeasuringExecutorService(int, boolean, Time)}.
+   * See {@link AbstractDualRateMeasuringExecutorService#AbstractDualRateMeasuringExecutorService(int, boolean, Time)}.
    * Uses {@link SystemTime} as {@link Time}.
    */
-  public SubmitterWorkerRateMeasuringExecutorService(final int threadsCount, final boolean prestartThreads) {
+  public DualRateMeasuringExecutorService(final int threadsCount, final boolean prestartThreads) {
     super(threadsCount, prestartThreads, SystemTime.instance());
   }
 
@@ -149,8 +149,7 @@ public final class SubmitterWorkerRateMeasuringExecutorService extends AbstractS
   protected final ScheduledFuture<?> scheduleAtFixedRate(
       final Runnable task,
       final Rate targetRate,
-      final SubmitterWorkerScheduledTaskConfig<
-          SubmitterWorkerRateMeasuredEvent<Object, ConcurrentRateMeterStats>, Object, ConcurrentRateMeterStats> config,
+      final DualScheduledTaskConfig<DualRateMeasuredEvent<Object, ConcurrentRateMeterStats>, Object, ConcurrentRateMeterStats> config,
       final ScheduledExecutorService submitter,
       final ExecutorService worker) {
     checkNotNull(task, "task");
@@ -174,16 +173,16 @@ public final class SubmitterWorkerRateMeasuringExecutorService extends AbstractS
     final long periodNanos = submitterRateMeter.getTimeSensitivity()
         .toNanos();
     @Nullable
-    final RateListener<? super SubmitterWorkerRateMeasuredEvent<Object, ConcurrentRateMeterStats>> rateListener = config.getRateListenerSupplier()
+    final RateListener<? super DualRateMeasuredEvent<Object, ConcurrentRateMeterStats>> rateListener = config.getRateListenerSupplier()
         .map(Supplier::get)
         .orElseGet(null);
     @Nullable
-    final SubmitterWorkerRateMeasuredEvent<Object, ConcurrentRateMeterStats> rateMeasuredEvent = rateListener == null
+    final DualRateMeasuredEvent<Object, ConcurrentRateMeterStats> rateMeasuredEvent = rateListener == null
         ? null
-        : new SubmitterWorkerRateMeasuredEvent<>(
+        : new DualRateMeasuredEvent<>(
             targetRate, new RateMeterReading(), new RateMeterReading(), null, workerRateMeter.stats()
             .orElse(null));
-    final SubmitterTask<SubmitterWorkerRateMeasuredEvent<Object, ConcurrentRateMeterStats>, Object, ConcurrentRateMeterStats>
+    final SubmitterTask<DualRateMeasuredEvent<Object, ConcurrentRateMeterStats>, Object, ConcurrentRateMeterStats>
         submitterTask = new SubmitterTask<>(time, task, targetRate, endNanos, submitterRateMeter, workerRateMeter, rateListener, rateMeasuredEvent);
     @Nullable
     ScheduledFuture<?> result = null;
@@ -195,7 +194,7 @@ public final class SubmitterWorkerRateMeasuringExecutorService extends AbstractS
     return result;
   }
 
-  private static final class SubmitterTask<E extends SubmitterWorkerRateMeasuredEvent<? extends SRS, ? extends WRS>, SRS, WRS> implements Runnable {
+  private static final class SubmitterTask<E extends DualRateMeasuredEvent<? extends SRS, ? extends WRS>, SRS, WRS> implements Runnable {
     private final Time time;
     private final Runnable workerTask;
     private final Rate targetRate;

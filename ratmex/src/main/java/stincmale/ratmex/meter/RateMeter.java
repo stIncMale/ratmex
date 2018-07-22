@@ -359,7 +359,7 @@ public interface RateMeter<S> {
    *
    * @return Stats which may be not {@linkplain Optional#isPresent() present}
    * if the {@link RateMeter} does not collect stats. Once returned a non-empty {@link Optional}, this method must always return
-   * an {@link Optional} containing the same object, so that users can safely store a reference to stats and reuse it.
+   * an {@link Optional} containing the same object, so that users can store a reference to the object and reuse it.
    */
-  Optional<S> stats();
+  Optional<? extends S> stats();
 }

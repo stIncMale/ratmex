@@ -33,11 +33,10 @@ import java.util.Collections;
  * If an implementation of the interface is not immutable, this must be explicitly stated
  * (e.g. by annotating it with {@link NotThreadSafe @NotThreadSafe}).
  * One should never apply this annotation to an interface unless there is a very good reason for this.</li>
- * <li>When this annotation is applied to a not final class it may mean either of the following and must be further clarified by the class:
+ * <li>When this annotation is applied to an abstract class it may mean either of the following and must be further clarified by the class:
  * <ul><li>Subclasses of the class must be immutable.
  * If a subclass is not immutable, this must be explicitly stated (e.g. by annotating it with {@link NotThreadSafe @NotThreadSafe}).</li>
- * <li>The class is immutable, but it does not impose this restriction on its subclasses.
- * This interpretation must not be used by not final not abstract classes.</li></ul></li>
+ * <li>The class is immutable, but it does not impose this restriction on its subclasses.</li></ul></li>
  * </ul>
  * <p>
  * Immutability of an object means that its state cannot be seen to change by a user<sup>(1)</sup>.
@@ -68,7 +67,7 @@ import java.util.Collections;
  * Using a reference to an object (e.g. passing it between threads) is not considered to be a use of the object
  * and generally requires an additional synchronization unless the object is immutable.
  * <p>
- * <sup>(2)</sup> The paragraph is based on the Brian Goetz's very good specification of an immutable object from his book
+ * <sup>(2)</sup> The paragraph is based on the very good specification of an immutable object provided by Brian Goetz in his book
  * <a href="http://jcip.net">"Java Concurrency in Practice"</a>
  */
 @Documented

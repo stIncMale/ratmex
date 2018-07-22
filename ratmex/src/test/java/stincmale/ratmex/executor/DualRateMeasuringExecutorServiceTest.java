@@ -31,10 +31,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static stincmale.ratmex.executor.SubmitterWorkerRateMeasuringExecutorService.defaultScheduledTaskConfig;
+import static stincmale.ratmex.executor.DualRateMeasuringExecutorService.defaultScheduledTaskConfig;
 
-public final class SubmitterWorkerRateMeasuringExecutorServiceTest {
-  public SubmitterWorkerRateMeasuringExecutorServiceTest() {
+public final class DualRateMeasuringExecutorServiceTest {
+  public DualRateMeasuringExecutorServiceTest() {
   }
 
   @Test
@@ -51,7 +51,7 @@ public final class SubmitterWorkerRateMeasuringExecutorServiceTest {
       TimeUnit.MILLISECONDS,
       new LinkedBlockingQueue<>(),
       wtf);
-    try (final SubmitterWorkerRateMeasuringExecutorService ex = new SubmitterWorkerRateMeasuringExecutorService(
+    try (final DualRateMeasuringExecutorService ex = new DualRateMeasuringExecutorService(
       submitter, worker, workerThreadsCount, true)) {
       assertEquals(0, stf.count());
       assertEquals(0, wtf.count());
@@ -68,7 +68,7 @@ public final class SubmitterWorkerRateMeasuringExecutorServiceTest {
     final CountingThreadFactory stf = new CountingThreadFactory();
     final CountingThreadFactory wtf = new CountingThreadFactory();
     final int threadsCount = 5;
-    try (final RateMeasuringExecutorService<?, ?> ex = new SubmitterWorkerRateMeasuringExecutorService(stf, wtf, threadsCount, true)) {
+    try (final DualRateMeasuringExecutorService ex = new DualRateMeasuringExecutorService(stf, wtf, threadsCount, true)) {
       assertNotNull(ex);//refer to ex to hide a warning
       assertEquals(1, stf.count());
       assertEquals(threadsCount - 1, wtf.count());
@@ -80,7 +80,7 @@ public final class SubmitterWorkerRateMeasuringExecutorServiceTest {
     final CountingThreadFactory stf = new CountingThreadFactory();
     final CountingThreadFactory wtf = new CountingThreadFactory();
     final int threadsCount = 1;
-    try (final RateMeasuringExecutorService<?, ?> ex = new SubmitterWorkerRateMeasuringExecutorService(stf, wtf, threadsCount, true)) {
+    try (final DualRateMeasuringExecutorService ex = new DualRateMeasuringExecutorService(stf, wtf, threadsCount, true)) {
       assertNotNull(ex);//refer to ex to hide a warning
       assertEquals(1, stf.count());
       assertEquals(threadsCount - 1, wtf.count());
@@ -92,7 +92,7 @@ public final class SubmitterWorkerRateMeasuringExecutorServiceTest {
     final CountingThreadFactory stf = new CountingThreadFactory();
     final CountingThreadFactory wtf = new CountingThreadFactory();
     final int threadsCount = 5;
-    try (final RateMeasuringExecutorService<?, ?> ex = new SubmitterWorkerRateMeasuringExecutorService(stf, wtf, threadsCount, false)) {
+    try (final DualRateMeasuringExecutorService ex = new DualRateMeasuringExecutorService(stf, wtf, threadsCount, false)) {
       assertEquals(0, stf.count());
       assertEquals(0, wtf.count());
       ex.execute(() -> {});
@@ -105,8 +105,8 @@ public final class SubmitterWorkerRateMeasuringExecutorServiceTest {
   public final void shutdownWithSubmitterAndWorker1() throws InterruptedException {
     final ScheduledExecutorService submitter = Executors.newScheduledThreadPool(1);
     final ExecutorService worker = Executors.newFixedThreadPool(2);
-    final SubmitterWorkerRateMeasuringExecutorService executor;
-    try (final SubmitterWorkerRateMeasuringExecutorService ex = new SubmitterWorkerRateMeasuringExecutorService(
+    final DualRateMeasuringExecutorService executor;
+    try (final DualRateMeasuringExecutorService ex = new DualRateMeasuringExecutorService(
         submitter, worker, -1, true)) {
       executor = ex;
       assertFalse(submitter.isShutdown());
@@ -132,8 +132,8 @@ public final class SubmitterWorkerRateMeasuringExecutorServiceTest {
     submitter.shutdownNow();
     final ExecutorService worker = Executors.newFixedThreadPool(2);
     worker.shutdownNow();
-    final SubmitterWorkerRateMeasuringExecutorService executor;
-    try (final SubmitterWorkerRateMeasuringExecutorService ex = new SubmitterWorkerRateMeasuringExecutorService(
+    final DualRateMeasuringExecutorService executor;
+    try (final DualRateMeasuringExecutorService ex = new DualRateMeasuringExecutorService(
         submitter, worker, -1, true)) {
       executor = ex;
       assertTrue(submitter.isShutdown());
@@ -153,8 +153,8 @@ public final class SubmitterWorkerRateMeasuringExecutorServiceTest {
   public final void shutdownWithoutSubmitterAndWorker1() throws InterruptedException {
     final ScheduledExecutorService submitter = Executors.newScheduledThreadPool(1);
     final ExecutorService worker = Executors.newFixedThreadPool(2);
-    final SubmitterWorkerRateMeasuringExecutorService executor;
-    try (final SubmitterWorkerRateMeasuringExecutorService ex = new SubmitterWorkerRateMeasuringExecutorService(
+    final DualRateMeasuringExecutorService executor;
+    try (final DualRateMeasuringExecutorService ex = new DualRateMeasuringExecutorService(
         submitter, worker, -1, false)) {
       executor = ex;
       assertFalse(submitter.isShutdown());
@@ -180,8 +180,8 @@ public final class SubmitterWorkerRateMeasuringExecutorServiceTest {
     submitter.shutdownNow();
     final ExecutorService worker = Executors.newFixedThreadPool(2);
     worker.shutdownNow();
-    final SubmitterWorkerRateMeasuringExecutorService executor;
-    try (final SubmitterWorkerRateMeasuringExecutorService ex = new SubmitterWorkerRateMeasuringExecutorService(
+    final DualRateMeasuringExecutorService executor;
+    try (final DualRateMeasuringExecutorService ex = new DualRateMeasuringExecutorService(
         submitter, worker, -1, false)) {
       executor = ex;
       assertTrue(submitter.isShutdown());

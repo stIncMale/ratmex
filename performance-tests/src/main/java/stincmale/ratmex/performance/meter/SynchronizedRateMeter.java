@@ -161,7 +161,7 @@ public final class SynchronizedRateMeter<S> implements RateMeter<S> {
   }
 
   @Override
-  public final Optional<S> stats() {
+  public final Optional<? extends S> stats() {
     synchronized (mutex) {
       return rm.stats();
     }

@@ -18,7 +18,6 @@ package stincmale.ratmex.meter;
 
 import java.time.Duration;
 import java.util.Optional;
-import stincmale.ratmex.doc.Nullable;
 import stincmale.ratmex.doc.ThreadSafe;
 import stincmale.ratmex.meter.auxiliary.AtomikLongArray;
 import stincmale.ratmex.meter.auxiliary.LongArray;
@@ -33,8 +32,7 @@ public final class ConcurrentRingBufferRateMeter extends AbstractRingBufferRateM
   private static final ConcurrentRateMeterConfig defaultConfig = ConcurrentRateMeterConfig.newBuilder()
       .build();
 
-  @Nullable
-  private final ConcurrentRingBufferRateMeterStats stats;
+  private final Optional<ConcurrentRingBufferRateMeterStats> stats;
 
   /**
    * @return A default configuration, which is the default {@link ConcurrentRateMeterConfig}.
@@ -51,7 +49,7 @@ public final class ConcurrentRingBufferRateMeter extends AbstractRingBufferRateM
    */
   public ConcurrentRingBufferRateMeter(final long startNanos, final Duration samplesInterval, final ConcurrentRateMeterConfig config) {
     super(startNanos, samplesInterval, config, AtomikLongArray::new, false);
-    stats = config.isCollectStats() ? new ConcurrentRingBufferRateMeterStats() : null;
+    stats = config.isCollectStats() ? Optional.of(new ConcurrentRingBufferRateMeterStats()) : Optional.empty();
   }
 
   /**
@@ -62,18 +60,13 @@ public final class ConcurrentRingBufferRateMeter extends AbstractRingBufferRateM
     this(startNanos, samplesInterval, defaultConfig);
   }
 
-  /**
-   * @return An {@linkplain Optional#empty() empty} {@link Optional}.
-   */
   @Override
-  public final Optional<ConcurrentRateMeterStats> stats() {
-    return Optional.ofNullable(stats);
+  public final Optional<? extends ConcurrentRateMeterStats> stats() {
+    return stats;
   }
 
   @Override
   protected final void registerIncorrectlyRegisteredTicksEvent() {
-    if (stats != null) {
-      stats.registerIncorrectlyRegisteredTicksEvent();
-    }
+    stats.ifPresent(ConcurrentRingBufferRateMeterStats::registerIncorrectlyRegisteredTicksEvent);
   }
 }

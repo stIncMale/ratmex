@@ -30,12 +30,11 @@ import java.lang.annotation.Target;
  * <li>When this annotation is applied to an interface it means that implementations of the interface must be thread-safe.
  * If an implementation of the interface is not thread-safe, this must be explicitly stated
  * (e.g. by annotating it with {@link NotThreadSafe @NotThreadSafe}).</li>
- * <li>When this annotation is applied to a not final class
+ * <li>When this annotation is applied to an abstract class
  * it may mean either of the following and must be further clarified by the class:
  * <ul><li>Subclasses of the class must be thread-safe.
  * If a subclass is not thread-safe, this must be explicitly stated (e.g. by annotating it with {@link NotThreadSafe @NotThreadSafe}).</li>
- * <li>The class is thread-safe, but it does not impose this restriction on its subclasses.
- * This interpretation must not be used by not final not abstract classes.</li></ul></li>
+ * <li>The class is thread-safe, but it does not impose this restriction on its subclasses.</li></ul></li>
  * </ul>
  * <p>
  * No type can be considered thread-safe unless the type is explicitly documented as such (e.g. it is annotated with {@link ThreadSafe @ThreadSafe}),

@@ -32,7 +32,7 @@ final class ConcurrentRingBufferRateMeterStats implements ConcurrentRateMeterSta
     return incorrectlyRegisteredTickEventsCounter.sum();
   }
 
-  public final void registerIncorrectlyRegisteredTicksEvent() {
+  final void registerIncorrectlyRegisteredTicksEvent() {
     incorrectlyRegisteredTickEventsCounter.increment();
   }
 

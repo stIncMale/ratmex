@@ -34,7 +34,7 @@ import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;
 import static stincmale.ratmex.internal.util.Utils.format;
 
 /**
- * This is an almost complete implementation of {@link AbstractRateMeter}
+ * This is an almost complete implementation of {@link RateMeter}
  * which only requires a correct parameters to be provided to the
  * {@linkplain #AbstractNavigableMapRateMeter(long, Duration, ConcurrentRateMeterConfig, Supplier, boolean) constructor}.
  * Depending on the arguments the constructed object can be either sequential, or concurrent.

@@ -19,7 +19,7 @@ package stincmale.ratmex.executor.listener;
 import java.util.Optional;
 import stincmale.ratmex.doc.Nullable;
 import stincmale.ratmex.doc.NotThreadSafe;
-import stincmale.ratmex.executor.AbstractSubmitterWorkerRateMeasuringExecutorService;
+import stincmale.ratmex.executor.AbstractDualRateMeasuringExecutorService;
 import stincmale.ratmex.executor.Rate;
 import stincmale.ratmex.executor.config.ScheduledTaskConfig;
 import stincmale.ratmex.meter.RateMeter;
@@ -27,32 +27,31 @@ import stincmale.ratmex.meter.RateMeterReading;
 import static stincmale.ratmex.internal.util.Preconditions.checkNotNull;
 
 /**
- *{@link RateMeasuredEvent} used by {@link AbstractSubmitterWorkerRateMeasuringExecutorService}.
+ *{@link RateMeasuredEvent} used by {@link AbstractDualRateMeasuringExecutorService}.
  *
  * @param <SRS> A type that represents {@linkplain RateMeter#stats() statistics} of submitter {@link RateMeter}.
  * @param <WRS> A type that represents {@linkplain RateMeter#stats() statistics} of worker {@link RateMeter}.
  */
 @NotThreadSafe
-public class SubmitterWorkerRateMeasuredEvent<SRS, WRS> extends RateMeasuredEvent {
+public final class DualRateMeasuredEvent<SRS, WRS> implements RateMeasuredEvent {
+  private final Rate targetRate;
   private final RateMeterReading submissionRate;
   private final RateMeterReading completionRate;
-  @Nullable
-  private final SRS submitterRateMeterStats;
-  @Nullable
-  private final WRS workerRateMeterStats;
+  private final Optional<SRS> submitterRateMeterStats;
+  private final Optional<WRS> workerRateMeterStats;
 
   /**
-   * @param targetRate See {@link RateMeasuredEvent#RateMeasuredEvent(Rate)}.
+   * @param targetRate See {@link #getTargetRate()}.
    * @param submissionRate The current submission rate of the
-   * {@linkplain AbstractSubmitterWorkerRateMeasuringExecutorService#scheduleAtFixedRate(Runnable, Rate, ScheduledTaskConfig) scheduled task}.
+   * {@linkplain AbstractDualRateMeasuringExecutorService#scheduleAtFixedRate(Runnable, Rate, ScheduledTaskConfig) scheduled task}.
    * Must not be null.
    * @param completionRate The current completion rate of the
-   * {@linkplain AbstractSubmitterWorkerRateMeasuringExecutorService#scheduleAtFixedRate(Runnable, Rate, ScheduledTaskConfig) scheduled task}.
+   * {@linkplain AbstractDualRateMeasuringExecutorService#scheduleAtFixedRate(Runnable, Rate, ScheduledTaskConfig) scheduled task}.
    * Must not be null.
    * @param submitterRateMeterStats {@linkplain RateMeter#stats() Statistics} of the submitter {@link RateMeter}.
    * @param workerRateMeterStats {@linkplain RateMeter#stats() Statistics} of the worker {@link RateMeter}.
    */
-  public SubmitterWorkerRateMeasuredEvent(
+  public DualRateMeasuredEvent(
       final Rate targetRate,
       final RateMeterReading submissionRate,
       final RateMeterReading completionRate,
@@ -60,18 +59,24 @@ public class SubmitterWorkerRateMeasuredEvent<SRS, WRS> extends RateMeasuredEven
       final SRS submitterRateMeterStats,
       @Nullable
       final WRS workerRateMeterStats) {
-    super(targetRate);
+    checkNotNull(targetRate, "targetRate");
     checkNotNull(submissionRate, "submissionRate");
     checkNotNull(completionRate, "completionRate");
+    this.targetRate = targetRate;
     this.submissionRate = submissionRate;
     this.completionRate = completionRate;
-    this.submitterRateMeterStats = submitterRateMeterStats;
-    this.workerRateMeterStats = workerRateMeterStats;
+    this.submitterRateMeterStats = Optional.ofNullable(submitterRateMeterStats);
+    this.workerRateMeterStats = Optional.ofNullable(workerRateMeterStats);
+  }
+
+  @Override
+  public final Rate getTargetRate() {
+    return targetRate;
   }
 
   /**
    * @return The current submission rate of the
-   * {@linkplain AbstractSubmitterWorkerRateMeasuringExecutorService#scheduleAtFixedRate(Runnable, Rate, ScheduledTaskConfig) scheduled task}.
+   * {@linkplain AbstractDualRateMeasuringExecutorService#scheduleAtFixedRate(Runnable, Rate, ScheduledTaskConfig) scheduled task}.
    */
   public final RateMeterReading getSubmissionRate() {
     return submissionRate;
@@ -79,7 +84,7 @@ public class SubmitterWorkerRateMeasuredEvent<SRS, WRS> extends RateMeasuredEven
 
   /**
    * @return The current completion rate of the
-   * {@linkplain AbstractSubmitterWorkerRateMeasuringExecutorService#scheduleAtFixedRate(Runnable, Rate, ScheduledTaskConfig) scheduled task}.
+   * {@linkplain AbstractDualRateMeasuringExecutorService#scheduleAtFixedRate(Runnable, Rate, ScheduledTaskConfig) scheduled task}.
    */
   public final RateMeterReading getCompletionRate() {
     return submissionRate;
@@ -89,20 +94,20 @@ public class SubmitterWorkerRateMeasuredEvent<SRS, WRS> extends RateMeasuredEven
    * @return {@linkplain RateMeter#stats() Statistics} of the submitter {@link RateMeter}.
    */
   public final Optional<SRS> getSubmitterRateMeterStats() {
-    return Optional.ofNullable(submitterRateMeterStats);
+    return submitterRateMeterStats;
   }
 
   /**
    * @return {@linkplain RateMeter#stats() Statistics} of the worker {@link RateMeter}.
    */
   public final Optional<WRS >getWorkerRateMeterStats() {
-    return Optional.ofNullable(workerRateMeterStats);
+    return workerRateMeterStats;
   }
 
   @Override
-  public String toString() {
+  public final String toString() {
     return getClass().getSimpleName() +
-        "{targetRate=" + getTargetRate() +
+        "{targetRate=" + targetRate +
         ", submissionRate=" + submissionRate +
         ", completionRate=" + completionRate +
         ", submitterRateMeterStats=" + submitterRateMeterStats +

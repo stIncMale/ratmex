@@ -19,48 +19,49 @@ package stincmale.ratmex.executor.listener;
 import stincmale.ratmex.doc.ThreadSafe;
 import stincmale.ratmex.executor.Rate;
 import stincmale.ratmex.meter.ConcurrentRateMeterStats;
+import stincmale.ratmex.meter.RateMeter;
 import static stincmale.ratmex.internal.util.Utils.format;
 
 /**
- * A default implementation of {@link SubmitterWorkerRateListener}.
+ * An implementation of {@link RateListener} which does not allow any deviations from correctness
+ * (see {@link #onMeasurement(DualRateMeasuredEvent)}).
  *
- * @param <E> See {@link SubmitterWorkerRateListener}.
- * @param <SRS> See {@link SubmitterWorkerRateListener}.
- * @param <WRS> See {@link SubmitterWorkerRateListener}.
+ * @param <E> See {@link RateListener}.
+ * @param <SRS> A type that represents {@linkplain RateMeter#stats() statistics} of submitter {@link RateMeter}.
+ * @param <WRS> A type of {@link ConcurrentRateMeterStats} that represents {@linkplain RateMeter#stats() statistics} of worker {@link RateMeter}.
  */
 @ThreadSafe
-public class DefaultSubmitterWorkerRateListener<
-    E extends SubmitterWorkerRateMeasuredEvent<? extends SRS, ? extends WRS>, SRS, WRS extends ConcurrentRateMeterStats>
-    extends SubmitterWorkerRateListener<E, SRS, WRS> {
-  private static final DefaultSubmitterWorkerRateListener<?, ?, ?> instance = new DefaultSubmitterWorkerRateListener<>();
+public final class StrictDualRateListener<
+    E extends DualRateMeasuredEvent<? extends SRS, ? extends WRS>, SRS, WRS extends ConcurrentRateMeterStats> implements RateListener<E> {
+  private static final StrictDualRateListener<?, ?, ?> instance = new StrictDualRateListener<>();
 
-  protected DefaultSubmitterWorkerRateListener() {
+  private StrictDualRateListener() {
   }
 
   /**
    * Always returns the same instance.
    *
-   * @param <E> See {@link DefaultSubmitterWorkerRateListener}.
-   * @param <SRS> See {@link DefaultSubmitterWorkerRateListener}.
-   * @param <WRS> See {@link DefaultSubmitterWorkerRateListener}.
+   * @param <E> See {@link StrictDualRateListener}.
+   * @param <SRS> See {@link StrictDualRateListener}.
+   * @param <WRS> See {@link StrictDualRateListener}.
    *
-   * @return An instance of {@link DefaultSubmitterWorkerRateListener}.
+   * @return An instance of {@link StrictDualRateListener}.
    */
   @SuppressWarnings("unchecked")
-  public static <E extends SubmitterWorkerRateMeasuredEvent<? extends SRS, ? extends WRS>, SRS, WRS extends ConcurrentRateMeterStats>
-      DefaultSubmitterWorkerRateListener<E, SRS, WRS> instance() {
-    return (DefaultSubmitterWorkerRateListener<E, SRS, WRS>)instance;
+  public static final <E extends DualRateMeasuredEvent<? extends SRS, ? extends WRS>, SRS, WRS extends ConcurrentRateMeterStats>
+  StrictDualRateListener<E, SRS, WRS> instance() {
+    return (StrictDualRateListener<E, SRS, WRS>)instance;
   }
 
   /**
    * @throws RateException If the {@linkplain RateMeasuredEvent#getTargetRate() target rate} is not respected
-   * by either a {@linkplain SubmitterWorkerRateMeasuredEvent#getSubmissionRate() submitter}
-   * or a {@linkplain SubmitterWorkerRateMeasuredEvent#getCompletionRate() worker}.
+   * by either a {@linkplain DualRateMeasuredEvent#getSubmissionRate() submitter}
+   * or a {@linkplain DualRateMeasuredEvent#getCompletionRate() worker}.
    * @throws CorrectnessException If {@link ConcurrentRateMeterStats#incorrectlyRegisteredTickEventsCount()}
-   * from {@link SubmitterWorkerRateMeasuredEvent#getWorkerRateMeterStats()} is greater than 0.
+   * from {@link DualRateMeasuredEvent#getWorkerRateMeterStats()} is greater than 0.
    */
   @Override
-  public boolean onMeasurement(final E e) throws RateException, CorrectnessException {
+  public final boolean onMeasurement(final E e) throws RateException, CorrectnessException {
     final Rate targetRate = e.getTargetRate();
     if (targetRate.compareTo(e.getSubmissionRate()) != 0) {
       throw new RateException("The target rate was violated by the submission rate. ", e.getTargetRate(), e.getSubmissionRate()
