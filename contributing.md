@@ -2,7 +2,7 @@
 ## Build-related commands
 This project uses [Maven](https://maven.apache.org/) for organizing, managing dependencies and build procedures.
 
-Run from project root directory:
+Run from the project root directory:
 
 Command | Description
 --- | ---
