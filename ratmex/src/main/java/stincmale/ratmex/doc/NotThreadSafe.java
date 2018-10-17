@@ -23,18 +23,24 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * An object of a type annotated with this annotation should not be used concurrently
- * without any additional synchronization or coordination on the part of a user. Such objects and types are called not thread-safe.
+ * An object of a type annotated with this annotation or a method annotated with this annotation should not be used<sup>(1)</sup> concurrently
+ * without additional synchronization or coordination on the part of a user;
+ * such objects, types and methods are called not thread-safe.
  * <p>
- * This annotation can be useful in cases specified by {@link ThreadSafe @ThreadSafe}
- * as well as in some cases where an explicit statement about the lack of thread-safety can help avoid misunderstanding.
+ * This annotation can be useful in cases specified by {@link ThreadSafe}
+ * as well as in some cases where an explicit statement about the lack of thread-safety can help avoiding misunderstanding.
  * <p>
  * This annotation does not forbid a type to be thread-safe
- * but rather informs a user that it may be not safe to use an object of the type concurrently
- * without any additional synchronization or coordination on the part of the user.
+ * but rather informs a user that it may be not safe to use an object or method concurrently
+ * without additional synchronization or coordination on the part of the user.
+ * <p>
+ * <sup>(1)</sup> By "use" we mean interaction with an object via its API.
+ * Interactions via other means (e.g. via Java Reflection) is out of the scope of this specification.
+ * Using a reference to an object (e.g. passing it between threads) is not considered to be a use of the object
+ * and generally requires additional synchronization.
  */
 @Documented
-@Target(ElementType.TYPE)
+@Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.CLASS)
 public @interface NotThreadSafe {
 }
